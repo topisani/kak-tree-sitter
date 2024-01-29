@@ -141,6 +141,23 @@
 (attribute
   name: (identifier) @attribute)
 
+(field_identifier) @variable.other.member
+(statement_identifier) @label
+(type_identifier) @type
+(primitive_type) @type.builtin
+(sized_type_specifier) @type.builtin
+
+((identifier) @constant
+  (#match? @constant "^[A-Z][A-Z\\d_]*$"))
+
+(identifier) @variable
+
+((comment) @comment.documentation
+    (#match? @comment.documentation "^///\\s.*"))
+    
+((comment) @comment.documentation
+    (#match? @comment.documentation "^/\\*\\*\\s+.*"))
+    
 (comment) @comment
 
 ; Constants
