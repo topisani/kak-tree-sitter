@@ -30,8 +30,8 @@ impl Language {
     &self.name
   }
 
-  pub fn lang(&self) -> tree_sitter::Language {
-    self.ts_lang
+  pub fn lang(&self) -> &tree_sitter::Language {
+    &self.ts_lang
   }
 }
 
@@ -90,7 +90,8 @@ impl Languages {
 
           let queries = Queries::load_from_dir(queries_dir);
           let mut hl_config = match HighlightConfiguration::new(
-            ts_lang,
+            ts_lang.clone(),
+            lang_name,
             queries.highlights.as_deref().unwrap_or(""),
             queries.injections.as_deref().unwrap_or(""),
             queries.locals.as_deref().unwrap_or(""),
@@ -110,7 +111,7 @@ impl Languages {
           let textobject_query = queries
             .text_objects
             .as_deref()
-            .map(|q| Query::new(ts_lang, q).map(Some))
+            .map(|q| Query::new(&ts_lang, q).map(Some))
             .unwrap_or_else(|| Ok(None))?;
 
           let lang = Language {
