@@ -50,7 +50,8 @@ impl Response {
     write!(resp_str, "evaluate-commands -no-hooks ")?;
 
     if let Some(ref buffer) = self.buffer {
-      write!(resp_str, "-buffer '{buffer}' ")?;
+      let escaped = buffer.replace(',', "\\,");
+      write!(resp_str, "-buffer '{escaped}' ")?;
     } else if let Some(ref client) = self.client {
       write!(resp_str, "-try-client '{client}' ")?;
     }
