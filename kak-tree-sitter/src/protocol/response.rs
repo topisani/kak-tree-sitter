@@ -43,7 +43,8 @@ impl Response {
     }
 
     let prefix = if let Some(ref buffer) = self.buffer {
-      format!("-buffer '{buffer}' ")
+      let escaped = buffer.replace(',', "\\,");
+      format!("-buffer '{escaped}' ")
     } else if let Some(ref client) = self.client {
       format!("-try-client '{client}' ")
     } else {
