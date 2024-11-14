@@ -7,7 +7,7 @@ mod protocol;
 mod server;
 mod tree_sitter;
 
-use std::{fs::File, sync::Arc};
+use std::{fs::File, path::Path, sync::Arc};
 
 use clap::Parser;
 use cli::Cli;
@@ -30,11 +30,8 @@ fn main() {
   }
 }
 
-fn start() -> Result<(), OhNo> {
-  let cli = Cli::parse();
-
-  // setup logger; if we start from kakoune, the logger implementation sends to
-  // the *debug* buffer
+fn setup_logger(cli: &Cli) -> Result<(), OhNo> {
+  // if we start from kakoune, the logger implementation sends to the *debug* buffer
   if let Some(level) = Verbosity::from_count(cli.verbose).to_level() {
     if cli.kakoune {
       KakouneLogger::new(level).register()?;
@@ -43,8 +40,10 @@ fn start() -> Result<(), OhNo> {
     }
   }
 
-  let config = Config::load_default_user()?;
+  Ok(())
+}
 
+fn print_rc_if_kakoune(cli: &Cli, config: &Config) {
   // inject rc if we start from Kakoune
   if cli.kakoune && cli.init.is_some() {
     println!("{}", rc::static_kak());
@@ -53,57 +52,76 @@ fn start() -> Result<(), OhNo> {
       println!("{}", rc::text_objects_kak());
     }
   }
+}
 
-  let paths = Paths::new()?;
+fn handle_cli_request(cli: &Cli, paths: &Paths, req: &str) -> Result<(), OhNo> {
+  // otherwise, regular client
+  let req = Request::from_json(req)?;
 
-  if let Some(request) = cli.request {
-    // otherwise, regular client
-    let req = Request::from_json(request)?;
+  let mut client = client::Client::connect(paths)?;
+  client.send(&req)?;
 
-    let mut client = client::Client::connect(&paths)?;
-    client.send(&req)?;
+  // if we sent the request from within Kakoune, we return nop command so that we can call the commands and print
+  // errors along the way
+  if cli.kakoune {
+    println!("nop");
+  }
 
-    // if we sent the request from within Kakoune, we return nop command so that we can call the commands and print
-    // errors along the way
-    if cli.kakoune {
-      println!("nop");
+  Ok(())
+}
+
+fn start_server(cli: Cli, config: &Config, paths: Paths) -> Result<(), OhNo> {
+  if Server::is_server_running(&paths) {
+    log::debug!("server already running");
+
+    if let Some(session) = cli.init {
+      log::debug!("initiating first session {session}");
+      client::Client::init_session(&paths, session)?;
     }
 
     return Ok(());
   }
 
+  persist_process(&paths, cli.daemonize)?;
+
+  let poll = Poll::new().map_err(|err| OhNo::PollError { err })?;
+
+  // whatever we do, we will need to know about where the resources are; this
+  // object ensures the resources are created and expose interfaces to them
+  let registry = Arc::new(
+    poll
+      .registry()
+      .try_clone()
+      .map_err(|err| OhNo::PollError { err })?,
+  );
+  let resources = ServerResources::new(paths, registry)?;
+  let mut server = Server::new(config, &cli, resources, poll)?;
+
+  if let Some(session) = cli.init {
+    server.init_first_session(session)?;
+  }
+
+  server.start()
+}
+
+fn start() -> Result<(), OhNo> {
+  let cli = Cli::parse();
+
+  setup_logger(&cli)?;
+
+  let config = Config::load_default_user()?;
+
+  // inject rc if we start from Kakoune
+  print_rc_if_kakoune(&cli, &config);
+
+  let paths = Paths::new()?;
+
+  if let Some(ref req) = cli.request {
+    return handle_cli_request(&cli, &paths, req);
+  }
+
   if cli.server {
-    if Server::is_server_running(&paths) {
-      log::debug!("server already running");
-
-      if let Some(session) = cli.init {
-        log::debug!("initiating first session {session}");
-        client::Client::init_session(&paths, session)?;
-      }
-
-      return Ok(());
-    }
-
-    persist_process(&paths, cli.daemonize)?;
-
-    let poll = Poll::new().map_err(|err| OhNo::PollError { err })?;
-
-    // whatever we do, we will need to know about where the resources are; this
-    // object ensures the resources are created and expose interfaces to them
-    let registry = Arc::new(
-      poll
-        .registry()
-        .try_clone()
-        .map_err(|err| OhNo::PollError { err })?,
-    );
-    let resources = ServerResources::new(paths, registry)?;
-    let mut server = Server::new(&config, &cli, resources, poll)?;
-
-    if let Some(session) = cli.init {
-      server.init_first_session(session)?;
-    }
-
-    return server.start();
+    return start_server(cli, &config, paths);
   }
 
   Err(OhNo::NothingToDo)
@@ -140,26 +158,7 @@ fn persist_process(paths: &Paths, daemonize: bool) -> Result<(), OhNo> {
   }
 
   if daemonize {
-    // create stdout / stderr files
-    let stdout_path = paths.stdout();
-    let stderr_path = paths.stderr();
-    let stdout = File::create(&stdout_path).map_err(|err| OhNo::CannotCreateFile {
-      file: stdout_path,
-      err,
-    })?;
-    let stderr = File::create(&stderr_path).map_err(|err| OhNo::CannotCreateFile {
-      file: stderr_path,
-      err,
-    })?;
-
-    daemonize::Daemonize::new()
-      .stdout(stdout)
-      .stderr(stderr)
-      .pid_file(pid_file)
-      .start()
-      .map_err(|err| OhNo::CannotStartDaemon {
-        err: err.to_string(),
-      })?;
+    persist_daemon(paths, &pid_file)?;
   } else {
     std::fs::write(&pid_file, format!("{}", std::process::id())).map_err(|err| {
       OhNo::CannotWriteFile {
@@ -168,6 +167,31 @@ fn persist_process(paths: &Paths, daemonize: bool) -> Result<(), OhNo> {
       }
     })?;
   }
+
+  Ok(())
+}
+
+fn persist_daemon(paths: &Paths, pid_file: &Path) -> Result<(), OhNo> {
+  // create stdout / stderr files
+  let stdout_path = paths.stdout();
+  let stderr_path = paths.stderr();
+  let stdout = File::create(&stdout_path).map_err(|err| OhNo::CannotCreateFile {
+    file: stdout_path,
+    err,
+  })?;
+  let stderr = File::create(&stderr_path).map_err(|err| OhNo::CannotCreateFile {
+    file: stderr_path,
+    err,
+  })?;
+
+  daemonize::Daemonize::new()
+    .stdout(stdout)
+    .stderr(stderr)
+    .pid_file(pid_file)
+    .start()
+    .map_err(|err| OhNo::CannotStartDaemon {
+      err: err.to_string(),
+    })?;
 
   Ok(())
 }
