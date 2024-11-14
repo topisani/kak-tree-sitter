@@ -42,19 +42,23 @@ fn start() -> Result<(), HellNo> {
 
   match cli.cmd {
     cli::Cmd::Fetch { all, lang } => {
-      manage(config, true, false, false, false, all, lang.as_deref())?
+      let flags = ManageFlags::new(true, false, false, false);
+      manage(config, flags, all, lang.as_deref())?
     }
 
     cli::Cmd::Compile { all, lang } => {
-      manage(config, false, true, false, false, all, lang.as_deref())?
+      let flags = ManageFlags::new(false, true, false, false);
+      manage(config, flags, all, lang.as_deref())?
     }
 
     cli::Cmd::Install { all, lang } => {
-      manage(config, false, false, true, false, all, lang.as_deref())?
+      let flags = ManageFlags::new(false, false, true, false);
+      manage(config, flags, all, lang.as_deref())?
     }
 
     cli::Cmd::Sync { all, lang } => {
-      manage(config, false, false, false, true, all, lang.as_deref())?
+      let flags = ManageFlags::new(false, false, false, true);
+      manage(config, flags, all, lang.as_deref())?
     }
 
     cli::Cmd::Query { lang, all } => {
@@ -91,15 +95,10 @@ fn start() -> Result<(), HellNo> {
 
 fn manage(
   config: Config,
-  fetch: bool,
-  compile: bool,
-  install: bool,
-  sync: bool,
+  manage_flags: ManageFlags,
   all: bool,
   lang: Option<&str>,
 ) -> Result<(), HellNo> {
-  let manage_flags = ManageFlags::new(fetch, compile, install, sync);
-
   if let Some(lang) = lang {
     let manager = Manager::new(config, manage_flags)?;
     manager.manage(lang)?;
