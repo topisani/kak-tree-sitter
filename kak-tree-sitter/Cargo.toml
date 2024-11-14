@@ -18,17 +18,17 @@ clap = { version = "4.5", features = ["derive"] }
 ctrlc = "3.4"
 daemonize = "0.5"
 dirs = "5.0"
-itertools = "0.12"
+itertools = "0.13"
 #kak-tree-sitter-config = { version = ">=1.0.0, <3.0.0", path = "../kak-tree-sitter-config" }
 kak-tree-sitter-config = { version = "2.2.0-dev", path = "../kak-tree-sitter-config" }
 libc = "0.2"
 libloading = "0.8"
 log = "0.4"
-mio = { version = "0.8.11", features = ["net", "os-poll", "os-ext"] }
+mio = { version = "1.0.2", features = ["net", "os-poll", "os-ext"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 simple_logger = "5"
-thiserror = "1.0"
+thiserror = "2.0.3"
 tree-sitter = "0.20"
 tree-sitter-highlight = "0.20"
 unicode-segmentation = "1.11"
