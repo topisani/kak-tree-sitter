@@ -35,10 +35,7 @@ pub fn clone(report: &Report, fetch_path: &Path, url: &str) -> Result<Clone, Hel
       "1",
       "-n",
       url,
-      fetch_path
-        .as_os_str()
-        .to_str()
-        .ok_or_else(|| HellNo::BadPath)?,
+      fetch_path.as_os_str().to_str().ok_or(HellNo::BadPath)?,
     ];
 
     Process::new("git").run(None, &git_clone_args)?;

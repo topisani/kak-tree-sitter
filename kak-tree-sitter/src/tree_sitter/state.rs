@@ -66,7 +66,7 @@ impl Trees {
     self
       .by_token
       .get(tkn)
-      .ok_or_else(|| OhNo::UnknownToken { tkn: *tkn })
+      .ok_or(OhNo::UnknownToken { tkn: *tkn })
   }
 
   pub fn delete_tree(&mut self, id: &BufferId) {
@@ -193,7 +193,7 @@ impl TreeState {
     let query = lang
       .textobject_query
       .as_ref()
-      .ok_or_else(|| OhNo::UnsupportedTextObjects)?;
+      .ok_or(OhNo::UnsupportedTextObjects)?;
 
     // get captures’ nodes for the given pattern; this is a function because the pattern might be dynamically recomputed
     // (e.g. object mode)

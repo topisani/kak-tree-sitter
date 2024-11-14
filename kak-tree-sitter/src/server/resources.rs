@@ -23,7 +23,7 @@ impl Paths {
       .or_else(||
         // macOS doesn’t implement XDG, yay…
         std::env::var("TMPDIR").map(PathBuf::from).ok())
-      .ok_or_else(|| OhNo::NoRuntimeDir)?;
+      .ok_or(OhNo::NoRuntimeDir)?;
     let runtime_dir = dir.join("kak-tree-sitter");
 
     // create the runtime dir if it doesn’t exist

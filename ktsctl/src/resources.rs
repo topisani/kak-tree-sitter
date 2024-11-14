@@ -17,12 +17,12 @@ impl Resources {
   /// Ensure paths / directories exist and generate a [`Resources`] object.
   pub fn new() -> Result<Self, HellNo> {
     let runtime_dir = dirs::runtime_dir()
-      .or_else(|| std::env::var("TMPDIR").map(PathBuf::from).ok())
-      .ok_or_else(|| HellNo::NoRuntimeDir)?
+      .or(std::env::var("TMPDIR").map(PathBuf::from).ok())
+      .ok_or(HellNo::NoRuntimeDir)?
       .join("ktsctl");
 
     let data_dir = dirs::data_dir()
-      .ok_or_else(|| HellNo::NoDataDir)?
+      .ok_or(HellNo::NoDataDir)?
       .join("kak-tree-sitter");
 
     Ok(Self {
