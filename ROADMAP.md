@@ -19,18 +19,18 @@ You can also send an email the [discuss] mailing list.
 
 ### v2.0
 
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/18
+- TODO [JSX Syntax Highlighting does not appear to be working (or possibly just tweaking.md instructions outdated)](https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/18)
 
 ### v1.2
 
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/17
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-features/9
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-features/20
+- TODO [Unison highlighting doesn't work](https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/17)
+- TODO [Support session renaming](https://todo.sr.ht/~hadronized/kak-tree-sitter-features/9)
+- TODO [Specify a custom user configuration path](https://todo.sr.ht/~hadronized/kak-tree-sitter-features/20)
 
 ### v1.1.*
 
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/16
-- TODO https://todo.sr.ht/~hadronized/kak-tree-sitter-features/4
+- TODO [Losing buffers if using :cd](https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/16)
+- TODO [Use direct UNIX socket instead of kak -p](https://todo.sr.ht/~hadronized/kak-tree-sitter-features/4)
 
 ## ktsctl
 
