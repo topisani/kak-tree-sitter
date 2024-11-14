@@ -10,13 +10,26 @@ tasks:
       rustup set profile minimal
       rustup default stable
       rustup component add rustfmt clippy
+
   - check: |
       cd kak-tree-sitter
       cargo fmt --check
       cargo clippy
+
+  # up-to-date build
   - build: |
       cd kak-tree-sitter
       cargo build
   - test: |
       cd kak-tree-sitter
       cargo test
+
+  # minimal version build
+  - build-minimal: |
+      rustup default nightly
+      cd kak-tree-sitter
+      cargo build -Z minimal-versions
+  - test-minimal: |
+      rustup default nightly
+      cd kak-tree-sitter
+      cargo test -Z minimal-versions
