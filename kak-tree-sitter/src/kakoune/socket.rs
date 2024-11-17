@@ -3,7 +3,7 @@
 //! This module allows to send commands to Kakoune by directly writing to a Unix
 //! socket (instead of the typical `kak -p` process invocation).
 
-use std::{io::Write, os::unix::net::UnixStream, path::PathBuf};
+use std::{io::Write as _, os::unix::net::UnixStream, path::PathBuf};
 
 use crate::{error::OhNo, protocol::response::Response};
 
@@ -24,10 +24,22 @@ impl Connection {
     let Some(s) = resp.to_kak() else {
       return Ok(());
     };
+    let bytes = s.as_bytes();
+
+    // content is encoded length + raw message
+    let mut content = Vec::new();
+    content.extend(encode_len(bytes.len()));
+    content.extend(bytes);
+
+    // header is magic byte + length of content
+    let mut message = vec![0x02];
+    message.extend(encode_len(content.len() + 5));
+
+    message.extend(content);
 
     self
       .socket
-      .write_all(s.as_bytes())
+      .write_all(&message)
       .map_err(|err| OhNo::KakouneUnixSocketError { err })
   }
 
@@ -38,4 +50,8 @@ impl Connection {
 
     Ok(session_dir.join(format!("kakoune/{session}")))
   }
+}
+
+fn encode_len(size: usize) -> [u8; 4] {
+  (size as u32).to_ne_bytes()
 }
