@@ -12,6 +12,7 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
 - [Install](#install)
 - [Usage](#usage)
 - [Contributing](#contributing)
+- [Chat](#chat)
 - [Credits](#credits)
 
 ## Features
@@ -39,6 +40,10 @@ See the [User manual](docs/man) to know how to install, use, configure and get r
 
 Whether you want to fix a bug, make a feature request, help improving something or add support for a new language by
 changing the default configuration, you should read the [CONTRIBUTING.md](./CONTRIBUTING.md) file.
+
+## Chat
+
+Feel free to join `#kts` on the [libera.chat](https://libera.chat/) IRC network.
 
 ## Credits
 
