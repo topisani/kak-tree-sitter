@@ -66,10 +66,8 @@ It is possible to make a `buffer_metadata` request several time for the same
 buffer, as the request should be idempotent. However, if the language has
 changed, the buffer will be reset and setup again.
 
-KTS will send responses to `buffer_metadata` that will:
-
-- Set the FIFO path to stream the buffer content to.
-- Set the _buffer sentinel_ for this buffer (see the buffer update section).
+KTS will send responses to `buffer_metadata` that will set the FIFO path to
+stream the buffer content to.
 
 ## Buffer update
 
@@ -101,11 +99,7 @@ operations:
 - `write` to the FIFO. The `write` Kakoune command writes the content of the
   buffer to the specified file, so here, we write the content into the FIFO.
 - Once the content is written to the FIFO (which is open in non-blocking on the
-  KTS side), the _buffer sentinel_ is written to the FIFO.
-
-The _buffer sentinel_ is a special string (UUID v4) set when the buffer is
-setup with tree-sitter, and marks the end of the buffer. This is a protocol
-detail that is required to know when the buffer is fully streamed to the FIFO.
+  KTS side), `NUL` is written to the FIFO.
 
 > It is possible that buffer updates trigger more asynchronous responses from
 > the KTS server; for instance if it was started with `--with-highlighting`.

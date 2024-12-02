@@ -53,12 +53,7 @@ impl Handler {
     let tree = self.trees.compute(resources, lang, id)?;
     let fifo = tree.fifo();
     let fifo_path = fifo.path().to_owned();
-    let sentinel = fifo.sentinel().to_owned();
-
-    Ok(Payload::BufferSetup {
-      fifo_path,
-      sentinel,
-    })
+    Ok(Payload::BufferSetup { fifo_path })
   }
 
   /// Handle buffer close.
