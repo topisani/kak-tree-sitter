@@ -25,6 +25,7 @@ pub struct Fifo {
   path: PathBuf,
   file: File,
   tkn: Token,
+  sentinel: String,
   buf: String,
 }
 
@@ -40,6 +41,7 @@ impl Fifo {
     Self::create_fifo(&path)?;
     let file = Self::open_nonblocking(&path)?;
     let tkn = Self::register(registry, tokens, &file)?;
+    let sentinel = uuid::Uuid::new_v4().to_string();
 
     Ok(Self {
       registry: registry.clone(),
@@ -47,6 +49,7 @@ impl Fifo {
       path,
       file,
       tkn,
+      sentinel,
       buf: String::default(),
     })
   }
@@ -117,6 +120,10 @@ impl Fifo {
     &self.path
   }
 
+  pub fn sentinel(&self) -> &str {
+    &self.sentinel
+  }
+
   pub fn read_to_buf(&mut self, target: &mut String) -> Result<bool, OhNo> {
     loop {
       match self.file.read_to_string(&mut self.buf) {
@@ -135,16 +142,21 @@ impl Fifo {
       }
     }
 
-    // search for NUL; if we find it, it means we have a complete
+    // search for the sentinel; if we find it, it means we have a complete
     // buffer; cut it from the data and reset to be ready to read the next
     // buffer
-    if let Some(index) = self.buf.find('\0') {
+    if let Some(index) = self.buf.find(&self.sentinel) {
+      log::trace!(
+        "found sentinel {sentinel} in buffer {path}",
+        sentinel = self.sentinel,
+        path = self.path.display()
+      );
       target.clear();
       target.push_str(&self.buf[..index]);
 
       log::trace!("new buffer content:\n{target}");
 
-      self.buf.drain(..index + 1); // NUL is 1-byte
+      self.buf.drain(..index + self.sentinel.len());
       return Ok(true);
     }
 

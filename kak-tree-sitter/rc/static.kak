@@ -2,26 +2,26 @@
 # source it yourself; instead, when starting the KTS server, the binary will
 # inject it directly into the session.
 
+# FIFO buffer path; this is used by Kakoune to write the content of buffers to
+# update the tree-sitter representation on KTS side.
+#
+# Should only be set KTS side by buffer.
+declare-option str tree_sitter_buf_fifo_path /dev/null
+
+# Sentinel code used to delimit buffers in FIFOs.
+declare-option str tree_sitter_buf_sentinel
+
+# Highlight ranges used when highlighting buffers.
+declare-option range-specs tree_sitter_hl_ranges
+
 # Internal verbosity; used when sending requests to KTS.
 declare-option str tree_sitter_verbose '-vvvvv'
 
 # Language a buffer uses. That option should be set at the buffer level.
 declare-option str tree_sitter_lang
 
-# FIFO buffer path; this is used by Kakoune to write the content of buffers to
-# update the tree-sitter representation on KTS side.
-#
-# Should only be set KTS side by buffer.
-declare-option -hidden str tree_sitter_buf_fifo_path /dev/null
-
-# Sentinel code used to delimit buffers in FIFOs.
-declare-option -hidden str tree_sitter_buf_sentinel %sh{ echo -e "\x0" }
-
-# Highlight ranges used when highlighting buffers.
-declare-option -hidden range-specs tree_sitter_hl_ranges
-
 # Last known timestamp of previouses buffer updates.
-declare-option -hidden int tree_sitter_buf_update_timestamp -1
+declare-option int tree_sitter_buf_update_timestamp -1
 
 # Create a command to send to Kakoune for the current session.
 #

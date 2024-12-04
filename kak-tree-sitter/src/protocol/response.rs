@@ -75,6 +75,9 @@ pub enum Payload {
   BufferSetup {
     /// FIFO where Kakoune should stream update
     fifo_path: PathBuf,
+
+    /// Sentinel code used to delimit end of buffers inside the FIFO.
+    sentinel: String,
   },
 
   /// Highlights.
@@ -131,11 +134,15 @@ impl Payload {
 
       Payload::Deinit => "tree-sitter-remove-all".to_owned(),
 
-      Payload::BufferSetup { fifo_path } => [
+      Payload::BufferSetup {
+        fifo_path,
+        sentinel,
+      } => [
         format!(
           "set-option buffer tree_sitter_buf_fifo_path {}",
           fifo_path.display()
         ),
+        format!("set-option buffer tree_sitter_buf_sentinel {sentinel}"),
         "tree-sitter-hook-install-update".to_owned(),
       ]
       .into_iter()
