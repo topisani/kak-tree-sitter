@@ -1,10 +1,16 @@
+# v2.2.1
+
+## Language support
+
+- Add `glsl` support. [36d8bc0](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/36d8bc0)
+
 # v2.2.0
 
 ## Language support
 
-- Add hyprlang suport. [52fa98f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/52fa98f)
-- Add taskwarrior support. [64cc98a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/64cc98a)
-- Add ini support. [1484673](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1484673)
+- Add `hyprlang` suport. [52fa98f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/52fa98f)
+- Add `taskwarrior` support. [64cc98a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/64cc98a)
+- Add `ini` support. [1484673](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1484673)
 
 # v2.1.1
 
@@ -16,7 +22,7 @@
 
 ## Language support
 
-- Add support for Koka. [6bab165](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6bab165)
+- Add support for `Koka`. [6bab165](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6bab165)
 
 # v2.0.0
 

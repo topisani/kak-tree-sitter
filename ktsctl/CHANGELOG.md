@@ -1,3 +1,9 @@
+# v1.1.2
+
+## Features
+
+- Support for `kak-tree-sitter-config-v2.2.1`.
+ 
 # v1.1.1
 
 ## Bug fixes
