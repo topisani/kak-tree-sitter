@@ -43,7 +43,7 @@ changing the default configuration, you should read the [CONTRIBUTING.md](./CONT
 
 ## Chat
 
-Feel free to join `#kts` on the [libera.chat](https://libera.chat/) IRC network.
+Feel free to join `#kakoune` on the [libera.chat](https://libera.chat/) IRC network.
 
 ## Credits
 
