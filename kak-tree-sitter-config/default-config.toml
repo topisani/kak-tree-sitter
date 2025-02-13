@@ -117,7 +117,7 @@ groups = [
 # astro
 [language.astro.grammar.source.git]
 url = "https://github.com/virchau13/tree-sitter-astro"
-pin = "4be180759ec13651f72bacee65fa477c64222a1a"
+pin = "947e93089e60c66e681eba22283f4037841451e7"
 
 [language.astro.grammar]
 path = "src"
@@ -130,7 +130,7 @@ link_flags = ["-O3"]
 
 [language.astro.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "862f6cd58b38d9d1b4abfb722b4a4b25bdae2586"
+pin = "TODO"
 
 [language.astro.queries]
 path = "runtime/queries/astro"

@@ -1,3 +1,5 @@
+; kak-tree-sitter notes: taken from helix-editor/helix
+
 ((comment) @injection.content
  (#set! injection.language "comment"))
 
