@@ -904,7 +904,7 @@ link_flags = ["-O3"]
 
 [language.make.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.make.queries]
 path = "runtime/queries/make"
