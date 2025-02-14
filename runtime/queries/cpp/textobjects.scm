@@ -12,7 +12,7 @@
 (union_specifier
   body: (_) @class.inside) @class.around
 
-(parameter_list
+(parameter_list 
   ((_) @parameter.inside . ","? @parameter.around) @parameter.around)
 
 (argument_list
@@ -21,6 +21,12 @@
 (comment) @comment.inside
 
 (comment)+ @comment.around
+
+(enumerator
+  (_) @entry.inside) @entry.around
+
+(initializer_list
+  (_) @entry.around)
 
 (lambda_expression
   body: (_) @function.inside) @function.around
