@@ -834,7 +834,7 @@ path = "runtime/queries/kotlin"
 # latex
 [language.latex.grammar.source.git]
 url = "https://github.com/latex-lsp/tree-sitter-latex"
-pin = "dfe891922ccd2e7cef52eccb2775e1b576727165"
+pin = "8c75e93cd08ccb7ce1ccab22c1fbd6360e3bcea6"
 
 [language.latex.grammar]
 path = "src"
@@ -847,7 +847,7 @@ link_flags = ["-O3"]
 
 [language.latex.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.latex.queries]
 path = "runtime/queries/latex"
