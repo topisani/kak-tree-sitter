@@ -264,7 +264,7 @@ path = "runtime/queries/cmake"
 # comment
 [language.comment.grammar.source.git]
 url = "https://github.com/stsewd/tree-sitter-comment"
-pin = "94c99a66bb5051d8321b5900aee92b76450c50ce"
+pin = "aefcc2813392eb6ffe509aa0fc8b4e9b57413ee1"
 
 [language.comment.grammar]
 path = "src"
@@ -277,7 +277,7 @@ link_flags = ["-O3"]
 
 [language.comment.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.comment.queries]
 path = "runtime/queries/comment"
