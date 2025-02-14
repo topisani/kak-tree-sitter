@@ -973,6 +973,9 @@ path = "runtime/queries/markdown.inline"
 # TODO
 
 # nim
+[language.nim.grammar.source.git]
+url = "https://github.com/alaviss/tree-sitter-nim"
+pin = "c5f0ce3b65222f5dbb1a12f9fe894524881ad590"
 
 [language.nim.grammar]
 path = "src"
@@ -983,16 +986,12 @@ link = "cc"
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "nim.so"]
 link_flags = ["-O3"]
 
-[language.nim.grammar.source.git]
-url = "https://github.com/alaviss/tree-sitter-nim"
-pin = "961c2798cec9250c44f7d7225ddb33d47d25856a"
+[language.nim.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.nim.queries]
 path = "runtime/queries/nim"
-
-[language.nim.queries.source.git]
-url = "https://github.com/helix-editor/helix"
-pin = "50c90cb47c9cdbb044d1a2de034285e0d198f43e"
 
 # nix
 
