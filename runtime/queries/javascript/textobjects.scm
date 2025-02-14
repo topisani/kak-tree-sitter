@@ -1,4 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
+
 (function_declaration
   body: (_) @function.inside) @function.around
 
@@ -23,7 +24,7 @@
 (export_statement
   declaration: [
     (function_declaration) @function.around
-    (class_declaration) @class.around
+    (class_declaration) @class.around 
   ])
 
 (formal_parameters
@@ -36,4 +37,11 @@
 
 (comment)+ @comment.around
 
-; javascript
+(array 
+  (_) @entry.around)
+
+(pair
+  (_) @entry.inside) @entry.around
+
+(pair_pattern
+  (_) @entry.inside) @entry.around

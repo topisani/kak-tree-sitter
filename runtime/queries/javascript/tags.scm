@@ -1,6 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
 
-; javascript
 (
   (comment)* @doc
   .

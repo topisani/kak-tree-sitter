@@ -1,4 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
+
 ; Scopes
 ;-------
 
@@ -43,7 +44,6 @@
 
 (identifier) @local.reference
 
-; javascript
 ; Definitions
 ;------------
 ; Javascript and Typescript Treesitter grammars deviate when defining the
@@ -51,10 +51,10 @@
 ; language instead of ecma.
 
 ; (i)
-(formal_parameters
+(formal_parameters 
   (identifier) @local.definition)
 
 ; (i = 1)
-(formal_parameters
+(formal_parameters 
   (assignment_pattern
     left: (identifier) @local.definition))

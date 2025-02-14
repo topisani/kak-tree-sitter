@@ -1,4 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
+
 [
   (array)
   (object)
@@ -27,5 +28,3 @@
   "]"
   ")"
 ] @outdent
-
-; javascript
