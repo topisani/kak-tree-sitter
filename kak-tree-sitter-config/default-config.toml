@@ -1017,7 +1017,7 @@ path = "runtime/queries/nix"
 # nu
 [language.nu.grammar.source.git ]
 url = "https://github.com/nushell/tree-sitter-nu"
-pin = "786689b0562b9799ce53e824cb45a1a2a04dc673"
+pin = "358c4f509eb97f0148bbd25ad36acc729819b9c1"
 
 [language.nu.grammar]
 path = "src"
@@ -1030,7 +1030,7 @@ link_flags = ["-O3"]
 
 [language.nu.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "107763083405868f3679d8e12476ed0688896f87"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.nu.queries]
 path = "runtime/queries/nu"
