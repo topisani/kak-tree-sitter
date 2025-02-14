@@ -606,7 +606,7 @@ path = "runtime/queries/haskell"
 # html
 [language.html.grammar.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-html"
-pin = "86c253e675e7fdd1c0482efe0706f24bafbc3a7d"
+pin = "29f53d8f4f2335e61bf6418ab8958dac3282077a"
 
 [language.html.grammar]
 path = "src"
@@ -619,7 +619,7 @@ link_flags = ["-O3", "-lstdc++"]
 
 [language.html.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.html.queries]
 path = "runtime/queries/html"
