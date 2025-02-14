@@ -914,8 +914,8 @@ path = "runtime/queries/make"
 
 # markdown
 [language.markdown.grammar.source.git]
-url = "https://github.com/MDeiml/tree-sitter-markdown"
-pin = "aaf76797aa8ecd9a5e78e0ec3681941de6c945ee"
+url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
 
 [language.markdown.grammar]
 path = "tree-sitter-markdown/src"
@@ -927,8 +927,8 @@ link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "markdown.so"]
 link_flags = ["-O3"]
 
 [language.markdown.queries.source.git]
-url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "d2d9761f309d6204a8f4480dc23f10558a165e29"
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.markdown.queries]
 path = "runtime/queries/markdown"
