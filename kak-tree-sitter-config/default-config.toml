@@ -935,8 +935,8 @@ path = "runtime/queries/markdown"
 
 # markdown.inline
 [language."markdown.inline".grammar.source.git]
-url = "https://github.com/MDeiml/tree-sitter-markdown"
-pin = "aaf76797aa8ecd9a5e78e0ec3681941de6c945ee"
+url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
 
 [language."markdown.inline".grammar]
 path = "tree-sitter-markdown-inline/src"
@@ -949,7 +949,7 @@ link_flags = ["-O3"]
 
 [language."markdown.inline".queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "56ccaedffbb8011e36012278e2a4861a8d435a60"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language."markdown.inline".queries]
 path = "runtime/queries/markdown.inline"
