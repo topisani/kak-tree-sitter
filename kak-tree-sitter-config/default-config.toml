@@ -483,7 +483,7 @@ path = "runtime/queries/fish"
 # git-commit
 [language.git-commit.grammar.source.git]
 url = "https://github.com/the-mikedavis/tree-sitter-git-commit"
-pin = "db88cffa3952dd2328b741af5d0fc69bdb76704f"
+pin = "6f193a66e9aa872760823dff020960c6cedc37b3"
 
 [language.git-commit.grammar]
 path = "src"
@@ -496,7 +496,7 @@ link_flags = ["-O3"]
 
 [language.git-commit.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.git-commit.queries]
 path = "runtime/queries/git-commit"
