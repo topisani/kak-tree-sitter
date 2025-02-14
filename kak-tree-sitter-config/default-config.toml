@@ -826,7 +826,7 @@ link_flags = ["-O3"]
 
 [language.kotlin.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "f73e9a8d15fd5a87d472a49808baf42ba403f9bf"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.kotlin.queries]
 path = "runtime/queries/kotlin"
