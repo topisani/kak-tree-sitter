@@ -453,7 +453,7 @@ path = "runtime/queries/elixir"
 # fish
 [language.fish.grammar.source.git]
 url = "https://github.com/ram02z/tree-sitter-fish"
-pin = "84436cf24c2b3176bfbb220922a0fdbd0141e406"
+pin = "a78aef9abc395c600c38a037ac779afc7e3cc9e0"
 
 [language.fish.grammar]
 path = "src"
@@ -466,7 +466,7 @@ link_flags = ["-O3", "-flto=auto"]
 
 [language.fish.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.fish.queries]
 path = "runtime/queries/fish"
