@@ -529,7 +529,7 @@ link_flags = ["-O3"]
 
 [language.glsl.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "49e0468bb1d7680c5a5f1d8df0b28bb8ba15451f"
+pin = "TODO"
 
 [language.glsl.queries]
 path = "runtime/queries/glsl"

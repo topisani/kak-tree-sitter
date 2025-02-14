@@ -1,3 +1,5 @@
+; kak-tree-sitter notes: taken from helix-editor/helix
+
 (function_definition
   body: (_) @function.inside) @function.around
 
@@ -19,3 +21,9 @@
 (comment) @comment.inside
 
 (comment)+ @comment.around
+
+(enumerator
+  (_) @entry.inside) @entry.around
+
+(initializer_list
+  (_) @entry.around)

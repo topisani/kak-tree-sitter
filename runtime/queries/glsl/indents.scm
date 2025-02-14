@@ -1,3 +1,5 @@
+; kak-tree-sitter notes: taken from helix-editor/helix
+
 [
   (init_declarator)
   (compound_statement)
