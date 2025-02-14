@@ -994,10 +994,9 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/nim"
 
 # nix
-
 [language.nix.grammar.source.git]
 url = "https://github.com/nix-community/tree-sitter-nix"
-pin = "763168fa916a333a459434f1424b5d30645f015d"
+pin = "1b69cf1fa92366eefbe6863c184e5d2ece5f187d"
 
 [language.nix.grammar]
 path = "src"
@@ -1010,7 +1009,7 @@ link_flags = ["-O3"]
 
 [language.nix.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "be307a420480178c1bc443992c8336f6471b8b7b"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.nix.queries]
 path = "runtime/queries/nix"
