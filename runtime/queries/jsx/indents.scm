@@ -1,4 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
+
 [
   (array)
   (object)
@@ -28,12 +29,9 @@
   ")"
 ] @outdent
 
-; jsx
 [
   (jsx_element)
   (jsx_self_closing_element)
 ] @indent
 
 (parenthesized_expression) @indent
-
-; javascript

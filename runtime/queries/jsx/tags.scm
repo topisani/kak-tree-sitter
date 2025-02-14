@@ -1,8 +1,5 @@
-; ecma
+; kak-tree-sitter notes: taken from helix/helix-editor
 
-; jsx
-
-; javascript
 (
   (comment)* @doc
   .
@@ -91,3 +88,4 @@
 
 (new_expression
   constructor: (_) @name) @reference.class
+

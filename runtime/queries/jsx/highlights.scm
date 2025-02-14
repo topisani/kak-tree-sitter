@@ -1,112 +1,7 @@
-; ecma
-; Special identifiers
-;--------------------
-
-([
-    (identifier)
-    (shorthand_property_identifier)
-    (shorthand_property_identifier_pattern)
- ] @constant
- (#match? @constant "^[A-Z_][A-Z\\d_]+$"))
-
-
-((identifier) @constructor
- (#match? @constructor "^[A-Z]"))
-
-((identifier) @variable.builtin
- (#match? @variable.builtin "^(arguments|module|console|window|document)$")
- (#is-not? local))
-
-((identifier) @function.builtin
- (#eq? @function.builtin "require")
- (#is-not? local))
-
-; Function and method definitions
-;--------------------------------
-
-(function
-  name: (identifier) @function)
-(function_declaration
-  name: (identifier) @function)
-(method_definition
-  name: (property_identifier) @function.method)
-
-(pair
-  key: (property_identifier) @function.method
-  value: [(function) (arrow_function)])
-
-(assignment_expression
-  left: (member_expression
-    property: (property_identifier) @function.method)
-  right: [(function) (arrow_function)])
-
-(variable_declarator
-  name: (identifier) @function
-  value: [(function) (arrow_function)])
-
-(assignment_expression
-  left: (identifier) @function
-  right: [(function) (arrow_function)])
-
-; Function and method parameters
-;-------------------------------
-
-; Arrow function parameters in the form `p => ...` are supported by both
-; javascript and typescript grammars without conflicts.
-(arrow_function
-  parameter: (identifier) @variable.parameter)
-
-; Function and method calls
-;--------------------------
-
-(call_expression
-  function: (identifier) @function)
-
-(call_expression
-  function: (member_expression
-    property: (property_identifier) @function.method))
-
-; Variables
-;----------
-
-(identifier) @variable
-
-; Properties
-;-----------
-
-(property_identifier) @variable.other.member
-(shorthand_property_identifier) @variable.other.member
-(shorthand_property_identifier_pattern) @variable.other.member
-
-; Literals
-;---------
-
-(this) @variable.builtin
-(super) @variable.builtin
-
-[
-  (true)
-  (false)
-  (null)
-  (undefined)
-] @constant.builtin
-
-(comment) @comment
-
-[
-  (string)
-  (template_string)
-] @string
-
-(regex) @string.regexp
-(number) @constant.numeric.integer
+; kak-tree-sitter notes: taken from helix/helix-editor
 
 ; Tokens
 ;-------
-
-(template_substitution
-  "${" @punctuation.special
-  "}" @punctuation.special) @embedded
 
 [
   ";"
@@ -174,6 +69,10 @@
   "}"
 ]  @punctuation.bracket
 
+(template_substitution
+  "${" @punctuation.special
+  "}" @punctuation.special) @embedded
+
 [
   "async"
   "debugger"
@@ -234,7 +133,7 @@
 [
   "import"
   "export"
-] @keyword.control.import
+] @keyword.control.import 
 
 [
   "return"
@@ -248,52 +147,143 @@
   "catch"
 ] @keyword.control.exception
 
-; jsx
-; Opening elements
-; ----------------
+; Variables
+;----------
 
-(jsx_opening_element ((identifier) @constructor
- (#match? @constructor "^[A-Z]")))
+(identifier) @variable
 
-(jsx_opening_element (identifier) @tag)
+; Properties
+;-----------
 
-; Closing elements
-; ----------------
+(property_identifier) @variable.other.member
+(private_property_identifier) @variable.other.member.private
+(shorthand_property_identifier) @variable.other.member
+(shorthand_property_identifier_pattern) @variable.other.member
 
-(jsx_closing_element ((identifier) @constructor
- (#match? @constructor "^[A-Z]")))
+; Function and method definitions
+;--------------------------------
 
-(jsx_closing_element (identifier) @tag)
+(function
+  name: (identifier) @function)
+(function_declaration
+  name: (identifier) @function)
+(method_definition
+  name: (property_identifier) @function.method)
+(method_definition
+  name: (private_property_identifier) @function.method.private)
 
-; Self-closing elements
-; ---------------------
+(pair
+  key: (property_identifier) @function.method
+  value: [(function) (arrow_function)])
+(pair
+  key: (private_property_identifier) @function.method.private
+  value: [(function) (arrow_function)])
 
-(jsx_self_closing_element ((identifier) @constructor
- (#match? @constructor "^[A-Z]")))
+(assignment_expression
+  left: (member_expression
+    property: (property_identifier) @function.method)
+  right: [(function) (arrow_function)])
+(assignment_expression
+  left: (member_expression
+    property: (private_property_identifier) @function.method.private)
+  right: [(function) (arrow_function)])
 
-(jsx_self_closing_element (identifier) @tag)
+(variable_declarator
+  name: (identifier) @function
+  value: [(function) (arrow_function)])
 
-; Attributes
-; ----------
+(assignment_expression
+  left: (identifier) @function
+  right: [(function) (arrow_function)])
 
-(jsx_attribute (property_identifier) @variable.other.member)
+; Function and method parameters
+;-------------------------------
 
-; Punctuation
-; -----------
+; Arrow function parameters in the form `p => ...` are supported by both
+; javascript and typescript grammars without conflicts.
+(arrow_function
+  parameter: (identifier) @variable.parameter)
+  
+; Function and method calls
+;--------------------------
 
-; Handle attribute delimiter (<Component color="red"/>)
-(jsx_attribute "=" @punctuation.delimiter)
+(call_expression
+  function: (identifier) @function)
 
-; <Component>
-(jsx_opening_element ["<" ">"] @punctuation.bracket)
+(call_expression
+  function: (member_expression
+    property: (property_identifier) @function.method))
+(call_expression
+  function: (member_expression
+    property: (private_property_identifier) @function.method.private))
 
-; </Component>
-(jsx_closing_element ["</" ">"] @punctuation.bracket)
+; Literals
+;---------
 
-; <Component />
-(jsx_self_closing_element ["<" "/>"] @punctuation.braket)
+(this) @variable.builtin
+(super) @variable.builtin
 
-; javascript
+[
+  (true)
+  (false)
+  (null)
+  (undefined)
+] @constant.builtin
+
+(comment) @comment
+
+[
+  (string)
+  (template_string)
+] @string
+
+(regex) @string.regexp
+(number) @constant.numeric.integer
+
+; Special identifiers
+;--------------------
+
+((identifier) @constructor
+ (#match? @constructor "^[A-Z]"))
+
+([
+    (identifier)
+    (shorthand_property_identifier)
+    (shorthand_property_identifier_pattern)
+ ] @constant
+ (#match? @constant "^[A-Z_][A-Z\\d_]+$"))
+
+((identifier) @variable.builtin
+ (#match? @variable.builtin "^(arguments|module|console|window|document)$")
+ (#is-not? local))
+
+(call_expression
+ (identifier) @function.builtin
+ (#any-of? @function.builtin
+  "eval"
+  "fetch"
+  "isFinite"
+  "isNaN"
+  "parseFloat"
+  "parseInt"
+  "decodeURI"
+  "decodeURIComponent"
+  "encodeURI"
+  "encodeURIComponent"
+  "require"
+  "alert"
+  "prompt"
+  "btoa"
+  "atob"
+  "confirm"
+  "structuredClone"
+  "setTimeout"
+  "clearTimeout"
+  "setInterval"
+  "clearInterval"
+  "queueMicrotask")
+ (#is-not? local))
+
 ; Function and method parameters
 ;-------------------------------
 
@@ -302,7 +292,7 @@
 ; language instead of ecma.
 
 ; (p)
-(formal_parameters
+(formal_parameters 
   (identifier) @variable.parameter)
 
 ; (...p)
@@ -330,3 +320,47 @@
 (formal_parameters
   (assignment_pattern
     left: (identifier) @variable.parameter))
+
+; Punctuation
+; -----------
+
+; Handle attribute delimiter (<Component color="red"/>)
+(jsx_attribute "=" @punctuation.delimiter)
+
+; <Component>
+(jsx_opening_element ["<" ">"] @punctuation.bracket)
+
+; </Component>
+(jsx_closing_element ["</" ">"] @punctuation.bracket)
+
+; <Component />
+(jsx_self_closing_element ["<" "/>"] @punctuation.bracket)
+
+; Attributes
+; ----------
+
+(jsx_attribute (property_identifier) @attribute)
+
+; Opening elements
+; ----------------
+
+(jsx_opening_element (identifier) @tag)
+
+(jsx_opening_element ((identifier) @constructor
+ (#match? @constructor "^[A-Z]")))
+
+; Closing elements
+; ----------------
+
+(jsx_closing_element (identifier) @tag)
+
+(jsx_closing_element ((identifier) @constructor
+ (#match? @constructor "^[A-Z]")))
+
+; Self-closing elements
+; ---------------------
+
+(jsx_self_closing_element (identifier) @tag)
+
+(jsx_self_closing_element ((identifier) @constructor
+ (#match? @constructor "^[A-Z]")))
