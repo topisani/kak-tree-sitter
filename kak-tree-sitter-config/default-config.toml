@@ -1377,7 +1377,7 @@ path = "runtime/queries/typescript"
 # unison
 [language.unison.grammar.source.git]
 url = "https://github.com/kylegoetz/tree-sitter-unison"
-pin = "1f505e2447fa876a87aee47ff3d70b9e141c744f"
+pin = "3c97db76d3cdbd002dfba493620c2d5df2fd6fa9"
 
 [language.unison.grammar]
 path = "src"
@@ -1390,7 +1390,7 @@ link_flags = ["-O3"]
 
 [language.unison.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "be307a420480178c1bc443992c8336f6471b8b7b"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.unison.queries]
 path = "runtime/queries/unison"
