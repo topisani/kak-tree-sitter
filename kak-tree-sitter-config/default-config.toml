@@ -1197,27 +1197,6 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 [language.rust.queries]
 path = "runtime/queries/rust"
 
-# scss
-[language.scss.grammar.source.git]
-url = "https://github.com/serenadeai/tree-sitter-scss"
-pin = "c478c6868648eff49eb04a4df90d703dc45b312a"
-
-[language.scss.grammar]
-path = "src"
-compile = "cc"
-compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
-compile_flags = ["-O3"]
-link = "cc"
-link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "scss.so"]
-link_flags = ["-O3"]
-
-[language.scss.queries.source.git]
-url = "https://github.com/helix-editor/helix"
-pin = "be307a420480178c1bc443992c8336f6471b8b7b"
-
-[language.scss.queries]
-path = "runtime/queries/scss"
-
 # sage
 # TODO
 
@@ -1240,13 +1219,31 @@ link_flags = ["-O3"]
 
 [language.scheme.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.scheme.queries]
 path = "runtime/queries/scheme"
 
 # scss
-# TODO
+[language.scss.grammar.source.git]
+url = "https://github.com/serenadeai/tree-sitter-scss"
+pin = "c478c6868648eff49eb04a4df90d703dc45b312a"
+
+[language.scss.grammar]
+path = "src"
+compile = "cc"
+compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
+compile_flags = ["-O3"]
+link = "cc"
+link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "scss.so"]
+link_flags = ["-O3"]
+
+[language.scss.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+
+[language.scss.queries]
+path = "runtime/queries/scss"
 
 # slint
 # TODO
