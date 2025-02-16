@@ -1107,20 +1107,20 @@ path = "runtime/queries/purescript"
 # python
 [language.python.grammar.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-python"
-pin = "de221eccf9a221f5b85474a553474a69b4b5784d"
+pin = "4bfdd9033a2225cc95032ce77066b7aeca9e2efc"
 
 [language.python.grammar]
 path = "src"
 compile = "cc"
-compile_args = ["-c", "-fpic", "../scanner.cc", "../parser.c", "-I", ".."]
+compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
 compile_flags = ["-O3"]
 link = "cc"
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "python.so"]
-link_flags = ["-O3", "-lstdc++"]
+link_flags = ["-O3"]
 
 [language.python.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "dbd248fdfa680373d94fbc10094a160aafa0f7a7"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.python.queries]
 path = "runtime/queries/python"
