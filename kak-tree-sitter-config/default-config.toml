@@ -1514,8 +1514,8 @@ path = "runtime/queries/yaml"
 
 # zig
 [language.zig.grammar.source.git]
-url = "https://github.com/maxxnino/tree-sitter-zig"
-pin = "0d08703e4c3f426ec61695d7617415fff97029bd"
+url = "https://github.com/tree-sitter-grammars/tree-sitter-zig"
+pin = "eb7d58c2dc4fbeea4745019dee8df013034ae66b"
 
 [language.zig.grammar]
 path = "src"
@@ -1528,7 +1528,7 @@ link_flags = ["-O3"]
 
 [language.zig.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "bc737404e8ad462b4101987730f4a76658d132ad"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.zig.queries]
 path = "runtime/queries/zig"
