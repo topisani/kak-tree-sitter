@@ -1281,7 +1281,7 @@ path = "runtime/queries/scss"
 # task
 [language.task.grammar.source.git]
 url = "https://github.com/alexanderbrevig/tree-sitter-task"
-pin = "ed4fb3674dd2d889c36e121f7173099290452af2"
+pin = "f2cb435c5dbf3ee19493e224485d977cb2d36d8b"
 
 [language.task.grammar]
 path = "src"
@@ -1294,7 +1294,7 @@ link_flags = ["-O3"]
 
 [language.task.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "aef00a3ab640417f06dc9f59938283ffde5c451e"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 [language.task.queries]
 path = "runtime/queries/task"
