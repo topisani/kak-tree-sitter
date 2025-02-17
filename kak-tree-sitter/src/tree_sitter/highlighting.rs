@@ -86,6 +86,9 @@ impl KakHighlightRange {
       }
     }
 
+    #[cfg(feature = "debug-hl-ranges")]
+    log::debug!("highlight ranges: {kak_hls:#?}");
+
     kak_hls
   }
 
