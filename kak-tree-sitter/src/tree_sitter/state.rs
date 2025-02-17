@@ -88,7 +88,7 @@ pub struct TreeState {
   lang: String,
   fifo: Fifo,
 
-  // TODO: for now, we don’t support custom highligthing, and hence have to use tree-sitter-highlight; see
+  // TODO: for now, we don’t support custom highlighting, and hence have to use tree-sitter-highlight; see
   // #26 for further information
   highlighter: tree_sitter_highlight::Highlighter,
 }
