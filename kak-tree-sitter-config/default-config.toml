@@ -130,7 +130,7 @@ link_flags = ["-O3"]
 
 [language.astro.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.astro.queries]
 path = "runtime/queries/astro"
@@ -304,7 +304,7 @@ link_flags = ["-O3", "-lstdc++"]
 
 [language.cpp.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.cpp.queries]
 path = "runtime/queries/cpp"
@@ -529,7 +529,7 @@ link_flags = ["-O3"]
 
 [language.glsl.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.glsl.queries]
 path = "runtime/queries/glsl"
@@ -709,7 +709,7 @@ link_flags = ["-O3"]
 
 [language.javascript.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.javascript.queries]
 path = "runtime/queries/javascript"
@@ -757,7 +757,7 @@ link_flags = ["-O3"]
 
 [language.jsx.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.jsx.queries]
 path = "runtime/queries/jsx"
@@ -928,7 +928,7 @@ link_flags = ["-O3"]
 
 [language.markdown.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "28187a1123edb2c270f02f1caa26d94b15d04245"
+pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 
 [language.markdown.queries]
 path = "runtime/queries/markdown"
