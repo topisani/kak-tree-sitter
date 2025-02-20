@@ -16,6 +16,7 @@ You can configure it via the [configuration file](configuration.md).
 
 Usage: `ktsctl <COMMAND>`. Commands can be:
 
+- `help`, the reference. Read it!
 - `fetch` used to fetch runtime resources.
 - `compile` used to compile runtime resources. You should have fetched them
   first though.
@@ -24,7 +25,10 @@ Usage: `ktsctl <COMMAND>`. Commands can be:
 - `sync` used to synchronize resources — fetching, compiling, installing and
   checking pinned resources all at once.
 - `query`, used to get information about the languages configuration, installed
-- resources, etc.
+  resources, etc.
+- `remove`, used to remove grammars, queries or both. You can use the `-p` flag to prune unpinned
+  resources as well.
+- `prune`, used to remove all unpinned queries and grammars, and keep only pinned ones.
 
 ### Managing resources
 
