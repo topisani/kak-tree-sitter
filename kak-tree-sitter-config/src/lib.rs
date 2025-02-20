@@ -185,6 +185,14 @@ impl LanguagesConfig {
       }
     }
   }
+
+  /// Get an iterator on languages and associated configuration.
+  pub fn iter(&self) -> impl Iterator<Item = (&str, &LanguageConfig)> {
+    self
+      .language
+      .iter()
+      .map(|(name, config)| (name.as_str(), config))
+  }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]

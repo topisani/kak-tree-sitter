@@ -104,4 +104,10 @@ pub enum Cmd {
     /// Remove resources for the specific language.
     lang: String,
   },
+
+  /// Prune resources.
+  ///
+  /// This command iterates over all languages’ resources and remove everything that
+  /// is not pinned in the configuration.
+  Prune,
 }

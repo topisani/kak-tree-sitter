@@ -88,6 +88,11 @@ fn start() -> Result<(), HellNo> {
 
       remove::remove(&config, &resources, grammar, queries, prune, lang)?;
     }
+
+    cli::Cmd::Prune => {
+      let resources = Resources::new()?;
+      remove::prune_unpinned(&config, &resources)?;
+    }
   }
 
   Ok(())
