@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -13,6 +15,10 @@ pub struct Cli {
 
   #[clap(subcommand)]
   pub cmd: Cmd,
+
+  /// Specify a custom user-config.
+  #[clap(long)]
+  pub config: Option<PathBuf>,
 }
 
 #[derive(Debug, Subcommand)]

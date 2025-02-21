@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -57,6 +59,10 @@ pub struct Cli {
   /// Text-objects user-modes will be available via the 'tree-sitter' user-mode.
   #[arg(long)]
   pub with_text_objects: bool,
+
+  /// Specify a custom user-config.
+  #[arg(long)]
+  pub config: Option<PathBuf>,
 }
 
 impl Cli {

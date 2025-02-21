@@ -37,7 +37,11 @@ fn start() -> Result<(), HellNo> {
     simple_logger::init_with_level(log::Level::Debug)?;
   }
 
-  let config = Config::load_default_user()?;
+  let config = if let Some(path_config) = &cli.config {
+    Config::load_user(path_config)?
+  } else {
+    Config::load_from_xdg()?
+  };
   log::debug!("ktsctl configuration:\n{config:#?}");
 
   match cli.cmd {

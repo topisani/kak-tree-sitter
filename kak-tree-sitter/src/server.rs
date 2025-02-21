@@ -450,7 +450,7 @@ impl IOHandler {
   }
 
   fn reload(&mut self) {
-    let config = match Config::load_default_user() {
+    let config = match Config::load_from_xdg() {
       Ok(config) => config,
       Err(err) => {
         log::error!("reloading config failed: {err}");

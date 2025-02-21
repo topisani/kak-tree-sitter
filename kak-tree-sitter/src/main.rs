@@ -109,7 +109,11 @@ fn start() -> Result<(), OhNo> {
 
   setup_logger(&cli)?;
 
-  let config = Config::load_default_user()?;
+  let config = if let Some(path_config) = &cli.config {
+    Config::load_user(path_config)?
+  } else {
+    Config::load_from_xdg()?
+  };
 
   // inject rc if we start from Kakoune
   print_rc_if_kakoune(&cli, &config);

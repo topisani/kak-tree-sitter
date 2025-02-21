@@ -27,23 +27,11 @@ pub struct Config {
 }
 
 impl Config {
-  /// Load the configuration from a given path.
-  pub fn load(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
-    let path = path.as_ref();
-    let content = fs::read_to_string(path).map_err(|err| ConfigError::CannotReadConfig {
-      path: path.to_owned(),
-      err,
-    })?;
-
-    toml::from_str(&content).map_err(|err| ConfigError::CannotParseConfig {
-      err: err.to_string(),
-    })
-  }
-
   /// Default configuration using the `default-config.toml` file.
   const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../default-config.toml");
 
-  pub fn load_default_config() -> Result<Self, ConfigError> {
+  /// Default configuration.
+  pub fn default_config() -> Result<Self, ConfigError> {
     log::debug!("loading default configuration");
 
     toml::from_str(Self::DEFAULT_CONFIG_CONTENT).map_err(|err| ConfigError::CannotParseConfig {
@@ -51,10 +39,10 @@ impl Config {
     })
   }
 
-  /// Load the default configuration, the user configuration, and merge both.
-  pub fn load_default_user() -> Result<Self, ConfigError> {
-    let mut config = Self::load_default_config()?;
-    match UserConfig::load_from_xdg() {
+  /// Load a user configuration at a given path, and merge with the default configuration.
+  pub fn load_user(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+    let mut config = Self::default_config()?;
+    match UserConfig::load(path) {
       Ok(user_config) => {
         config.merge_user_config(user_config)?;
       }
@@ -65,6 +53,13 @@ impl Config {
     }
 
     Ok(config)
+  }
+
+  /// Load the default configuration, the user configuration, and merge both.
+  pub fn load_from_xdg() -> Result<Self, ConfigError> {
+    let dir = dirs::config_dir().ok_or(ConfigError::NoConfigDir)?;
+    let path = dir.join("kak-tree-sitter/config.toml");
+    Self::load_user(path)
   }
 
   /// Merge the config with a user-provided one.
