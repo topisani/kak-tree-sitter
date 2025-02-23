@@ -43,15 +43,14 @@ fn setup_logger(cli: &Cli) -> Result<(), OhNo> {
   Ok(())
 }
 
-fn print_rc_if_kakoune(cli: &Cli, config: &Config) {
-  // inject rc if we start from Kakoune
-  if cli.kakoune && cli.init.is_some() {
-    println!("{}", rc::static_kak());
+fn print_rc(cli: &Cli, config: &Config) {
+  println!("{}", rc::static_kak());
 
-    if cli.with_text_objects || config.features.text_objects {
-      println!("{}", rc::text_objects_kak());
-    }
+  if cli.with_text_objects || config.features.text_objects {
+    println!("{}", rc::text_objects_kak());
   }
+
+  println!("{}", rc::cli_args_opt_kak(cli));
 }
 
 fn handle_cli_request(cli: &Cli, paths: &Paths, req: &str) -> Result<(), OhNo> {
@@ -116,7 +115,9 @@ fn start() -> Result<(), OhNo> {
   };
 
   // inject rc if we start from Kakoune
-  print_rc_if_kakoune(&cli, &config);
+  if cli.kakoune && cli.init.is_some() {
+    print_rc(&cli, &config);
+  }
 
   let paths = Paths::new()?;
 

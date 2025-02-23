@@ -2,6 +2,12 @@
 # source it yourself; instead, when starting the KTS server, the binary will
 # inject it directly into the session.
 
+# kak-tree-sitter arguments used when invoking the command.
+#
+# This is mainly used to ensure we use the same arguments when invoking
+# kak-tree-sitter from within Kakoune.
+declare-option str-list tree_sitter_cli_args
+
 # FIFO buffer path; this is used by Kakoune to write the content of buffers to
 # update the tree-sitter representation on KTS side.
 #
@@ -23,31 +29,32 @@ declare-option str tree_sitter_lang
 # Last known timestamp of previouses buffer updates.
 declare-option int tree_sitter_buf_update_timestamp -1
 
+# Wrapper for kak-tree-sitter.
+define-command -hidden kak-tree-sitter -params .. %{
+  evaluate-commands -no-hooks %sh{
+    kak-tree-sitter $kak_opt_tree_sitter_cli_args -kr "$@"
+  }
+}
+
 # Create a command to send to Kakoune for the current session.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session -params 1 %{
-  evaluate-commands -no-hooks %sh{
-    kak-tree-sitter -vvv -kr "{ \"session\": \"$kak_session\", \"payload\": { \"type\": \"$1\" } }"
-  }
+  kak-tree-sitter "{ ""session"": ""%val{session}"", ""payload"": { ""type"": ""%arg{1}"" } }"
 }
 
 # Create a command to send to Kakoune for the current session and client.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-client -params 1 %{
-  evaluate-commands -no-hooks %sh{
-    kak-tree-sitter -vvv -kr "{ \"session\": \"$kak_session\", \"client\": \"$kak_client\", \"payload\": $1 }"
-  }
+  kak-tree-sitter "{ ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""payload"": %arg{1} }"
 }
 
 # Create a command to send to Kakoune for the current session and buffer.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-buffer -params 1 %{
-  evaluate-commands -no-hooks %sh{
-    kak-tree-sitter -vvv -kr "{ \"session\": \"$kak_session\", \"buffer\": \"$kak_bufname\", \"payload\": $1 }"
-  }
+  kak-tree-sitter "{ ""session"": ""%val{session}"", ""buffer"": ""%val{bufname}"", ""payload"": %arg{1} }"
 }
 
 # Notify KTS that a session exists.
