@@ -211,6 +211,27 @@ impl From<RemoveDefaultHighlighter> for bool {
   }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct FileTypeHook(pub bool);
+
+impl Default for FileTypeHook {
+  fn default() -> Self {
+    Self(true)
+  }
+}
+
+impl From<bool> for FileTypeHook {
+  fn from(value: bool) -> Self {
+    Self(value)
+  }
+}
+
+impl From<FileTypeHook> for bool {
+  fn from(FileTypeHook(value): FileTypeHook) -> Self {
+    value
+  }
+}
+
 /// Specific language configuration.
 ///
 /// It is possible to configure the grammar and queries part of a language, as well as some specific Kakoune options.
@@ -221,6 +242,9 @@ pub struct LanguageConfig {
 
   #[serde(default)]
   pub remove_default_highlighter: RemoveDefaultHighlighter,
+
+  #[serde(default)]
+  pub filetype_hook: FileTypeHook,
 
   // language aliases that use the same language config
   #[serde(default)]
@@ -240,6 +264,10 @@ impl LanguageConfig {
     self.remove_default_highlighter = user_config
       .remove_default_highlighter
       .unwrap_or(self.remove_default_highlighter.0)
+      .into();
+    self.filetype_hook = user_config
+      .filetype_hook
+      .unwrap_or(self.filetype_hook.0)
       .into();
 
     self.aliases = user_config.aliases.unwrap_or_default();
@@ -266,6 +294,7 @@ impl TryFrom<UserLanguageConfig> for LanguageConfig {
         .remove_default_highlighter
         .unwrap_or(true)
         .into(),
+      filetype_hook: user_config.filetype_hook.unwrap_or(true).into(),
       aliases: user_config.aliases.unwrap_or_default(),
     })
   }
@@ -491,6 +520,7 @@ pub struct UserLanguageConfig {
   pub grammar: Option<UserLanguageGrammarConfig>,
   pub queries: Option<UserLanguageQueriesConfig>,
   pub remove_default_highlighter: Option<bool>,
+  pub filetype_hook: Option<bool>,
   pub aliases: Option<HashSet<String>>,
 }
 
@@ -555,6 +585,7 @@ mod tests {
               path: PathBuf::from("runtime/queries/rust"),
             },
             remove_default_highlighter: true.into(),
+            filetype_hook: true.into(),
             aliases: HashSet::new(),
           },
         )]

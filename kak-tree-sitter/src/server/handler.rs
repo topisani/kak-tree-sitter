@@ -40,6 +40,7 @@ impl Handler {
       .map(|(name, lang)| EnabledLang {
         name: name.to_owned(),
         remove_default_highlighter: lang.remove_default_highlighter,
+        filetype_hook: lang.filetype_hook,
         aliases: lang.aliases.clone(),
       })
       .collect();

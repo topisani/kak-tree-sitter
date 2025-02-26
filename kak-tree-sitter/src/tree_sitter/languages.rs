@@ -20,6 +20,8 @@ pub struct Language {
   pub hl_names: Vec<String>,
   // whether we should remove the default highlighter when highlighting a buffer with this language
   pub remove_default_highlighter: bool,
+  // whether we should inject a hook that forwards the filetype to tree_sitter_lang Kakoune option
+  pub filetype_hook: bool,
   // query to use for text objects, if supported by the language
   pub textobject_query: Option<Query>,
   // language names aliases
@@ -112,6 +114,7 @@ impl Languages {
           hl_config.configure(&hl_names);
 
           let remove_default_highlighter = lang_config.remove_default_highlighter.into();
+          let filetype_hook = lang_config.filetype_hook.into();
           let aliases = lang_config.aliases.clone();
 
           let textobject_query = queries
@@ -125,6 +128,7 @@ impl Languages {
             hl_config,
             hl_names,
             remove_default_highlighter,
+            filetype_hook,
             aliases,
             textobject_query,
             ts_lang,

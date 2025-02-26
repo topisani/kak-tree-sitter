@@ -1,6 +1,6 @@
 //! Response sent from the daemon to Kakoune.
 
-use std::{collections::HashSet, path::PathBuf, sync::mpsc::Sender};
+use std::{collections::HashSet, fmt::Write, path::PathBuf, sync::mpsc::Sender};
 
 use itertools::Itertools;
 
@@ -111,30 +111,37 @@ impl Payload {
             };
 
             // logic to run when a buffer set tree_sitter_lang
-            let mut config = format!(
+            let mut config = String::new();
+            write!(
+              &mut config,
               "hook -group tree-sitter global WinSetOption tree_sitter_lang={name} %<
                  {remove_default_hl}
                  tree-sitter-buffer-metadata
                  {add_hl}
                  tree-sitter-user-after-highlighter
                >",
-            );
+            )
+            .unwrap();
 
             // automatic config for the language and its aliases
-            for alias in enabled_lang.aliases.iter().chain(Some(name)) {
-              // remove the hook that set a default highlighter
-              if enabled_lang.remove_default_highlighter {
-                config.push_str(&format!("\ntry 'remove-hooks global {alias}-highlight'"));
-              }
+            if enabled_lang.filetype_hook {
+              for alias in enabled_lang.aliases.iter().chain(Some(name)) {
+                // remove the hook that set a default highlighter
+                if enabled_lang.remove_default_highlighter {
+                  config.push_str(&format!("\ntry 'remove-hooks global {alias}-highlight'"));
+                }
 
-              // set the alias tree-sitter name to the enabled language `name`
-              config.push_str(&format!(
-                r#"
-                hook -group tree-sitter global BufSetOption filetype={alias} %{{
-                  # Forward the filetype as tree-sitter language.
-                  set-option buffer tree_sitter_lang {name}
-                }}"#
-              ));
+                // set the alias tree-sitter name to the enabled language `name`
+                write!(
+                  &mut config,
+                  r#"
+                  hook -group tree-sitter global BufSetOption filetype={alias} %{{
+                    # Forward the filetype as tree-sitter language.
+                    set-option buffer tree_sitter_lang {name}
+                  }}"#
+                )
+                .unwrap();
+              }
             }
 
             config
@@ -218,5 +225,6 @@ impl EnqueueResponse {
 pub struct EnabledLang {
   pub name: String,
   pub remove_default_highlighter: bool,
+  pub filetype_hook: bool,
   pub aliases: HashSet<String>,
 }
