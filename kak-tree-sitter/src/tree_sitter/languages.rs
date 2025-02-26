@@ -2,7 +2,10 @@
 //!
 //! Languages have different objects (grammars, queries, etc.) living at runtime and must be loaded beforehand.
 
-use std::{collections::HashMap, path::Path};
+use std::{
+  collections::{HashMap, HashSet},
+  path::Path,
+};
 
 use kak_tree_sitter_config::{Config, LanguagesConfig};
 use libloading::Symbol;
@@ -19,6 +22,8 @@ pub struct Language {
   pub remove_default_highlighter: bool,
   // query to use for text objects, if supported by the language
   pub textobject_query: Option<Query>,
+  // language names aliases
+  pub aliases: HashSet<String>,
 
   // NOTE: we need to keep that alive *probably*; better be safe than sorry
   ts_lang: tree_sitter::Language,
@@ -107,6 +112,7 @@ impl Languages {
           hl_config.configure(&hl_names);
 
           let remove_default_highlighter = lang_config.remove_default_highlighter.into();
+          let aliases = lang_config.aliases.clone();
 
           let textobject_query = queries
             .text_objects
@@ -119,6 +125,7 @@ impl Languages {
             hl_config,
             hl_names,
             remove_default_highlighter,
+            aliases,
             textobject_query,
             ts_lang,
             _ts_lib: ts_lib,

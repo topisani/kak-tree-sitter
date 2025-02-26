@@ -157,6 +157,9 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/awk"
 
 # bash
+[language.bash]
+aliases = ["sh"]
+
 [language.bash.grammar.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-bash"
 pin = "f8fb3274f72a30896075585b32b0c54cad65c086"

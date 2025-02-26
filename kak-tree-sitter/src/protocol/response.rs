@@ -1,6 +1,6 @@
 //! Response sent from the daemon to Kakoune.
 
-use std::{path::PathBuf, sync::mpsc::Sender};
+use std::{collections::HashSet, path::PathBuf, sync::mpsc::Sender};
 
 use itertools::Itertools;
 
@@ -62,7 +62,7 @@ pub enum Payload {
   /// Initial response when a session starts.
   ///
   /// This is a list of (language, remove_default_highlighter) configuration.
-  Init { enabled_langs: Vec<(String, bool)> },
+  Init { enabled_langs: Vec<EnabledLang> },
 
   /// Explicit deinit response when the daemon exits.
   ///
@@ -100,15 +100,19 @@ impl Payload {
           "add-highlighter -override buffer/tree-sitter-highlighter ranges tree_sitter_hl_ranges";
         let per_lang = enabled_langs
           .iter()
-          .map(|(lang, remove_default_highlighter)| {
-            let remove_default_hl = if *remove_default_highlighter {
-              format!("try 'remove-highlighter window/{lang}'")
+          .map(|enabled_lang| {
+            let name = &enabled_lang.name;
+
+            // try to remove the highlighter of the already existing opened buffer
+            let remove_default_hl = if enabled_lang.remove_default_highlighter {
+              format!("try 'remove-highlighter window/{name}'")
             } else {
               String::new()
             };
 
+            // logic to run when a buffer set tree_sitter_lang
             let mut config = format!(
-              "hook -group tree-sitter global WinSetOption tree_sitter_lang={lang} %<
+              "hook -group tree-sitter global WinSetOption tree_sitter_lang={name} %<
                  {remove_default_hl}
                  tree-sitter-buffer-metadata
                  {add_hl}
@@ -116,8 +120,21 @@ impl Payload {
                >",
             );
 
-            if *remove_default_highlighter {
-              config.push_str(&format!("\ntry 'remove-hooks global {lang}-highlight'"));
+            // automatic config for the language and its aliases
+            for alias in enabled_lang.aliases.iter().chain(Some(name)) {
+              // remove the hook that set a default highlighter
+              if enabled_lang.remove_default_highlighter {
+                config.push_str(&format!("\ntry 'remove-hooks global {alias}-highlight'"));
+              }
+
+              // set the alias tree-sitter name to the enabled language `name`
+              config.push_str(&format!(
+                r#"
+                hook -group tree-sitter global BufSetOption filetype={alias} %{{
+                  # Forward the filetype as tree-sitter language.
+                  set-option buffer tree_sitter_lang {name}
+                }}"#
+              ));
             }
 
             config
@@ -192,4 +209,14 @@ impl EnqueueResponse {
       log::error!("cannot send response: {err}");
     }
   }
+}
+
+/// Tree-sitter enabled language.
+///
+/// This type contains information to enable support for a language.
+#[derive(Debug, Eq, PartialEq)]
+pub struct EnabledLang {
+  pub name: String,
+  pub remove_default_highlighter: bool,
+  pub aliases: HashSet<String>,
 }

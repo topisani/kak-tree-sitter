@@ -4,7 +4,7 @@ use mio::Token;
 use crate::{
   error::OhNo,
   kakoune::{buffer::BufferId, selection::Sel, text_objects::OperationMode},
-  protocol::response::{Payload, Response},
+  protocol::response::{EnabledLang, Payload, Response},
   tree_sitter::{languages::Languages, nav, state::Trees},
 };
 
@@ -37,7 +37,11 @@ impl Handler {
     let enabled_langs = self
       .langs
       .langs()
-      .map(|(name, lang)| (name.to_owned(), lang.remove_default_highlighter))
+      .map(|(name, lang)| EnabledLang {
+        name: name.to_owned(),
+        remove_default_highlighter: lang.remove_default_highlighter,
+        aliases: lang.aliases.clone(),
+      })
       .collect();
     Payload::Init { enabled_langs }
   }

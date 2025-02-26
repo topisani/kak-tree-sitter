@@ -221,6 +221,10 @@ pub struct LanguageConfig {
 
   #[serde(default)]
   pub remove_default_highlighter: RemoveDefaultHighlighter,
+
+  // language aliases that use the same language config
+  #[serde(default)]
+  pub aliases: HashSet<String>,
 }
 
 impl LanguageConfig {
@@ -228,6 +232,7 @@ impl LanguageConfig {
     if let Some(user_grammar) = user_config.grammar {
       self.grammar.merge_user_config(user_grammar)?;
     }
+
     if let Some(user_queries) = user_config.queries {
       self.queries.merge_user_config(user_queries)?;
     }
@@ -236,6 +241,8 @@ impl LanguageConfig {
       .remove_default_highlighter
       .unwrap_or(self.remove_default_highlighter.0)
       .into();
+
+    self.aliases = user_config.aliases.unwrap_or_default();
 
     Ok(())
   }
@@ -259,6 +266,7 @@ impl TryFrom<UserLanguageConfig> for LanguageConfig {
         .remove_default_highlighter
         .unwrap_or(true)
         .into(),
+      aliases: user_config.aliases.unwrap_or_default(),
     })
   }
 }
@@ -483,6 +491,7 @@ pub struct UserLanguageConfig {
   pub grammar: Option<UserLanguageGrammarConfig>,
   pub queries: Option<UserLanguageQueriesConfig>,
   pub remove_default_highlighter: Option<bool>,
+  pub aliases: Option<HashSet<String>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -505,7 +514,7 @@ pub struct UserLanguageQueriesConfig {
 
 #[cfg(test)]
 mod tests {
-  use std::path::PathBuf;
+  use std::{collections::HashSet, path::PathBuf};
 
   use crate::{
     source::{Source, UserSource},
@@ -535,17 +544,18 @@ mod tests {
               source: Source::local("file://hello"),
               path: PathBuf::from("src"),
               compile: "".to_owned(),
-              compile_args: Vec::default(),
-              compile_flags: Vec::default(),
+              compile_args: Vec::new(),
+              compile_flags: Vec::new(),
               link: "".to_owned(),
-              link_args: Vec::default(),
-              link_flags: Vec::default(),
+              link_args: Vec::new(),
+              link_flags: Vec::new(),
             },
             queries: LanguageQueriesConfig {
               source: None,
               path: PathBuf::from("runtime/queries/rust"),
             },
             remove_default_highlighter: true.into(),
+            aliases: HashSet::new(),
           },
         )]
         .into_iter()

@@ -132,13 +132,6 @@ define-command -hidden tree-sitter-hook-install-session %{
   hook -group tree-sitter global KakEnd .* %{
     tree-sitter-session-end
   }
-
-  # HACK: this is temporary; only used to ensure %opt{tree_sitter_lang} works
-  # as expected; in the end, users should do that on their own
-  hook -group tree-sitter global BufSetOption filetype=(.*) %{
-    # Forward the filetype as tree-sitter language.
-    set-option buffer tree_sitter_lang "%opt{filetype}"
-  }
 }
 
 # Install a hook that updates buffer content if it has changed.
