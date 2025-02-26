@@ -76,7 +76,7 @@ It synchronizes everything. Basically, it will:
 ### Getting information
 
 The `query` command allows to get information about tree-sitter resources. As
-with `manage`, you can use `--help` to know what you can do, but here are some
+with other commands, you can use `--help` to know what you can do, but here are some
 useful commands:
 
 - `ktsctl query rust` will provide information about a specific language
