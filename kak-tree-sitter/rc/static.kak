@@ -51,7 +51,7 @@ define-command -hidden tree-sitter-request-with-session-client -params 1 %{
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-buffer -params 1 %{
-  kak-tree-sitter "{ ""session"": ""%val{session}"", ""buffer"": ""%val{bufname}"", ""payload"": %arg{1} }"
+  kak-tree-sitter "{ ""session"": ""%val{session}"", ""buffer"": ""%val{buffile}"", ""payload"": %arg{1} }"
 }
 
 # Notify KTS that a session exists.
