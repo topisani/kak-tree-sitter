@@ -3,7 +3,7 @@
 use std::collections::{hash_map::Entry, HashMap};
 
 use mio::Token;
-use tree_sitter::{Node, Parser, QueryCursor};
+use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
 
 use crate::{
   error::OhNo,
@@ -205,13 +205,17 @@ impl TreeState {
             pattern: pattern.to_owned(),
           })?;
       let mut cursor = QueryCursor::new();
-      let captures: Vec<_> = cursor
-        .captures(query, self.tree.root_node(), self.buf.as_bytes())
-        .flat_map(|(cm, _)| cm.captures.iter().cloned())
-        .filter(|cq| cq.index == capture_index)
-        .map(|c| c.node)
-        .collect();
-      <Result<_, OhNo>>::Ok(captures)
+      let mut iter = cursor.captures(query, self.tree.root_node(), self.buf.as_bytes());
+      let mut nodes = Vec::new();
+
+      iter.advance();
+      while let Some((cm, _)) = iter.get() {
+        for cq in cm.captures.iter().filter(|cq| cq.index == capture_index) {
+          nodes.push(cq.node);
+        }
+        iter.advance();
+      }
+      <Result<_, OhNo>>::Ok(nodes)
     };
 
     let sels = match mode {
