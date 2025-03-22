@@ -147,7 +147,7 @@ where
       }
 
       if let Some(grapheme) = self.chars.next() {
-        let bytes = grapheme.as_bytes().len();
+        let bytes = grapheme.len();
         self.byte_idx += bytes;
 
         if Self::should_change_line(grapheme) {
