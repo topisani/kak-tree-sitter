@@ -64,6 +64,7 @@ pub enum OhNo {
   #[error("cannot load grammar for language {lang}: {err}")]
   CannotLoadGrammar { lang: String, err: String },
 
+  #[cfg(feature = "direct-unix-socket")]
   #[error("Kakoune Unix socket error: {err:?}")]
   KakouneUnixSocketError { err: io::Error },
 

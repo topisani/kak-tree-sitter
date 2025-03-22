@@ -14,6 +14,8 @@ rust-version = "1.70.0"
 
 [features]
 debug-hl-ranges = []
+# send replies to Kakoune by writing to the Unix socket directly
+direct-unix-socket = []
 
 [dependencies]
 chrono = "0.4"

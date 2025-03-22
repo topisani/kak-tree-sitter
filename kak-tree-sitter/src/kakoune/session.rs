@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use crate::{error::OhNo, protocol::response::Response};
 
-use super::socket::Connection;
-
 /// Session tracker.
 ///
 /// Responsible for tracking sessions (by names).
@@ -49,6 +47,64 @@ impl Session {
 
   /// Send a response back to Kakoune.
   pub fn send_response(resp: Response) -> Result<(), OhNo> {
-    Connection::connect(resp.session())?.send(resp)
+    #[cfg(feature = "direct-unix-socket")]
+    {
+      Self::send_response_socket(resp)
+    }
+
+    #[cfg(not(feature = "direct-unix-socket"))]
+    {
+      Self::send_response_kakp(resp)
+    }
+  }
+
+  /// Send the response by writing to the Unix socket directly.
+  #[cfg(feature = "direct-unix-socket")]
+  fn send_response_socket(resp: Response) -> Result<(), OhNo> {
+    super::socket::Connection::connect(resp.session())?.send(resp)
+  }
+
+  /// Send the response by spawning a `kak -p` process.
+  #[cfg(not(feature = "direct-unix-socket"))]
+  fn send_response_kakp(resp: Response) -> Result<(), OhNo> {
+    use std::io::Write as _;
+
+    let Some(data) = resp.to_kak() else {
+      // FIXME: this is a weird situation where the [`Response`] doesn’t really
+      // have any Kakoune counterpart; I plan on removing that ~soon
+      return Ok(());
+    };
+
+    // spawn the kak -p process
+    // TODO: we want to switch that from directly connecting to the UNIX socket
+    let mut child = std::process::Command::new("kak")
+      .args(["-p", resp.session()])
+      .stdin(std::process::Stdio::piped())
+      .spawn()
+      .map_err(|err| OhNo::CannotSendRequest {
+        err: err.to_string(),
+      })?;
+    let child_stdin = child
+      .stdin
+      .as_mut()
+      .ok_or_else(|| OhNo::CannotSendRequest {
+        err: "cannot pipe data to kak -p".to_owned(),
+      })?;
+
+    child_stdin
+      .write_all(data.as_bytes())
+      .map_err(|err| OhNo::CannotSendRequest {
+        err: err.to_string(),
+      })?;
+
+    child_stdin.flush().map_err(|err| OhNo::CannotSendRequest {
+      err: err.to_string(),
+    })?;
+
+    child.wait().map_err(|err| OhNo::CannotSendRequest {
+      err: format!("error while waiting on kak -p: {err}"),
+    })?;
+
+    Ok(())
   }
 }
