@@ -47,6 +47,9 @@ impl Config {
         config.merge_user_config(user_config)?;
       }
 
+      // no user config is fine; simply use the default config
+      Err(ConfigError::NoUserConfig) => return Ok(config),
+
       Err(err) => {
         log::warn!("cannot load user config: {err}");
       }
@@ -492,6 +495,10 @@ impl UserConfig {
     let path = path.as_ref();
 
     log::debug!("loading configuration at {path}", path = path.display());
+
+    if !matches!(path.try_exists(), Ok(true)) {
+      return Err(ConfigError::NoUserConfig);
+    }
 
     let content = fs::read_to_string(path).map_err(|err| ConfigError::CannotReadConfig {
       path: path.to_owned(),
