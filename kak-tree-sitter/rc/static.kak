@@ -102,21 +102,21 @@ define-command tree-sitter-buffer-close %{
 # First parameter is the pattern.
 # Second parameter is the operation mode.
 define-command tree-sitter-text-objects -params 2 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{bufname}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": ""%arg{2}"" }"
+  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{buffile}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": ""%arg{2}"" }"
 }
 
 # Request KTS to apply “object-mode” text-objects on selections.
 #
 # First parameter is the pattern.
 define-command tree-sitter-object-text-objects -params 1 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{bufname}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": { ""object"": { ""mode"": ""%val{select_mode}"", ""flags"": ""%val{object_flags}"" } } }"
+  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{buffile}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": { ""object"": { ""mode"": ""%val{select_mode}"", ""flags"": ""%val{object_flags}"" } } }"
 }
 
 # Request KTS to navigate the tree-sitter tree on selections.
 #
 # The first parameter is the direction to move to.
 define-command tree-sitter-nav -params 1 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""nav"", ""buffer"": ""%val{bufname}"", ""selections"": ""%val{selections_desc}"", ""dir"": %arg{1} }"
+  tree-sitter-request-with-session-client "{ ""type"": ""nav"", ""buffer"": ""%val{buffile}"", ""selections"": ""%val{selections_desc}"", ""dir"": %arg{1} }"
 }
 
 # User-overrideable command called right after inserting the tree-sitter
