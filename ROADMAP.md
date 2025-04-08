@@ -17,7 +17,7 @@ This document tracks the on-going milestones.
 
 - [x] Fix buffer identity (`:cd`) <https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/16>
 - [ ] JSX fix <https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/18>
-- [ ] `ktsctl` panics <https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/24>
+- [x] `ktsctl` panics <https://todo.sr.ht/~hadronized/kak-tree-sitter-bugs/24>
 
 ## ktsctl next major
 
