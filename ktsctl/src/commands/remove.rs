@@ -108,20 +108,31 @@ pub fn prune_unpinned(config: &Config, resources: &Resources) -> Result<(), Hell
     let report = Report::new(StatusIcon::Info, "pruning");
     report.info(format!("pruning {}", lang.blue()));
 
-    prune_unpinned_grammar(resources, lang, lang_config, &mut errors);
-    prune_unpinned_queries(resources, lang, lang_config, &mut errors);
+    if let Err(err) = prune_unpinned_lang(resources, lang, lang_config, &mut errors) {
+      errors.push(format!("{err}"));
+    }
 
     if errors.is_empty() {
       report.success(format!("pruned {}", lang.blue()));
     } else {
-      report.error(format!("cannot prune {lang}"));
-
-      for err in errors {
-        eprintln!("{}", err.red());
-      }
+      report.error(format!(
+        "cannot prune {lang}:\n  {err}",
+        err = errors.join("\n  ")
+      ));
     }
   }
 
+  Ok(())
+}
+
+fn prune_unpinned_lang(
+  resources: &Resources,
+  lang: &str,
+  lang_config: &LanguageConfig,
+  errors: &mut Vec<String>,
+) -> Result<(), HellNo> {
+  prune_unpinned_grammar(resources, lang, lang_config, errors)?;
+  prune_unpinned_queries(resources, lang, lang_config, errors)?;
   Ok(())
 }
 
@@ -130,9 +141,15 @@ fn prune_unpinned_grammar(
   lang: &str,
   lang_config: &LanguageConfig,
   errors: &mut Vec<String>,
-) {
+) -> Result<(), HellNo> {
   let grammar_dir = resources.grammars_dir(lang);
-  for entry in grammar_dir.read_dir().unwrap().flatten() {
+  let grammar_dir = grammar_dir
+    .read_dir()
+    .map_err(|_| HellNo::NoGrammarDirForLang {
+      lang: lang.to_owned(),
+    })?;
+
+  for entry in grammar_dir.flatten() {
     match &lang_config.grammar.source {
       Source::Local { path } => {
         if entry.path() != *path {
@@ -164,6 +181,8 @@ fn prune_unpinned_grammar(
       }
     }
   }
+
+  Ok(())
 }
 
 fn prune_unpinned_queries(
@@ -171,9 +190,15 @@ fn prune_unpinned_queries(
   lang: &str,
   lang_config: &LanguageConfig,
   errors: &mut Vec<String>,
-) {
+) -> Result<(), HellNo> {
   let queries_dir = resources.queries_dir(lang);
-  for entry in queries_dir.read_dir().unwrap().flatten() {
+  let queries_dir = queries_dir
+    .read_dir()
+    .map_err(|_| HellNo::NoQueriesDirForLang {
+      lang: lang.to_owned(),
+    })?;
+
+  for entry in queries_dir.flatten() {
     match &lang_config.queries.source {
       Some(Source::Local { path }) => {
         if entry.path() != *path {
@@ -201,4 +226,6 @@ fn prune_unpinned_queries(
       None => todo!(),
     }
   }
+
+  Ok(())
 }

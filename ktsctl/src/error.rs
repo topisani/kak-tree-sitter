@@ -18,6 +18,12 @@ pub enum HellNo {
   #[error("no data directory to hold grammars / queries")]
   NoDataDir,
 
+  #[error("no grammar directory for language {lang}")]
+  NoGrammarDirForLang { lang: String },
+
+  #[error("no queries directory for language {lang}")]
+  NoQueriesDirForLang { lang: String },
+
   #[error("bad path")]
   BadPath,
 
