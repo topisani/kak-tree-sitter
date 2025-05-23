@@ -296,7 +296,7 @@ mod tests {
     ];
 
     let mut hl_conf = HighlightConfiguration::new(
-      tree_sitter_rust::language(),
+      tree_sitter_rust::LANGUAGE.into(),
       "rust",
       tree_sitter_rust::HIGHLIGHTS_QUERY,
       tree_sitter_rust::INJECTIONS_QUERY,
