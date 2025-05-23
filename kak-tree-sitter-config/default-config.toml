@@ -1374,6 +1374,30 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 [language.typescript.queries]
 path = "runtime/queries/typescript"
 
+# typst
+[language.typst]
+aliases = ["typ", "typc"]
+
+[language.typst.grammar.source.git]
+url = "https://github.com/uben0/tree-sitter-typst"
+pin = "13863ddcbaa7b68ee6221cea2e3143415e64aea4"
+
+[language.typst.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+
+[language.typst.queries]
+path = "runtime/queries/typst"
+
+[language.typst.grammar]
+path = "src"
+compile = "cc"
+compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
+compile_flags = ["-O3"]
+link = "cc"
+link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "typst.so"]
+link_flags = ["-O3"]
+
 # ungrammar
 # TODO
 
