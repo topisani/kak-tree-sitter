@@ -9,8 +9,8 @@ categories = ["text-editors"]
 homepage = "https://sr.ht/~hadronized/kak-tree-sitter/"
 repository = "https://sr.ht/~hadronized/kak-tree-sitter/"
 readme = "../README.md"
-edition = "2021"
-rust-version = "1.70.0"
+edition = "2024"
+rust-version = "1.86.0"
 
 [features]
 debug-hl-ranges = []

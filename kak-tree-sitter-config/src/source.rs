@@ -44,8 +44,8 @@ impl Source {
 
       (
         Source::Git {
-          url: ref mut self_url,
-          pin: ref mut self_pin,
+          url: self_url,
+          pin: self_pin,
         },
         UserSource::Git { url, pin },
       ) => {

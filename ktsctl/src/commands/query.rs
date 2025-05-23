@@ -94,7 +94,7 @@ impl Query {
       .collect()
   }
 
-  fn lang_config_sections(&self, lang_config: &LanguageConfig) -> impl Iterator<Item = Section> {
+  fn lang_config_sections(&self, lang_config: &LanguageConfig) -> impl Iterator<Item = Section> + use<> {
     [
       self.lang_config_grammar_section(lang_config),
       self.lang_config_queries_section(lang_config),

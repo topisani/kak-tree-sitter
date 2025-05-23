@@ -79,8 +79,8 @@ impl Resources {
   /// Get the queries directory from a language config.
   pub fn queries_dir_from_config(&self, lang: &str, config: &LanguageConfig) -> Option<PathBuf> {
     let path = match config.queries.source.as_ref()? {
-      Source::Local { ref path } => path.clone(),
-      Source::Git { ref pin, .. } => self.queries_pin_dir(lang, pin),
+      Source::Local { path } => path.clone(),
+      Source::Git { pin, .. } => self.queries_pin_dir(lang, pin),
     };
 
     Some(path)
