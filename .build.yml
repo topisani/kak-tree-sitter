@@ -17,7 +17,7 @@ tasks:
       cargo clippy
   - check-all-features: |
       cd kak-tree-sitter
-      cargo clippy --all-features
+      cargo clippy --all-features --all-targets
 
   # up-to-date build
   - build-default: |
@@ -25,13 +25,13 @@ tasks:
       cargo build
   - build-all-features: |
       cd kak-tree-sitter
-      cargo build --all-features
+      cargo build --all-features --all-targets
   - test-default: |
       cd kak-tree-sitter
       cargo test
   - test-all-features: |
       cd kak-tree-sitter
-      cargo test --all-features
+      cargo test --all-features --all-targets
 
   # minimal version build
   - build-minimal-default: |
@@ -41,7 +41,7 @@ tasks:
   - build-minimal-all-features: |
       rustup default nightly
       cd kak-tree-sitter
-      cargo build -Z minimal-versions --all-features
+      cargo build -Z minimal-versions --all-features --all-targets
   - test-minimal-default: |
       rustup default nightly
       cd kak-tree-sitter
@@ -49,4 +49,4 @@ tasks:
   - test-minimal-all-features: |
       rustup default nightly
       cd kak-tree-sitter
-      cargo test -Z minimal-versions --all-features
+      cargo test -Z minimal-versions --all-features --all-targets
