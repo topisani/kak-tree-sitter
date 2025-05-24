@@ -17,8 +17,8 @@ use logging::Verbosity;
 use mio::Poll;
 use protocol::request::Request;
 use server::{
-  resources::{Paths, ServerResources},
   Server,
+  resources::{Paths, ServerResources},
 };
 
 use crate::{kakoune::rc, logging::KakouneLogger};

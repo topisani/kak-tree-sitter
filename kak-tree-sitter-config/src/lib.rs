@@ -554,10 +554,10 @@ mod tests {
   use std::{collections::HashSet, path::PathBuf};
 
   use crate::{
-    source::{Source, UserSource},
     Config, ConfigError, FeaturesConfig, HighlightConfig, LanguageConfig, LanguageGrammarConfig,
     LanguageQueriesConfig, LanguagesConfig, UserConfig, UserLanguageConfig,
     UserLanguageGrammarConfig,
+    source::{Source, UserSource},
   };
 
   #[test]

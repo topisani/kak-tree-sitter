@@ -12,7 +12,7 @@ use std::{
   sync::{Arc, Mutex},
 };
 
-use mio::{unix::SourceFd, Interest, Registry, Token};
+use mio::{Interest, Registry, Token, unix::SourceFd};
 
 use crate::error::OhNo;
 

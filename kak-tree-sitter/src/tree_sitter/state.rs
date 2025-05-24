@@ -1,6 +1,6 @@
 //! Tree-sitter state (i.e. highlighting, tree walking, etc.)
 
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::{HashMap, hash_map::Entry};
 
 use mio::Token;
 use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
@@ -156,7 +156,7 @@ impl TreeState {
     &'a mut self,
     lang: &'a Language,
     injection_callback: impl FnMut(&str) -> Option<&'a tree_sitter_highlight::HighlightConfiguration>
-      + 'a,
+    + 'a,
   ) -> Result<Vec<KakHighlightRange>, OhNo> {
     let events = self
       .highlighter

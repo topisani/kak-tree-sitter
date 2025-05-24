@@ -1,6 +1,6 @@
 //! Report progress and status of commands.
 
-use std::io::{stdout, Write};
+use std::io::{Write, stdout};
 
 use super::status_icon::StatusIcon;
 

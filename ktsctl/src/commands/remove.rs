@@ -3,7 +3,7 @@
 use std::fs;
 
 use colored::Colorize;
-use kak_tree_sitter_config::{source::Source, Config, LanguageConfig};
+use kak_tree_sitter_config::{Config, LanguageConfig, source::Source};
 
 use crate::{
   error::HellNo,

@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kak_tree_sitter_config::{source::Source, LanguageConfig};
+use kak_tree_sitter_config::{LanguageConfig, source::Source};
 
 use crate::error::HellNo;
 

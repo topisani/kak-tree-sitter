@@ -45,7 +45,7 @@ impl Client {
           _ => {
             return Err(OhNo::CannotSendRequest {
               err: err.to_string(),
-            })
+            });
           }
         },
 

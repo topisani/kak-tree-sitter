@@ -7,17 +7,17 @@ use std::{
   collections::HashMap,
   io::{self, Read},
   sync::{
-    atomic::{AtomicBool, Ordering},
-    mpsc::{channel, Receiver},
     Arc,
+    atomic::{AtomicBool, Ordering},
+    mpsc::{Receiver, channel},
   },
-  thread::{spawn, JoinHandle},
+  thread::{JoinHandle, spawn},
 };
 
 use kak_tree_sitter_config::Config;
 use mio::{
-  net::{UnixListener, UnixStream},
   Events, Interest, Poll, Token, Waker,
+  net::{UnixListener, UnixStream},
 };
 
 use crate::{
