@@ -1,5 +1,14 @@
 # kak-tree-sitter
 
+<!--toc:start-->
+- [kak-tree-sitter](#kak-tree-sitter)
+  - [Features](#features)
+  - [User manual](#user-manual)
+  - [Contributing](#contributing)
+  - [Chat](#chat)
+  - [Credits](#credits)
+<!--toc:end-->
+
 This is a binary server that interfaces [tree-sitter](https://tree-sitter.github.io/) with
 [kakoune](https://kakoune.org/).
 
@@ -7,13 +16,6 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
 > own. See [this section from the man](./docs/man/highlighting.md) for further information.
 
 [![asciicast](https://asciinema.org/a/606062.svg)](https://asciinema.org/a/606062)
-
-- [Features](#features)
-- [Install](#install)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [Chat](#chat)
-- [Credits](#credits)
 
 ## Features
 
@@ -38,12 +40,14 @@ See the [User manual](docs/man) to know how to install, use, configure and get r
 
 ## Contributing
 
-Whether you want to fix a bug, make a feature request, help improving something or add support for a new language by
-changing the default configuration, you should read the [CONTRIBUTING.md](./CONTRIBUTING.md) file.
+Whether you want to report or fix a bug, make a feature request, help improving something or add support for
+a new language by changing the default configuration, you should read the [CONTRIBUTING.md](./CONTRIBUTING.md)
+file.
 
 ## Chat
 
-Feel free to join `#kakoune` on the [libera.chat](https://libera.chat/) IRC network.
+Feel free to join `#kakoune` on the [libera.chat](https://libera.chat/) IRC network, or the
+[Kakoune Community discord serve](https://discord.gg/yjv9CC5X).
 
 ## Credits
 

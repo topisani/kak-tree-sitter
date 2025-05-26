@@ -2,6 +2,7 @@
 
 <!--toc:start-->
 - [How to contribute](#how-to-contribute)
+  - [Useful links](#useful-links)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
     - [git send-email](#git-send-email)
@@ -12,9 +13,16 @@
 Everyone is welcome to contribute. There is no small contributions. **Please take
 the time to read this document before starting.**
 
+## Useful links
+
+- [Main project page](https://sr.ht/~hadronized/kak-tree-sitter)
+- [Repositories](https://sr.ht/~hadronized/kak-tree-sitter/sources)
+- [Bug/feature trackers](https://sr.ht/~hadronized/kak-tree-sitter/trackers)
+- [Mailing lists](https://sr.ht/~hadronized/kak-tree-sitter/lists)
+
 ## Prerequisites
 
-Before contributing, some prerequisites:
+Before contributing, some prerequisites **if plan on providing patches**:
 
 - You must have [git] installed, as this project uses it as VCS.
 - This project accepts contributions via _git patches_. A mail client that can
