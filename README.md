@@ -26,7 +26,6 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
   - Similar features to `f`, `?`, `<a-/>`, etc.
   - Full _object_ mode support (i.e. `<a-i>`, `{`, `<a-]>`, etc.)
 - [ ] Indents
-- [ ] Indent guidelines
 - [ ] Incremental parsing
 - [x] Fetch, compile and install grammars / queries with ease (via the use of the `ktsctl` controller companion)
 - [x] Ships with no mappings, defined options, but allows to use well-crafted values, user-modes, mappings and
