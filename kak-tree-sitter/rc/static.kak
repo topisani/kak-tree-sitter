@@ -211,7 +211,8 @@ set-face global ts_comment_block                ts_comment
 set-face global ts_comment_line                 ts_comment
 set-face global ts_conceal                      default
 set-face global ts_constant                     default
-set-face global ts_constant_builtin_boolean     ts_constant
+set-face global ts_constant_builtin             ts_constant
+set-face global ts_constant_builtin_boolean     ts_constant_builtin
 set-face global ts_constant_character           ts_constant
 set-face global ts_constant_character_escape    ts_constant_character
 set-face global ts_constant_macro               ts_constant
