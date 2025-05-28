@@ -294,20 +294,20 @@ path = "runtime/queries/comment"
 # cpp
 [language.cpp.grammar.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-cpp"
-pin = "670404d7c689be1c868a46f919ba2a3912f2b7ef"
+pin = "56455f4245baf4ea4e0881c5169de69d7edd5ae7"
 
 [language.cpp.grammar]
 path = "src"
 compile = "cc"
-compile_args = ["-c", "-fpic", "../scanner.cc", "../parser.c", "-I", ".."]
-compile_flags = ["-O3"]
+compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
+compile_flags = ["-O3", "-flto=auto", "-march=native"]
 link = "cc"
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "cpp.so"]
-link_flags = ["-O3", "-lstdc++"]
+link_flags = ["-O3", "-flto=auto", "-march=native"]
 
 [language.cpp.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
+pin = "63cd42de7d7612d9b493074c06a2075ea1a2c899"
 
 [language.cpp.queries]
 path = "runtime/queries/cpp"
