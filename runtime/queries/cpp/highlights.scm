@@ -146,7 +146,7 @@
 ; Constants
 
 (this) @variable.builtin
-(nullptr) @constant.builtin
+(null) @constant.builtin
 
 ; Types
 
