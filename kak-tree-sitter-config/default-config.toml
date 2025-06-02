@@ -1200,6 +1200,27 @@ pin = "2baff46b2578d78d817b9e128e8cc00345541f0b"
 [language.rust.queries]
 path = "runtime/queries/rust"
 
+# rust-format-args
+[language.rust-format-args.grammar.source.git]
+url = "https://github.com/nik-rev/tree-sitter-rustfmt"
+pin = "2ca0bdd763d0c9dbb1d0bd14aea7544cbe81309c"
+
+[language.rust-format-args.grammar]
+path = "src"
+compile = "cc"
+compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
+compile_flags = ["-O3"]
+link = "cc"
+link_args = ["-shared", "-fpic", "parser.o", "-o", "rust-format-args.so"]
+link_flags = ["-O3"]
+
+[language.rust-format-args.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "1023e8f96482f725465bf2bc059e274f6ac0bb26"
+
+[language.rust-format-args.queries]
+path = "runtime/queries/rust-format-args"
+
 # sage
 # TODO
 
