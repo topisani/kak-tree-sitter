@@ -1389,8 +1389,8 @@ link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "typescript.so"]
 link_flags = ["-O3"]
 
 [language.typescript.queries.source.git]
-url = "https://github.com/helix-editor/helix"
-pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
+pin = "c4262970488d2c193f961200d153f54feee83ab9"
 
 [language.typescript.queries]
 path = "runtime/queries/typescript"
