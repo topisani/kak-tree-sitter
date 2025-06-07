@@ -1,112 +1,5 @@
-; ecma
-; Special identifiers
-;--------------------
-
-([
-    (identifier)
-    (shorthand_property_identifier)
-    (shorthand_property_identifier_pattern)
- ] @constant
- (#match? @constant "^[A-Z_][A-Z\\d_]+$"))
-
-
-((identifier) @constructor
- (#match? @constructor "^[A-Z]"))
-
-((identifier) @variable.builtin
- (#match? @variable.builtin "^(arguments|module|console|window|document)$")
- (#is-not? local))
-
-((identifier) @function.builtin
- (#eq? @function.builtin "require")
- (#is-not? local))
-
-; Function and method definitions
-;--------------------------------
-
-(function
-  name: (identifier) @function)
-(function_declaration
-  name: (identifier) @function)
-(method_definition
-  name: (property_identifier) @function.method)
-
-(pair
-  key: (property_identifier) @function.method
-  value: [(function) (arrow_function)])
-
-(assignment_expression
-  left: (member_expression
-    property: (property_identifier) @function.method)
-  right: [(function) (arrow_function)])
-
-(variable_declarator
-  name: (identifier) @function
-  value: [(function) (arrow_function)])
-
-(assignment_expression
-  left: (identifier) @function
-  right: [(function) (arrow_function)])
-
-; Function and method parameters
-;-------------------------------
-
-; Arrow function parameters in the form `p => ...` are supported by both
-; javascript and typescript grammars without conflicts.
-(arrow_function
-  parameter: (identifier) @variable.parameter)
-
-; Function and method calls
-;--------------------------
-
-(call_expression
-  function: (identifier) @function)
-
-(call_expression
-  function: (member_expression
-    property: (property_identifier) @function.method))
-
-; Variables
-;----------
-
-(identifier) @variable
-
-; Properties
-;-----------
-
-(property_identifier) @variable.other.member
-(shorthand_property_identifier) @variable.other.member
-(shorthand_property_identifier_pattern) @variable.other.member
-
-; Literals
-;---------
-
-(this) @variable.builtin
-(super) @variable.builtin
-
-[
-  (true)
-  (false)
-  (null)
-  (undefined)
-] @constant.builtin
-
-(comment) @comment
-
-[
-  (string)
-  (template_string)
-] @string
-
-(regex) @string.regexp
-(number) @constant.numeric.integer
-
 ; Tokens
 ;-------
-
-(template_substitution
-  "${" @punctuation.special
-  "}" @punctuation.special) @embedded
 
 [
   ";"
@@ -174,19 +67,19 @@
   "}"
 ]  @punctuation.bracket
 
+(template_substitution
+  "${" @punctuation.special
+  "}" @punctuation.special) @embedded
+
 [
   "async"
   "debugger"
-  "delete"
   "extends"
   "from"
   "get"
   "new"
   "set"
   "target"
-  "typeof"
-  "instanceof"
-  "void"
   "with"
 ] @keyword
 
@@ -194,6 +87,10 @@
   "of"
   "as"
   "in"
+  "delete"
+  "typeof"
+  "instanceof"
+  "void"
 ] @keyword.operator
 
 [
@@ -234,7 +131,7 @@
 [
   "import"
   "export"
-] @keyword.control.import
+] @keyword.control.import 
 
 [
   "return"
@@ -248,7 +145,143 @@
   "catch"
 ] @keyword.control.exception
 
-; typescript
+; Variables
+;----------
+
+(identifier) @variable
+
+; Properties
+;-----------
+
+(property_identifier) @variable.other.member
+(private_property_identifier) @variable.other.member.private
+(shorthand_property_identifier) @variable.other.member
+(shorthand_property_identifier_pattern) @variable.other.member
+
+; Function and method definitions
+;--------------------------------
+
+(function
+  name: (identifier) @function)
+(function_declaration
+  name: (identifier) @function)
+(method_definition
+  name: (property_identifier) @function.method)
+(method_definition
+  name: (private_property_identifier) @function.method.private)
+
+(pair
+  key: (property_identifier) @function.method
+  value: [(function) (arrow_function)])
+(pair
+  key: (private_property_identifier) @function.method.private
+  value: [(function) (arrow_function)])
+
+(assignment_expression
+  left: (member_expression
+    property: (property_identifier) @function.method)
+  right: [(function) (arrow_function)])
+(assignment_expression
+  left: (member_expression
+    property: (private_property_identifier) @function.method.private)
+  right: [(function) (arrow_function)])
+
+(variable_declarator
+  name: (identifier) @function
+  value: [(function) (arrow_function)])
+
+(assignment_expression
+  left: (identifier) @function
+  right: [(function) (arrow_function)])
+
+; Function and method parameters
+;-------------------------------
+
+; Arrow function parameters in the form `p => ...` are supported by both
+; javascript and typescript grammars without conflicts.
+(arrow_function
+  parameter: (identifier) @variable.parameter)
+  
+; Function and method calls
+;--------------------------
+
+(call_expression
+  function: (identifier) @function)
+
+(call_expression
+  function: (member_expression
+    property: (property_identifier) @function.method))
+(call_expression
+  function: (member_expression
+    property: (private_property_identifier) @function.method.private))
+
+; Literals
+;---------
+
+(this) @variable.builtin
+(super) @variable.builtin
+
+[
+  (true)
+  (false)
+  (null)
+  (undefined)
+] @constant.builtin
+
+(comment) @comment
+
+[
+  (string)
+  (template_string)
+] @string
+
+(regex) @string.regexp
+(number) @constant.numeric.integer
+
+; Special identifiers
+;--------------------
+
+((identifier) @constructor
+ (#match? @constructor "^[A-Z]"))
+
+([
+    (identifier)
+    (shorthand_property_identifier)
+    (shorthand_property_identifier_pattern)
+ ] @constant
+ (#match? @constant "^[A-Z_][A-Z\\d_]+$"))
+
+((identifier) @variable.builtin
+ (#match? @variable.builtin "^(arguments|module|console|window|document)$")
+ (#is-not? local))
+
+(call_expression
+ (identifier) @function.builtin
+ (#any-of? @function.builtin
+  "eval"
+  "fetch"
+  "isFinite"
+  "isNaN"
+  "parseFloat"
+  "parseInt"
+  "decodeURI"
+  "decodeURIComponent"
+  "encodeURI"
+  "encodeURIComponent"
+  "require"
+  "alert"
+  "prompt"
+  "btoa"
+  "atob"
+  "confirm"
+  "structuredClone"
+  "setTimeout"
+  "clearTimeout"
+  "setInterval"
+  "clearInterval"
+  "queueMicrotask")
+ (#is-not? local))
+
 ; Namespaces
 ; ----------
 
@@ -265,7 +298,7 @@
 
 ; (p: t)
 ; (p: t = 1)
-(required_parameter
+(required_parameter 
   (identifier) @variable.parameter)
 
 ; (...p: t)
@@ -290,11 +323,11 @@
     (identifier) @variable.parameter))
 
 ; (p?: t)
-; (p?: t = 1) // Invalid but still posible to hihglight.
-(optional_parameter
+; (p?: t = 1) // Invalid but still possible to highlight.
+(optional_parameter 
   (identifier) @variable.parameter)
 
-; (...p?: t) // Invalid but still posible to hihglight.
+; (...p?: t) // Invalid but still possible to highlight.
 (optional_parameter
   (rest_pattern
     (identifier) @variable.parameter))
@@ -310,10 +343,14 @@
     (pair_pattern
       value: (identifier) @variable.parameter)))
 
-; ([ p ]?: t[]) // Invalid but still posible to hihglight.
+; ([ p ]?: t[]) // Invalid but still possible to highlight.
 (optional_parameter
   (array_pattern
     (identifier) @variable.parameter))
+
+(public_field_definition) @punctuation.special
+(this_type) @variable.builtin
+(type_predicate) @keyword.operator
 
 ; Punctuation
 ; -----------
@@ -333,6 +370,7 @@
 [
   "abstract"
   "declare"
+  "module"
   "export"
   "infer"
   "implements"
@@ -359,6 +397,8 @@
 ; -----
 
 (type_identifier) @type
+(type_parameter
+  name: (type_identifier) @type.parameter)
 (predefined_type) @type.builtin
 
 ; Type arguments and parameters
@@ -376,6 +416,9 @@
     ">"
   ] @punctuation.bracket)
 
+(omitting_type_annotation) @punctuation.special
+(opting_type_annotation) @punctuation.special
+
 ; Literals
 ; --------
 
@@ -383,9 +426,8 @@
   (template_literal_type)
 ] @string
 
-; Tokens
-; ------
+(import_require_clause
+  (identifier) "="
+  ("require") @keyword)
 
-(template_type
-  "${" @punctuation.special
-  "}" @punctuation.special) @embedded
+
