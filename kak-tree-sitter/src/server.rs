@@ -192,7 +192,7 @@ impl IOHandler {
       )
       .map_err(|err| OhNo::PollError { err })?;
 
-    let handler = Handler::new(config, with_highlighting)?;
+    let handler = Handler::new(config, with_highlighting);
 
     Ok(Self {
       is_standalone,
@@ -458,10 +458,7 @@ impl IOHandler {
       }
     };
 
-    match Handler::new(&config, self.with_highlighting) {
-      Ok(new_handler) => self.handler = new_handler,
-      Err(err) => log::error!("reloading failed: {err}"),
-    }
+    self.handler = Handler::new(&config, self.with_highlighting);
   }
 }
 

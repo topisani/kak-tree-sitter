@@ -64,6 +64,9 @@ pub enum OhNo {
   #[error("cannot load grammar for language {lang}: {err}")]
   CannotLoadGrammar { lang: String, err: String },
 
+  #[error("cannot load queries for language {lang}: {err}")]
+  CannotLoadQueries { lang: String, err: String },
+
   #[cfg(feature = "direct-unix-socket")]
   #[error("Kakoune Unix socket error: {err:?}")]
   KakouneUnixSocketError { err: io::Error },
@@ -87,10 +90,16 @@ pub enum OhNo {
   CannotParseBuffer,
 
   #[error("highlight error: {err}")]
-  HighlightError { err: String },
+  HighlightError {
+    #[from]
+    err: tree_sitter_highlight::Error,
+  },
 
   #[error("unknown language: {lang}")]
   UnknownLang { lang: String },
+
+  #[error("language already failed to load: {lang}")]
+  TriedLoadingOnceLang { lang: String },
 
   #[error("unknown buffer: {id:?}")]
   UnknownBuffer { id: BufferId },

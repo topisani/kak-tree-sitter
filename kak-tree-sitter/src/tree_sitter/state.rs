@@ -1,6 +1,9 @@
 //! Tree-sitter state (i.e. highlighting, tree walking, etc.)
 
-use std::collections::{HashMap, hash_map::Entry};
+use std::{
+  collections::{HashMap, hash_map::Entry},
+  sync::atomic::AtomicUsize,
+};
 
 use mio::Token;
 use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
@@ -155,20 +158,16 @@ impl TreeState {
   pub fn highlight<'a>(
     &'a mut self,
     lang: &'a Language,
+    cancellation: Option<&'a AtomicUsize>,
     injection_callback: impl FnMut(&str) -> Option<&'a tree_sitter_highlight::HighlightConfiguration>
     + 'a,
   ) -> Result<Vec<KakHighlightRange>, OhNo> {
-    let events = self
-      .highlighter
-      .highlight(
-        &lang.hl_config,
-        self.buf.as_bytes(),
-        None,
-        injection_callback,
-      )
-      .map_err(|err| OhNo::HighlightError {
-        err: err.to_string(),
-      })?;
+    let events = self.highlighter.highlight(
+      &lang.hl_config,
+      self.buf.as_bytes(),
+      cancellation,
+      injection_callback,
+    )?;
 
     Ok(KakHighlightRange::from_iter(
       &self.buf,
