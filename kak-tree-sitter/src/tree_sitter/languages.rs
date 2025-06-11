@@ -2,7 +2,7 @@
 //!
 //! Languages have different objects (grammars, queries, etc.) living at runtime and must be loaded beforehand.
 
-use std::collections::{HashMap, hash_map::Entry};
+use std::{cell::LazyCell, collections::HashMap, ops::Deref};
 
 use kak_tree_sitter_config::{Config, LanguageConfig, LanguagesConfig};
 use libloading::Symbol;
@@ -53,16 +53,39 @@ impl From<Language> for CachedLanguage {
 ///
 /// For a language to be tree-sitter compatible, it has to have a mapping in
 /// the underlying map. If not, the language might be loaded on-demand.
+///
+/// [`LazyCell`] is used to load the language only when first accessed.
 pub struct Languages {
   /// Map a `kts_lang` to the tree-sitter [`Language`] and its queries.
-  langs: HashMap<String, CachedLanguage>,
+  langs: HashMap<String, LazyLang>,
 }
 
+type LazyLang = LazyCell<CachedLanguage, Box<dyn FnOnce() -> CachedLanguage + 'static>>;
+
 impl Languages {
-  pub fn new() -> Self {
-    Self {
-      langs: HashMap::new(),
-    }
+  pub fn new(config: &Config) -> Self {
+    let langs = config
+      .languages
+      .iter()
+      .map(|(lang_name, _)| {
+        let config = config.clone();
+        let lang_name2 = lang_name.to_owned();
+
+        let boxed: Box<dyn FnOnce() -> CachedLanguage + 'static> =
+          Box::new(move || match Self::load_lang(&config, &lang_name2) {
+            Ok(lang) => CachedLanguage::Loaded(Box::new(lang)),
+
+            Err(err) => {
+              log::error!("cannot lazy load language '{lang_name2}'; will not try again: {err}");
+              CachedLanguage::LoadFailed
+            }
+          });
+        let lazy = LazyCell::new(boxed);
+
+        (lang_name.to_owned(), lazy)
+      })
+      .collect();
+    Self { langs }
   }
 
   fn load_grammar(
@@ -153,39 +176,11 @@ impl Languages {
       .ok_or_else(|| OhNo::UnknownLang {
         lang: lang_name.to_owned(),
       })
-      .and_then(|lang| match lang {
+      .and_then(|lang| match lang.deref() {
         CachedLanguage::Loaded(language) => Ok(language.as_ref()),
         CachedLanguage::LoadFailed => Err(OhNo::TriedLoadingOnceLang {
           lang: lang_name.to_owned(),
         }),
       })
-  }
-
-  /// Manually inject a language.
-  pub fn insert_lang(&mut self, lang_name: impl Into<String>, lang: impl Into<CachedLanguage>) {
-    self.langs.insert(lang_name.into(), lang.into());
-  }
-
-  /// Get the [`Language`] associated with the argument name, or try to load it.
-  pub fn get_or_load(
-    &mut self,
-    config: &Config,
-    lang_name: impl AsRef<str>,
-  ) -> Result<&Language, OhNo> {
-    let lang_name = lang_name.as_ref();
-
-    match self.langs.entry(lang_name.to_owned()) {
-      Entry::Occupied(lang) => match lang.into_mut() {
-        CachedLanguage::Loaded(language) => Ok(language),
-        CachedLanguage::LoadFailed => Err(OhNo::TriedLoadingOnceLang {
-          lang: lang_name.to_owned(),
-        }),
-      },
-
-      Entry::Vacant(entry) => match entry.insert(Self::load_lang(config, lang_name)?.into()) {
-        CachedLanguage::Loaded(language) => Ok(language),
-        CachedLanguage::LoadFailed => unreachable!(),
-      },
-    }
   }
 }
