@@ -71,16 +71,16 @@ impl Languages {
         let config = config.clone();
         let lang_name2 = lang_name.to_owned();
 
-        let boxed: Box<dyn FnOnce() -> CachedLanguage + 'static> =
-          Box::new(move || match Self::load_lang(&config, &lang_name2) {
+        let lazy = LazyLang::new(Box::new(move || {
+          match Self::load_lang(&config, &lang_name2) {
             Ok(lang) => CachedLanguage::Loaded(Box::new(lang)),
 
             Err(err) => {
               log::error!("cannot lazy load language '{lang_name2}'; will not try again: {err}");
               CachedLanguage::LoadFailed
             }
-          });
-        let lazy = LazyCell::new(boxed);
+          }
+        }));
 
         (lang_name.to_owned(), lazy)
       })
