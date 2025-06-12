@@ -12,6 +12,9 @@ text_objects = true
 [highlight]
 # Top-level highlight capture group declarations. If your grammars uses a capture group that is not defined here, you
 # have to add it to the list.
+#
+# Important: use a dot (.) as delimiter between a parent capture group and its children; e.g.
+# top.middle.bottom. This is used internally by KTS to automatically generate face names and values.
 groups = [
   "attribute",
   "comment",

@@ -60,9 +60,10 @@ impl Response {
 #[derive(Debug, Eq, PartialEq)]
 pub enum Payload {
   /// Initial response when a session starts.
-  ///
-  /// This is a list of (language, remove_default_highlighter) configuration.
-  Init { enabled_langs: Vec<EnabledLang> },
+  Init {
+    /// Languages that will be recognized by KTS.
+    enabled_langs: Vec<EnabledLang>,
+  },
 
   /// Explicit deinit response when the daemon exits.
   ///

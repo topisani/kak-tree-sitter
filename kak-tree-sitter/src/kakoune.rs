@@ -1,4 +1,5 @@
 pub mod buffer;
+pub mod face;
 pub mod rc;
 pub mod selection;
 pub mod session;

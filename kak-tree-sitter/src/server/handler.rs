@@ -44,6 +44,7 @@ impl Handler {
         aliases: lang.aliases.clone(),
       })
       .collect();
+
     Payload::Init { enabled_langs }
   }
 

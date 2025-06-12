@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf};
+use std::{fmt, io, path::PathBuf};
 
 use kak_tree_sitter_config::error::ConfigError;
 use log::SetLoggerError;
@@ -124,4 +124,7 @@ pub enum OhNo {
 
   #[error("no such {pattern} text-object query")]
   UnknownTextObjectQuery { pattern: String },
+
+  #[error("face initialization error: {err}")]
+  FaceInit { err: fmt::Error },
 }
