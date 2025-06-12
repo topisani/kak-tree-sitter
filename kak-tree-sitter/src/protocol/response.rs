@@ -110,7 +110,7 @@ impl Payload {
               String::new()
             };
 
-            // logic to run when a buffer set tree_sitter_lang
+            // logic to run when a buffer sets tree_sitter_lang
             let mut config = String::new();
             write!(
               &mut config,

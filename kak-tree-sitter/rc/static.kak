@@ -155,7 +155,7 @@ define-command -hidden tree-sitter-hook-install-update %{
 # Set the tree_sitter_lang buffer-option for all known buffers.
 #
 # This command should only be used once the session is enabled, and permit to
-# dynamicall enable tree-sitter for a buffer that was opened and fully displayed
+# dynamically enable tree-sitter for a buffer that was opened and fully displayed
 # before the session was KTS-enabled
 define-command -hidden tree-sitter-initial-set-buffer-lang %{
   evaluate-commands -buffer "*" %{
