@@ -96,7 +96,7 @@ pub struct TreeState {
 impl TreeState {
   pub fn new(resources: &mut ServerResources, lang: &Language) -> Result<Self, OhNo> {
     let mut parser = Parser::new();
-    parser.set_language(lang.lang())?;
+    parser.set_language(lang.grammar().lang())?;
 
     let tree = parser
       .parse("".as_bytes(), None)
@@ -127,7 +127,7 @@ impl TreeState {
     lang.lang_name().clone_into(&mut self.lang);
 
     self.parser = Parser::new();
-    self.parser.set_language(lang.lang())?;
+    self.parser.set_language(lang.grammar().lang())?;
 
     self.recompute_tree()
   }
