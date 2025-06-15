@@ -35,7 +35,7 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
 
 ## User manual
 
-See the [User manual](/docs/man/README.md) to know how to install, use, configure and get runtime resources.
+See the [User manual](./docs/man/README.md) to know how to install, use, configure and get runtime resources.
 
 ## Contributing
 

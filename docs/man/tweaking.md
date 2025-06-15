@@ -1,8 +1,6 @@
 # Tweaking
 
-If you are using the
-[provided config.toml](https://git.sr.ht/~hadronized/kak-tree-sitter/tree/master/item/kak-tree-sitter-config/default-config.toml),
-some languages might require more setup. They are listed in this section.
+Here is a list of tweaks you might be interested in depending on the languages you use.
 
 - [JSX](#jsx]
 
