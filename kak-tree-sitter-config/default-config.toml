@@ -1,7 +1,8 @@
 # kak-tree-sitter default configuration file.
 #
-# It is highly recommended for users to copy that file and edit it manually if they need to add support for languages
-# not present yet.
+# This file is shipped with the kak-tree-sitter binary, you DO NOT HAVE TO COPY IT! If you want to add
+# support for a language that is not listed here in your config, you can start with an empty config, as your
+# configuration and this default configuration will get merged together.
 
 # List of features to be enabled/disabled. Most of those features can be
 # overriden in the user configuration, or even on the CLI — see --with-* flags.
@@ -120,11 +121,11 @@ groups = [
 ]
 
 # astro
-[language.astro.grammar.source.git]
+[grammar.astro.source.git]
 url = "https://github.com/virchau13/tree-sitter-astro"
 pin = "947e93089e60c66e681eba22283f4037841451e7"
 
-[language.astro.grammar]
+[grammar.astro]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -141,11 +142,11 @@ pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 path = "runtime/queries/astro"
 
 # awk
-[language.awk.grammar.source.git]
+[grammar.awk.source.git]
 url = "https://github.com/Beaglefoot/tree-sitter-awk"
 pin = "a799bc5da7c2a84bc9a06ba5f3540cf1191e4ee3"
 
-[language.awk.grammar]
+[grammar.awk]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -165,11 +166,11 @@ path = "runtime/queries/awk"
 [language.bash]
 aliases = ["sh"]
 
-[language.bash.grammar.source.git]
+[grammar.bash.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-bash"
 pin = "f8fb3274f72a30896075585b32b0c54cad65c086"
 
-[language.bash.grammar]
+[grammar.bash]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -192,11 +193,11 @@ path = "runtime/queries/bash"
 # TODO
 
 # bibtex
-[language.bibtex.grammar.source.git]
+[grammar.bibtex.source.git]
 url = "https://github.com/latex-lsp/tree-sitter-bibtex"
 pin = "ccfd77db0ed799b6c22c214fe9d2937f47bc8b34"
 
-[language.bibtex.grammar]
+[grammar.bibtex]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -216,11 +217,11 @@ path = "runtime/queries/bibtex"
 # TODO
 
 # c
-[language.c.grammar.source.git]
+[grammar.c.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-c"
 pin = "7175a6dd5fc1cee660dce6fe23f6043d75af424a"
 
-[language.c.grammar]
+[grammar.c]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -249,11 +250,11 @@ path = "runtime/queries/c"
 # TODO
 
 # cmake
-[language.cmake.grammar.source.git]
+[grammar.cmake.source.git]
 url = "https://github.com/uyha/tree-sitter-cmake"
 pin = "6e51463ef3052dd3b328322c22172eda093727ad"
 
-[language.cmake.grammar]
+[grammar.cmake]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "../scanner.cc", "-I", ".."]
@@ -270,11 +271,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/cmake"
 
 # comment
-[language.comment.grammar.source.git]
+[grammar.comment.source.git]
 url = "https://github.com/stsewd/tree-sitter-comment"
 pin = "aefcc2813392eb6ffe509aa0fc8b4e9b57413ee1"
 
-[language.comment.grammar]
+[grammar.comment]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -297,11 +298,11 @@ path = "runtime/queries/comment"
 # TODO
 
 # cpp
-[language.cpp.grammar.source.git]
+[grammar.cpp.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-cpp"
 pin = "56455f4245baf4ea4e0881c5169de69d7edd5ae7"
 
-[language.cpp.grammar]
+[grammar.cpp]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -321,11 +322,11 @@ path = "runtime/queries/cpp"
 # TODO
 
 # c-sharp
-[language.csharp.grammar.source.git]
+[grammar.csharp.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-c-sharp"
 pin = "5b60f99545fea00a33bbfae5be956f684c4c69e2"
 
-[language.csharp.grammar]
+[grammar.csharp]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -342,11 +343,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/c-sharp"
 
 # css
-[language.css.grammar.source.git]
+[grammar.css.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-css"
 pin = "769203d0f9abe1a9a691ac2b9fe4bb4397a73c51"
 
-[language.css.grammar]
+[grammar.css]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -378,11 +379,11 @@ path = "runtime/queries/css"
 # TODO
 
 # diff
-[language.diff.grammar.source.git]
+[grammar.diff.source.git]
 url = "https://github.com/the-mikedavis/tree-sitter-diff"
 pin = "fd74c78fa88a20085dbc7bbeaba066f4d1692b63"
 
-[language.diff.grammar]
+[grammar.diff]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -420,11 +421,11 @@ path = "runtime/queries/diff"
 # TODO
 
 # elixir
-[language.elixir.grammar.source.git]
+[grammar.elixir.source.git]
 url = "https://github.com/elixir-lang/tree-sitter-elixir"
 pin = "02a6f7fd4be28dd94ee4dd2ca19cb777053ea74e"
 
-[language.elixir.grammar]
+[grammar.elixir]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -459,11 +460,11 @@ path = "runtime/queries/elixir"
 # TODO
 
 # fish
-[language.fish.grammar.source.git]
+[grammar.fish.source.git]
 url = "https://github.com/ram02z/tree-sitter-fish"
 pin = "a78aef9abc395c600c38a037ac779afc7e3cc9e0"
 
-[language.fish.grammar]
+[grammar.fish]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
@@ -489,11 +490,11 @@ path = "runtime/queries/fish"
 # TODO
 
 # git-commit
-[language.git-commit.grammar.source.git]
+[grammar.git-commit.source.git]
 url = "https://github.com/the-mikedavis/tree-sitter-git-commit"
 pin = "6f193a66e9aa872760823dff020960c6cedc37b3"
 
-[language.git-commit.grammar]
+[grammar.git-commit]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -522,11 +523,11 @@ path = "runtime/queries/git-commit"
 # TODO
 
 # glsl
-[language.glsl.grammar.source.git]
+[grammar.glsl.source.git]
 url = "http://github.com/tree-sitter-grammars/tree-sitter-glsl"
 pin = "88408ffc5e27abcffced7010fc77396ae3636d7e"
 
-[language.glsl.grammar]
+[grammar.glsl]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -543,11 +544,11 @@ pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 path = "runtime/queries/glsl"
 
 # go
-[language.go.grammar.source.git]
+[grammar.go.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-go"
 pin = "64457ea6b73ef5422ed1687178d4545c3e91334a"
 
-[language.go.grammar]
+[grammar.go]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -582,11 +583,11 @@ path = "runtime/queries/go"
 # TODO
 
 # haskell
-[language.haskell.grammar.source.git]
+[grammar.haskell.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-haskell"
 pin = "d7ac98f49e3ed7e17541256fe3881a967d7ffdd3"
 
-[language.haskell.grammar]
+[grammar.haskell]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
@@ -612,11 +613,11 @@ path = "runtime/queries/haskell"
 # TODO
 
 # html
-[language.html.grammar.source.git]
+[grammar.html.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-html"
 pin = "29f53d8f4f2335e61bf6418ab8958dac3282077a"
 
-[language.html.grammar]
+[grammar.html]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "../scanner.cc", "-I", ".."]
@@ -636,11 +637,11 @@ path = "runtime/queries/html"
 # TODO
 
 # hyprlang
-[language.hyprlang.grammar.source.git]
+[grammar.hyprlang.source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-hyprlang"
 pin = "27af9b74acf89fa6bed4fb8cb8631994fcb2e6f3"
 
-[language.hyprlang.grammar]
+[grammar.hyprlang]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -660,11 +661,11 @@ path = "runtime/queries/hyprlang"
 # TODO
 
 # ini
-[language.ini.grammar.source.git]
+[grammar.ini.source.git]
 url = "https://github.com/justinmk/tree-sitter-ini"
 pin = "1b0498a89a1a4c0a3705846699f0b0bad887dd04"
 
-[language.ini.grammar]
+[grammar.ini]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -681,11 +682,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/ini"
 
 # java
-[language.java.grammar.source.git]
+[grammar.java.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-java"
 pin = "09d650def6cdf7f479f4b78f595e9ef5b58ce31e"
 
-[language.java.grammar]
+[grammar.java]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -702,11 +703,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/java"
 
 # javascript
-[language.javascript.grammar.source.git]
+[grammar.javascript.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-javascript"
 pin = "f772967f7b7bc7c28f845be2420a38472b16a8ee"
 
-[language.javascript.grammar]
+[grammar.javascript]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -726,11 +727,11 @@ path = "runtime/queries/javascript"
 # TODO
 
 # json
-[language.json.grammar.source.git]
+[grammar.json.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-json"
 pin = "73076754005a460947cafe8e03a8cf5fa4fa2938"
 
-[language.json.grammar]
+[grammar.json]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -750,32 +751,22 @@ path = "runtime/queries/json"
 # TODO
 
 # jsx
-[language.jsx.grammar.source.git]
-url = "https://github.com/tree-sitter/tree-sitter-javascript"
-pin = "f772967f7b7bc7c28f845be2420a38472b16a8ee"
+[language.jsx]
+grammar = "javascript"
 
-[language.jsx.grammar]
-path = "src"
-compile = "cc"
-compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
-compile_flags = ["-O3"]
-link = "cc"
-link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "jsx.so"]
-link_flags = ["-O3"]
+[language.jsx.queries]
+path = "runtime/queries/jsx"
 
 [language.jsx.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
 pin = "2e5b7841b70b91cfa1c91fe24d2d9db54b80ae10"
 
-[language.jsx.queries]
-path = "runtime/queries/jsx"
-
 # julia
-[language.julia.grammar.source.git]
+[grammar.julia.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-julia"
 pin = "e84f10db8eeb8b9807786bfc658808edaa1b4fa2"
 
-[language.julia.grammar]
+[grammar.julia]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "-flto=auto", "../parser.c", "../scanner.c", "-I", ".."]
@@ -798,11 +789,11 @@ path = "runtime/queries/julia"
 # TODO
 
 # koka
-[language.koka.grammar.source.git]
+[grammar.koka.source.git]
 url = "https://github.com/mtoohey31/tree-sitter-koka"
 pin = "96d070c3700692858035f3524cc0ad944cef2594"
 
-[language.koka.grammar]
+[grammar.koka]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -819,11 +810,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/koka"
 
 # kotlin
-[language.kotlin.grammar.source.git]
+[grammar.kotlin.source.git]
 url = "https://github.com/fwcd/tree-sitter-kotlin"
 pin = "a4f71eb9b8c9b19ded3e0e9470be4b1b77c2b569"
 
-[language.kotlin.grammar]
+[grammar.kotlin]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -840,11 +831,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/kotlin"
 
 # latex
-[language.latex.grammar.source.git]
+[grammar.latex.source.git]
 url = "https://github.com/latex-lsp/tree-sitter-latex"
 pin = "8c75e93cd08ccb7ce1ccab22c1fbd6360e3bcea6"
 
-[language.latex.grammar]
+[grammar.latex]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -867,11 +858,11 @@ path = "runtime/queries/latex"
 # TODO
 
 # llvm
-[language.llvm.grammar.source.git]
+[grammar.llvm.source.git]
 url = "https://github.com/benwilliamgraham/tree-sitter-llvm"
 pin = "c14cb839003348692158b845db9edda201374548"
 
-[language.llvm.grammar]
+[grammar.llvm]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -897,11 +888,11 @@ path = "runtime/queries/llvm"
 # TODO
 
 # make
-[language.make.grammar.source.git]
+[grammar.make.source.git]
 url = "https://github.com/alemuller/tree-sitter-make"
 pin = "a4b9187417d6be349ee5fd4b6e77b4172c6827dd"
 
-[language.make.grammar]
+[grammar.make]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -921,11 +912,11 @@ path = "runtime/queries/make"
 # TODO
 
 # markdown
-[language.markdown.grammar.source.git]
+[grammar.markdown.source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
 pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
 
-[language.markdown.grammar]
+[grammar.markdown]
 path = "tree-sitter-markdown/src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -942,11 +933,11 @@ pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
 path = "runtime/queries/markdown"
 
 # markdown.inline
-[language."markdown.inline".grammar.source.git]
+[grammar."markdown.inline".source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
 pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
 
-[language."markdown.inline".grammar]
+[grammar."markdown.inline"]
 path = "tree-sitter-markdown-inline/src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -981,11 +972,11 @@ path = "runtime/queries/markdown.inline"
 # TODO
 
 # nim
-[language.nim.grammar.source.git]
+[grammar.nim.source.git]
 url = "https://github.com/alaviss/tree-sitter-nim"
 pin = "c5f0ce3b65222f5dbb1a12f9fe894524881ad590"
 
-[language.nim.grammar]
+[grammar.nim]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1002,11 +993,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/nim"
 
 # nix
-[language.nix.grammar.source.git]
+[grammar.nix.source.git]
 url = "https://github.com/nix-community/tree-sitter-nix"
 pin = "1b69cf1fa92366eefbe6863c184e5d2ece5f187d"
 
-[language.nix.grammar]
+[grammar.nix]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1023,11 +1014,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/nix"
 
 # nu
-[language.nu.grammar.source.git ]
+[grammar.nu.source.git ]
 url = "https://github.com/nushell/tree-sitter-nu"
 pin = "358c4f509eb97f0148bbd25ad36acc729819b9c1"
 
-[language.nu.grammar]
+[grammar.nu]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1092,11 +1083,11 @@ path = "runtime/queries/nu"
 # TODO
 
 # purescript
-[language.purescript.grammar.source.git]
+[grammar.purescript.source.git]
 url = "https://github.com/postsolar/tree-sitter-purescript/"
 pin = "5ef5592674ea42de75fc2792972e4ea0b6e3da6c"
 
-[language.purescript.grammar]
+[grammar.purescript]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
@@ -1113,11 +1104,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/purescript"
 
 # python
-[language.python.grammar.source.git]
+[grammar.python.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-python"
 pin = "4bfdd9033a2225cc95032ce77066b7aeca9e2efc"
 
-[language.python.grammar]
+[grammar.python]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1164,11 +1155,11 @@ path = "runtime/queries/python"
 # TODO
 
 # ruby
-[language.ruby.grammar.source.git]
+[grammar.ruby.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-ruby"
 pin = "206c7077164372c596ffa8eaadb9435c28941364"
 
-[language.ruby.grammar]
+[grammar.ruby]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.cc", "../parser.c", "-I", ".."]
@@ -1185,11 +1176,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/ruby"
 
 # rust
-[language.rust.grammar.source.git]
+[grammar.rust.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-rust"
 pin = "1f63b33efee17e833e0ea29266dd3d713e27e321"
 
-[language.rust.grammar]
+[grammar.rust]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1206,11 +1197,11 @@ pin = "2baff46b2578d78d817b9e128e8cc00345541f0b"
 path = "runtime/queries/rust"
 
 # rust-format-args
-[language.rust-format-args.grammar.source.git]
+[grammar.rust-format-args.source.git]
 url = "https://github.com/nik-rev/tree-sitter-rustfmt"
 pin = "2ca0bdd763d0c9dbb1d0bd14aea7544cbe81309c"
 
-[language.rust-format-args.grammar]
+[grammar.rust-format-args]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1233,11 +1224,11 @@ path = "runtime/queries/rust-format-args"
 # TODO
 
 # scheme
-[language.scheme.grammar.source.git]
+[grammar.scheme.source.git]
 url = "https://github.com/6cdh/tree-sitter-scheme"
 pin = "af3af6c9356b936f8a515a1e449c32e804c2b1a8"
 
-[language.scheme.grammar]
+[grammar.scheme]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1254,11 +1245,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/scheme"
 
 # scss
-[language.scss.grammar.source.git]
+[grammar.scss.source.git]
 url = "https://github.com/serenadeai/tree-sitter-scss"
 pin = "c478c6868648eff49eb04a4df90d703dc45b312a"
 
-[language.scss.grammar]
+[grammar.scss]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1308,11 +1299,11 @@ path = "runtime/queries/scss"
 # TODO
 
 # task
-[language.task.grammar.source.git]
+[grammar.task.source.git]
 url = "https://github.com/alexanderbrevig/tree-sitter-task"
 pin = "f2cb435c5dbf3ee19493e224485d977cb2d36d8b"
 
-[language.task.grammar]
+[grammar.task]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1332,11 +1323,11 @@ path = "runtime/queries/task"
 # TODO
 
 # toml
-[language.toml.grammar.source.git]
+[grammar.toml.source.git]
 url = "https://github.com/ikatyang/tree-sitter-toml"
 pin = "7cff70bbcbbc62001b465603ca1ea88edd668704"
 
-[language.toml.grammar]
+[grammar.toml]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1356,11 +1347,14 @@ path = "runtime/queries/toml"
 # TODO
 
 # tsx
-[language.tsx.grammar.source.git]
+[language.tsx]
+grammar = "typescript"
+
+[grammar.tsx.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-typescript"
 pin = "b1bf4825d9eaa0f3bdeb1e52f099533328acfbdf"
 
-[language.tsx.grammar]
+[grammar.tsx]
 path = "tsx/src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1380,11 +1374,11 @@ path = "runtime/queries/tsx"
 # TODO
 
 # typescript
-[language.typescript.grammar.source.git]
+[grammar.typescript.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-typescript"
 pin = "b1bf4825d9eaa0f3bdeb1e52f099533328acfbdf"
 
-[language.typescript.grammar]
+[grammar.typescript]
 path = "typescript/src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1404,18 +1398,11 @@ path = "runtime/queries/typescript"
 [language.typst]
 aliases = ["typ", "typc"]
 
-[language.typst.grammar.source.git]
+[grammar.typst.source.git]
 url = "https://github.com/uben0/tree-sitter-typst"
 pin = "13863ddcbaa7b68ee6221cea2e3143415e64aea4"
 
-[language.typst.queries.source.git]
-url = "https://github.com/helix-editor/helix"
-pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
-
-[language.typst.queries]
-path = "runtime/queries/typst"
-
-[language.typst.grammar]
+[grammar.typst]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1424,15 +1411,22 @@ link = "cc"
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "typst.so"]
 link_flags = ["-O3"]
 
+[grammar.typst.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+
+[language.typst.queries]
+path = "runtime/queries/typst"
+
 # ungrammar
 # TODO
 
 # unison
-[language.unison.grammar.source.git]
+[grammar.unison.source.git]
 url = "https://github.com/kylegoetz/tree-sitter-unison"
 pin = "3c97db76d3cdbd002dfba493620c2d5df2fd6fa9"
 
-[language.unison.grammar]
+[grammar.unison]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
@@ -1458,11 +1452,11 @@ path = "runtime/queries/unison"
 # TODO
 
 # verilog
-[language.verilog.grammar.source.git]
+[grammar.verilog.source.git]
 url = "https://github.com/tree-sitter/tree-sitter-verilog"
 pin = "4457145e795b363f072463e697dfe2f6973c9a52"
 
-[language.verilog.grammar]
+[grammar.verilog]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1485,11 +1479,11 @@ path = "runtime/queries/verilog"
 # TODO
 
 # vue
-[language.vue.grammar.source.git]
+[grammar.vue.source.git]
 url = "https://github.com/ikatyang/tree-sitter-vue"
 pin = "91fe2754796cd8fba5f229505a23fa08f3546c06"
 
-[language.vue.grammar]
+[grammar.vue]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.cc", "../parser.c", "-I", ".."]
@@ -1521,11 +1515,11 @@ path = "runtime/queries/vue"
 # TODO
 
 # xml
-[language.xml.grammar.source.git]
+[grammar.xml.source.git]
 url = "https://github.com/RenjiSann/tree-sitter-xml"
 pin = "48a7c2b6fb9d515577e115e6788937e837815651"
 
-[language.xml.grammar]
+[grammar.xml]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
@@ -1542,11 +1536,11 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 path = "runtime/queries/xml"
 
 # yaml
-[language.yaml.grammar.source.git]
+[grammar.yaml.source.git]
 url = "https://github.com/ikatyang/tree-sitter-yaml"
 pin = "0e36bed171768908f331ff7dff9d956bae016efb"
 
-[language.yaml.grammar]
+[grammar.yaml]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../scanner.cc", "../parser.c", "-I", ".."]
@@ -1566,11 +1560,11 @@ path = "runtime/queries/yaml"
 # TODO
 
 # zig
-[language.zig.grammar.source.git]
+[grammar.zig.source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-zig"
 pin = "eb7d58c2dc4fbeea4745019dee8df013034ae66b"
 
-[language.zig.grammar]
+[grammar.zig]
 path = "src"
 compile = "cc"
 compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]

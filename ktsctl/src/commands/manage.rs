@@ -3,7 +3,7 @@
 use std::{fs, io, path::Path};
 
 use colored::Colorize;
-use kak_tree_sitter_config::{Config, LanguageConfig, source::Source};
+use kak_tree_sitter_config::{Config, GrammarConfig, LanguageConfig, source::Source};
 
 use crate::{
   error::HellNo,
@@ -53,7 +53,12 @@ impl Manager {
 
   pub fn manage(&self, lang: &str) -> Result<(), HellNo> {
     let lang_config = self.config.languages.get_lang_config(lang)?;
-    self.manage_grammar(lang, lang_config)?;
+    let grammar_config = self
+      .config
+      .grammars
+      .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
+
+    self.manage_grammar(lang, grammar_config)?;
     self.manage_queries(lang, lang_config)
   }
 
@@ -69,8 +74,8 @@ impl Manager {
     }
   }
 
-  fn manage_grammar(&self, lang: &str, lang_config: &LanguageConfig) -> Result<(), HellNo> {
-    match lang_config.grammar.source {
+  fn manage_grammar(&self, lang: &str, grammar_config: &GrammarConfig) -> Result<(), HellNo> {
+    match grammar_config.source {
       Source::Local { ref path } => {
         Report::new(
           StatusIcon::Info,
@@ -81,7 +86,9 @@ impl Manager {
         );
       }
 
-      Source::Git { ref url, ref pin } => self.manage_git_grammar(lang, lang_config, url, pin)?,
+      Source::Git { ref url, ref pin } => {
+        self.manage_git_grammar(lang, grammar_config, url, pin)?
+      }
     }
 
     Ok(())
@@ -90,7 +97,7 @@ impl Manager {
   fn manage_git_grammar(
     &self,
     lang: &str,
-    lang_config: &LanguageConfig,
+    grammar_config: &GrammarConfig,
     url: &str,
     pin: &str,
   ) -> Result<(), HellNo> {
@@ -98,7 +105,7 @@ impl Manager {
 
     if self.flags.sync {
       let report = Report::new(StatusIcon::Sync, format!("syncing {lang} grammar"));
-      self.sync_git_grammar(&report, lang, lang_config, &sources_path, url, pin)?;
+      self.sync_git_grammar(&report, lang, grammar_config, &sources_path, url, pin)?;
       return Ok(());
     }
 
@@ -117,11 +124,11 @@ impl Manager {
 
     let lang_build_dir = self
       .resources
-      .lang_build_dir(&sources_path, &lang_config.grammar.path);
+      .lang_build_dir(&sources_path, &grammar_config.path);
 
     if self.flags.compile {
       let report = Report::new(StatusIcon::Compile, format!("compiling {lang} grammar"));
-      Self::compile_git_grammar(&report, lang, lang_config, &lang_build_dir)?;
+      Self::compile_git_grammar(&report, lang, grammar_config, &lang_build_dir)?;
       report.success(format!("built {lang} grammar"));
 
       return Ok(());
@@ -140,7 +147,7 @@ impl Manager {
     &self,
     report: &Report,
     lang: &str,
-    lang_config: &LanguageConfig,
+    grammar_config: &GrammarConfig,
     fetch_path: &Path,
     url: &str,
     pin: &str,
@@ -154,9 +161,9 @@ impl Manager {
 
     let lang_build_dir = self
       .resources
-      .lang_build_dir(fetch_path, &lang_config.grammar.path);
+      .lang_build_dir(fetch_path, &grammar_config.path);
 
-    Self::compile_git_grammar(report, lang, lang_config, &lang_build_dir)?;
+    Self::compile_git_grammar(report, lang, grammar_config, &lang_build_dir)?;
     self.install_git_grammar(report, lang, &lang_build_dir, pin)?;
 
     report.success(format!("synchronized {lang} grammar"));
@@ -192,7 +199,7 @@ impl Manager {
   fn compile_git_grammar(
     report: &Report,
     lang: &str,
-    lang_config: &LanguageConfig,
+    grammar_config: &GrammarConfig,
     lang_build_dir: &Path,
   ) -> Result<(), HellNo> {
     // ensure the build dir exists
@@ -202,28 +209,26 @@ impl Manager {
     })?;
 
     // compile
-    let args: Vec<_> = lang_config
-      .grammar
+    let args: Vec<_> = grammar_config
       .compile_args
       .iter()
       .map(|x| x.as_str())
-      .chain(lang_config.grammar.compile_flags.iter().map(|x| x.as_str()))
+      .chain(grammar_config.compile_flags.iter().map(|x| x.as_str()))
       .collect();
 
-    Process::new(&lang_config.grammar.compile).run(lang_build_dir, &args)?;
+    Process::new(&grammar_config.compile).run(lang_build_dir, &args)?;
 
     report.info(format!("compiled {lang} grammar"));
 
     // link into {lang}.so
     let report = Report::new(StatusIcon::Link, format!("linking {lang} grammar",));
-    let args: Vec<_> = lang_config
-      .grammar
+    let args: Vec<_> = grammar_config
       .link_args
       .iter()
       .map(|x| x.as_str())
-      .chain(lang_config.grammar.link_flags.iter().map(|x| x.as_str()))
+      .chain(grammar_config.link_flags.iter().map(|x| x.as_str()))
       .collect();
-    Process::new(&lang_config.grammar.link).run(lang_build_dir, &args)?;
+    Process::new(&grammar_config.link).run(lang_build_dir, &args)?;
 
     report.success(format!("linked {lang} grammar"));
     Ok(())

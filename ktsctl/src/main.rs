@@ -73,7 +73,7 @@ fn start() -> Result<(), HellNo> {
           println!("{sct}");
         }
       } else if all {
-        let all_tbl = query.all_lang_info_tbl();
+        let all_tbl = query.all_lang_info_tbl()?;
         println!("{all_tbl}");
       }
     }

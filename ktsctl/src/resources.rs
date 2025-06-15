@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kak_tree_sitter_config::{LanguageConfig, source::Source};
+use kak_tree_sitter_config::{GrammarConfig, LanguageConfig, source::Source};
 
 use crate::error::HellNo;
 
@@ -64,8 +64,8 @@ impl Resources {
   }
 
   /// Get a grammar path from config.
-  pub fn grammar_path_from_config(&self, lang: &str, config: &LanguageConfig) -> PathBuf {
-    match config.grammar.source {
+  pub fn grammar_path_from_config(&self, lang: &str, config: &GrammarConfig) -> PathBuf {
+    match config.source {
       Source::Local { ref path } => path.clone(),
       Source::Git { ref pin, .. } => self.grammar_pin_path(lang, pin),
     }

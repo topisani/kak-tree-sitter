@@ -3,7 +3,7 @@
 use std::{collections::HashSet, iter, path::Path};
 
 use colored::Colorize;
-use kak_tree_sitter_config::{Config, LanguageConfig};
+use kak_tree_sitter_config::{Config, GrammarConfig, LanguageConfig};
 
 use crate::{
   error::HellNo,
@@ -30,7 +30,7 @@ impl Query {
   }
 
   /// A table representing all language information.
-  pub fn all_lang_info_tbl(&self) -> Table {
+  pub fn all_lang_info_tbl(&self) -> Result<Table, HellNo> {
     fn check_path_sign(path: &Path) -> Cell {
       if let Ok(true) = path.try_exists() {
         Cell::new(StatusIcon::Success)
@@ -56,7 +56,13 @@ impl Query {
     langs.sort_by(|(a, _), (b, _)| a.cmp(b));
 
     for (lang, lang_config) in langs {
-      let grammar_path = self.resources.grammar_path_from_config(lang, lang_config);
+      let grammar_config = self
+        .config
+        .grammars
+        .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
+      let grammar_path = self
+        .resources
+        .grammar_path_from_config(lang, grammar_config);
 
       let mut row = Row::default();
       row.push(lang.as_str());
@@ -77,7 +83,7 @@ impl Query {
       table.push(row);
     }
 
-    table
+    Ok(table)
   }
 
   /// Sections providing information about a given language.
@@ -86,46 +92,61 @@ impl Query {
       return Vec::default();
     };
 
+    let Ok(grammar_config) = self
+      .config
+      .grammars
+      .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))
+    else {
+      return Vec::default();
+    };
+
     self
-      .lang_config_sections(lang_config)
-      .chain(iter::once(
-        self.lang_install_stats_section(lang, lang_config),
-      ))
+      .lang_config_sections(lang_config, grammar_config)
+      .chain(iter::once(self.lang_install_stats_section(
+        lang,
+        lang_config,
+        grammar_config,
+      )))
       .collect()
   }
 
   fn lang_config_sections(
     &self,
     lang_config: &LanguageConfig,
+    grammar_config: &GrammarConfig,
   ) -> impl Iterator<Item = Section> + use<> {
     [
-      self.lang_config_grammar_section(lang_config),
+      self.lang_config_grammar_section(grammar_config),
       self.lang_config_queries_section(lang_config),
     ]
     .into_iter()
   }
 
-  fn lang_install_stats_section(&self, lang: &str, lang_config: &LanguageConfig) -> Section {
+  fn lang_install_stats_section(
+    &self,
+    lang: &str,
+    lang_config: &LanguageConfig,
+    grammar_config: &GrammarConfig,
+  ) -> Section {
     let mut section = Section::new("Install stats");
-    self.grammar_fields(&mut section, lang, lang_config);
+    self.grammar_fields(&mut section, lang, grammar_config);
     self.queries_fields(&mut section, lang, lang_config);
     section
   }
 
-  fn lang_config_grammar_section(&self, lang_config: &LanguageConfig) -> Section {
-    let grammar = &lang_config.grammar;
-    let compile_field_value: Vec<_> = iter::once(grammar.compile.green())
-      .chain(grammar.compile_args.iter().map(|x| x.green()))
+  fn lang_config_grammar_section(&self, grammar_config: &GrammarConfig) -> Section {
+    let compile_field_value: Vec<_> = iter::once(grammar_config.compile.green())
+      .chain(grammar_config.compile_args.iter().map(|x| x.green()))
       .collect();
-    let link_field_value: Vec<_> = iter::once(grammar.link.green())
-      .chain(grammar.link_args.iter().map(|x| x.green()))
+    let link_field_value: Vec<_> = iter::once(grammar_config.link.green())
+      .chain(grammar_config.link_args.iter().map(|x| x.green()))
       .collect();
 
     SectionBuilder::new("Grammar configuration")
-      .push(source_field(&grammar.source))
+      .push(source_field(&grammar_config.source))
       .push(Field::kv(
         "Path".blue(),
-        grammar.path.display().to_string().green(),
+        grammar_config.path.display().to_string().green(),
       ))
       .push(Field::kv(
         "Compilation command".blue(),
@@ -134,7 +155,7 @@ impl Query {
       .push(Field::kv(
         "Compilation flags".blue(),
         FieldValue::list(
-          grammar
+          grammar_config
             .compile_flags
             .iter()
             .map(|x| x.green())
@@ -148,7 +169,7 @@ impl Query {
       .push(Field::kv(
         "Link flags".blue(),
         FieldValue::list(
-          grammar
+          grammar_config
             .link_flags
             .iter()
             .map(|x| x.green())
@@ -182,8 +203,10 @@ impl Query {
     section
   }
 
-  fn grammar_fields(&self, section: &mut Section, lang: &str, lang_config: &LanguageConfig) {
-    let grammar_install_path = self.resources.grammar_path_from_config(lang, lang_config);
+  fn grammar_fields(&self, section: &mut Section, lang: &str, grammar_config: &GrammarConfig) {
+    let grammar_install_path = self
+      .resources
+      .grammar_path_from_config(lang, grammar_config);
     let grammar_field = if let Ok(true) = grammar_install_path.try_exists() {
       Field::status_line(
         StatusIcon::Success,

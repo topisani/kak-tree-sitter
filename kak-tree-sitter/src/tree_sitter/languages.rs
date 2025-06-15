@@ -9,7 +9,9 @@ use std::{
   rc::Rc,
 };
 
-use kak_tree_sitter_config::{Config, LanguageConfig, LanguagesConfig};
+use kak_tree_sitter_config::{
+  Config, GrammarConfig, GrammarsConfig, LanguageConfig, LanguagesConfig,
+};
 use libloading::Symbol;
 use tree_sitter::Query;
 use tree_sitter_highlight::HighlightConfiguration;
@@ -106,8 +108,8 @@ impl Languages {
     Self { langs }
   }
 
-  fn load_grammar(lang_name: &str, lang_config: &LanguageConfig) -> Result<Grammar, OhNo> {
-    let Some(path) = LanguagesConfig::get_grammar_path(lang_config, lang_name) else {
+  fn load_grammar(lang_name: &str, grammar_config: &GrammarConfig) -> Result<Grammar, OhNo> {
+    let Some(path) = GrammarsConfig::get_grammar_path(grammar_config, lang_name) else {
       return Err(OhNo::CannotLoadGrammar {
         lang: lang_name.to_owned(),
         err: format!("no grammar path for language {lang_name}"),
@@ -158,13 +160,15 @@ impl Languages {
     log::info!("loading configuration for {lang_name}");
 
     let lang_config = config.languages.get_lang_config(lang_name)?;
+    let grammar_name = lang_config.grammar.as_deref().unwrap_or(lang_name);
+    let grammar_config = config.grammars.get_grammar_config(grammar_name)?;
 
     // load the grammar if not already cached
     let grammar = if let Some(grammar) = grammars.borrow().get(lang_name) {
       log::debug!("grammar {lang_name} alread loaded; using cached version");
       grammar.clone()
     } else {
-      let grammar = Self::load_grammar(lang_name, lang_config)?;
+      let grammar = Self::load_grammar(grammar_name, grammar_config)?;
 
       let grammar = Rc::new(grammar);
       grammars

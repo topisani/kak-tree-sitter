@@ -3,7 +3,7 @@
 use std::fs;
 
 use colored::Colorize;
-use kak_tree_sitter_config::{Config, LanguageConfig, source::Source};
+use kak_tree_sitter_config::{Config, GrammarConfig, LanguageConfig, source::Source};
 
 use crate::{
   error::HellNo,
@@ -22,11 +22,14 @@ pub fn remove(
 ) -> Result<(), HellNo> {
   let lang = lang.as_ref();
   let lang_config = config.languages.get_lang_config(lang)?;
+  let grammar_config = config
+    .grammars
+    .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
   let report = Report::new(StatusIcon::Sync, format!("removing resources for {lang}"));
   let mut errors = Vec::new();
 
   if grammar {
-    remove_grammar(resources, lang, lang_config, prune, &report, &mut errors);
+    remove_grammar(resources, lang, grammar_config, prune, &report, &mut errors);
   }
 
   if queries {
@@ -49,7 +52,7 @@ pub fn remove(
 fn remove_grammar(
   resources: &Resources,
   lang: &str,
-  lang_config: &LanguageConfig,
+  grammar_config: &GrammarConfig,
   prune: bool,
   report: &Report,
   errors: &mut Vec<String>,
@@ -64,7 +67,7 @@ fn remove_grammar(
       }
     }
   } else {
-    let grammar_path = resources.grammar_path_from_config(lang, lang_config);
+    let grammar_path = resources.grammar_path_from_config(lang, grammar_config);
 
     if let Ok(true) = grammar_path.try_exists() {
       report.info(format!("removing {lang} grammar"));
@@ -104,11 +107,15 @@ fn remove_queries(
 /// Prune everything, removing unpinned data.
 pub fn prune_unpinned(config: &Config, resources: &Resources) -> Result<(), HellNo> {
   for (lang, lang_config) in config.languages.iter() {
+    let grammar_config = config
+      .grammars
+      .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
     let mut errors = Vec::new();
     let report = Report::new(StatusIcon::Info, "pruning");
     report.info(format!("pruning {}", lang.blue()));
 
-    if let Err(err) = prune_unpinned_lang(resources, lang, lang_config, &mut errors) {
+    if let Err(err) = prune_unpinned_lang(resources, lang, lang_config, grammar_config, &mut errors)
+    {
       errors.push(format!("{err}"));
     }
 
@@ -129,9 +136,10 @@ fn prune_unpinned_lang(
   resources: &Resources,
   lang: &str,
   lang_config: &LanguageConfig,
+  grammar_config: &GrammarConfig,
   errors: &mut Vec<String>,
 ) -> Result<(), HellNo> {
-  prune_unpinned_grammar(resources, lang, lang_config, errors)?;
+  prune_unpinned_grammar(resources, lang, grammar_config, errors)?;
   prune_unpinned_queries(resources, lang, lang_config, errors)?;
   Ok(())
 }
@@ -139,7 +147,7 @@ fn prune_unpinned_lang(
 fn prune_unpinned_grammar(
   resources: &Resources,
   lang: &str,
-  lang_config: &LanguageConfig,
+  grammar_config: &GrammarConfig,
   errors: &mut Vec<String>,
 ) -> Result<(), HellNo> {
   let grammar_dir = resources.grammars_dir(lang);
@@ -150,7 +158,7 @@ fn prune_unpinned_grammar(
     })?;
 
   for entry in grammar_dir.flatten() {
-    match &lang_config.grammar.source {
+    match &grammar_config.source {
       Source::Local { path } => {
         if entry.path() != *path {
           if let Err(err) = fs::remove_file(entry.path()) {
