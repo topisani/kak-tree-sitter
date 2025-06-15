@@ -13,7 +13,7 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
 [kakoune](https://kakoune.org/).
 
 > Important note: by default, no colorscheme supporting tree-sitter is set for you. You have to pick one or write your
-> own. See [this section from the man](./docs/man/highlighting.md) for further information.
+> own. See [this section from the man](./docs/man/highlighting.md#Highlighting) for further information.
 
 [![asciicast](https://asciinema.org/a/606062.svg)](https://asciinema.org/a/606062)
 
