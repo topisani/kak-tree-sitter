@@ -93,6 +93,7 @@ set them at all.
   - `ts_function_builtin`
   - `ts_function_macro`
   - `ts_function_method`
+    - `ts_function_method_private`
   - `ts_function_special`
 - `ts_hint`
 - `ts_info`
@@ -166,6 +167,7 @@ set them at all.
 - `ts_variable`
   - `ts_variable_builtin`
   - `ts_variable_other_member`
+    - `ts_variable_other_member_private`
   - `ts_variable_parameter`
 - `ts_warning`
 
