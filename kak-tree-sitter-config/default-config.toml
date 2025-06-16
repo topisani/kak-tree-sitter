@@ -753,7 +753,7 @@ grammar = "json"
 
 [language.jsonc.queries.source.git]
 url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "TODO"
+pin = "55a8f803c3edc3b07af96199c6158f6e4c77b170"
 
 [language.jsonc.queries]
 path = "runtime/queries/jsonc"
