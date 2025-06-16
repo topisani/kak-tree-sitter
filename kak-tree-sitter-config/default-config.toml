@@ -41,6 +41,7 @@ groups = [
   "function.builtin",
   "function.macro",
   "function.method",
+  "function.method.private",
   "function.special",
   "hint",
   "include",
@@ -113,6 +114,7 @@ groups = [
   "variable",
   "variable.builtin",
   "variable.other.member",
+  "variable.other.member.private",
   "variable.parameter",
   "warning",
 ]
