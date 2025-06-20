@@ -1427,7 +1427,7 @@ link = "cc"
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "typst.so"]
 link_flags = ["-O3"]
 
-[grammar.typst.queries.source.git]
+[language.typst.queries.source.git]
 url = "https://github.com/helix-editor/helix"
 pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
