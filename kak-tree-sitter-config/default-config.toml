@@ -968,7 +968,25 @@ path = "runtime/queries/markdown.inline"
 # TODO
 
 # mermaid
-# TODO
+[grammar.mermaid.source.git]
+url = "https://github.com/monaqa/tree-sitter-mermaid"
+pin = "d787c66276e7e95899230539f556e8b83ee16f6d"
+
+[grammar.mermaid]
+path = "src"
+compile = "cc"
+compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
+compile_flags = ["-O3"]
+link = "cc"
+link_args = ["-shared", "-fpic", "parser.o", "-o", "mermaid.so"]
+link_flags = ["-O3"]
+
+[language.mermaid.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "036729211a94d058b835f5ee212ab15de83bc037"
+
+[language.mermaid.queries]
+path = "runtime/queries/mermaid"
 
 # meson
 # TODO
