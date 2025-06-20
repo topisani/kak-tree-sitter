@@ -663,7 +663,7 @@ path = "runtime/queries/hyprlang"
 # ini
 [grammar.ini.source.git]
 url = "https://github.com/justinmk/tree-sitter-ini"
-pin = "1b0498a89a1a4c0a3705846699f0b0bad887dd04"
+pin = "32b31863f222bf22eb43b07d4e9be8017e36fb31"
 
 [grammar.ini]
 path = "src"
