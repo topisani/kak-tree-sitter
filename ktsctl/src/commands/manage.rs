@@ -53,12 +53,10 @@ impl Manager {
 
   pub fn manage(&self, lang: &str) -> Result<(), HellNo> {
     let lang_config = self.config.languages.get_lang_config(lang)?;
-    let grammar_config = self
-      .config
-      .grammars
-      .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
+    let grammar_lang = lang_config.grammar.as_deref().unwrap_or(lang);
+    let grammar_config = self.config.grammars.get_grammar_config(grammar_lang)?;
 
-    self.manage_grammar(lang, grammar_config)?;
+    self.manage_grammar(grammar_lang, grammar_config)?;
     self.manage_queries(lang, lang_config)
   }
 
