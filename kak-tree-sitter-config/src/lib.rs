@@ -350,36 +350,69 @@ pub struct GrammarConfig {
   pub source: Source,
 
   /// Path to find the grammar source inside the downloaded content.
+  #[serde(default = "GrammarConfig::default_path")]
   pub path: PathBuf,
 
   /// Compile command to run to compile the grammar.
   ///
   /// Should always be `cc` but who knows.
+  #[serde(default = "GrammarConfig::default_compile")]
   pub compile: String,
 
   /// Compiler arguments.
+  #[serde(default = "GrammarConfig::default_compile_args")]
   pub compile_args: Vec<String>,
 
   /// Compiler extra arguments.
   ///
   /// Should be used to pass optimization and debug flags, mainly.
+  #[serde(default = "GrammarConfig::default_compile_flags")]
   pub compile_flags: Vec<String>,
 
   /// Link command to run to link the grammar.
   ///
   /// Should always be `cc`, but, still, who knows.
+  #[serde(default = "GrammarConfig::default_compile")]
   pub link: String,
 
   /// Linker arguments.
+  #[serde(default = "GrammarConfig::default_link_args")]
   pub link_args: Vec<String>,
 
   /// Linker extra arguments.
   ///
   /// Should be used to pass optimization and debug flags, mainly.
+  #[serde(default = "GrammarConfig::default_compile_flags")]
   pub link_flags: Vec<String>,
 }
 
 impl GrammarConfig {
+  fn default_path() -> PathBuf {
+    "src".into()
+  }
+
+  fn default_compile() -> String {
+    "cc".to_owned()
+  }
+
+  fn default_compile_args() -> Vec<String> {
+    ["-c", "-fpic", "../parser.c", "-I", ".."]
+      .into_iter()
+      .map(String::from)
+      .collect()
+  }
+
+  fn default_compile_flags() -> Vec<String> {
+    ["-O3"].into_iter().map(String::from).collect()
+  }
+
+  fn default_link_args() -> Vec<String> {
+    ["-shared", "-fpic", "parser.o", "-o", "{lang}.so"]
+      .into_iter()
+      .map(String::from)
+      .collect()
+  }
+
   fn merge_user_config(&mut self, user_config: UserGrammarConfig) -> Result<(), ConfigError> {
     if let Some(source) = user_config.source {
       self.source.merge_user_config(source);
