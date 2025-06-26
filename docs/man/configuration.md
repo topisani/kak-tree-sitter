@@ -36,6 +36,38 @@ them at the end of the list.
 
 > Please consider contributing if you find a hole / missing capture group.
 
+## `grammar`
+
+The `grammar` table contains grammar-keyed configuration — e.g.
+`grammar.rust`. For a given language `language.<lang>`, it must have an
+associated `grammar.<lang>`, or a grammar mapped in `language.<lang>.grammar`
+in the case of sharing grammars between different languages.
+
+### `grammar.<lang>`
+
+This section contains various information about how to fetch, compile and link a
+grammar.
+
+The following field(s) are mandatory and must always be provided:
+
+| Field    | Description                                                                     |
+| -----    | -----------                                                                     |
+| `source` | the source from where to pick the grammar; see the [Sources](#sources) section. |
+
+The following fields are optional and have a default value associated with.
+Override only the values that need to — `{lang}` is replaced with the actual
+language grammar name:
+
+| Field           | Description                                                                                                           | Default value                                                      |
+| -----           | -----------                                                                                                           | -------------                                                      |
+| `path`          | Path where to find the various source files. Should always be `src` but can require adjustments for monorepositories. | `src`                                                              |
+| `compile`       | Compile command to use. Should always be `cc`.                                                                        | `cc`                                                               |
+| `compile_args`  | Arguments to pass to `compile` to compile the grammar.                                                                | `["-c", "-fpic", "../parser.c", "-I", ".."]`      |
+| `compile_flags` | Optimization / debug flags.                                                                                           | `["-O3"]`                                                          |
+| `link`          | Link command to use. Should alwas be `cc`.                                                                            | `cc`                                                               |
+| `link_args`     | Arguments to pass to `link` to link the grammar.                                                                      | `["-shared", "-fpic", "parser.o", "-o", "{lang}.so"]` |
+| `link_flags`    | Optimization / debug / additional libraries to link flags.                                                            | `["-O3"]`                                                          |
+
 ## `language`
 
 The `language` table contains language-keyed configuration — e.g.
@@ -43,7 +75,11 @@ The `language` table contains language-keyed configuration — e.g.
 
 - `remove_default_highlighter`, for removing the default highlighter set by the
   Kakoune distribution when enabling `kak-tree-sitter` support in a buffer.
-- `grammar`, for defining a grammar.
+- `filetype_hook`, for activating a per-language that forwards the value of the
+  Kakoune `filetype` option to `tree_sitter_lang`.
+- `aliases`, a list of alternate language names (useful for when your language
+  can have several names, like `bash`, `sh`, etc.).
+- `grammar`, for linking with a grammar.
 - `queries`, for defining queries.
 
 ### `language.<lang>.remove_default_higlighter`
@@ -60,20 +96,22 @@ Some languages might have an incomplete tree-sitter support; in such a case, you
 might not want to remove the default highlighter. Set this option to `false` in
 such cases, then.
 
+### `language.<lang>.filetype_hook`
+
+> Default value: `true`
+
+Install a hook for `<lang>` that will forward the content of `filetype` into
+`tree_sitter_lang`. This is highly recommended for most users, so you should not
+have to tweak that default value.
+
+### `language.<lang>.aliases`
+
+List of language names that can be used in place of `<lang>`.
+
 ### `language.<lang>.grammar`
 
-This section contains various information about how to fetch, compile and link a
-grammar:
-
-- `source`: the source from where to pick the grammar; see the [Sources](#sources) section.
-- `path`: path where to find the various source files. Should always be `src`
-  but can require adjustments for monorepositories.
-- `compile`: compile command to use. Should always be `cc`.
-- `compile_args`: arguments to pass to `compile` to compile the grammar.
-- `compile_flags`: optimization / debug flags.
-- `link`: link command to use. Should alwas be `cc`.
-- `link_args`: arguments to pass to `link` to link the grammar.
-- `link_flags`: optimization / debug / additional libraries to link flags.
+A string representing a grammar name. Defining this will use the associated value
+instead of `<lang>`.
 
 ### `language.<lang>.queries`
 
