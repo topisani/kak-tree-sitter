@@ -14,6 +14,9 @@ to know which path and values to pick from.
 
 # Option paths
 
+> For all the options that accept arguments like `{lang}`, those values are replaced
+> at runtime by the actual value of the language the configuration option is for.
+
 ## `features`
 
 This section contains enabled/disabled features. You can enable or disable a
@@ -21,11 +24,10 @@ given feature if you are not interested in it.
 
 List of features:
 
-- `highlighting`: enable highlighting. If set to `false`, can be overridden on
-  the CLI with `--with-highlighting`. _Default: `true`_.
-- `text_objects`: enable text-objects user modes and mappings. If set to
-  `false`, can be overridden on the CLI with `--with-text-objects`. _Default:
-  `true`_.
+| Feature        | Description                                                                                                              | Default |
+| -------        | -----------                                                                                                              | ------- |
+| `highlighting` | Enable highlighting. If set to `false`, can be overridden on the CLI with `--with-highlighting`.                         |  `true` |
+| `text_objects` | Enable text-objects user modes and mappings. If set to `false`, can be overridden on the CLI with `--with-text-objects`. |  `true` |
 
 ## `highlight.groups`
 
@@ -55,8 +57,7 @@ The following field(s) are mandatory and must always be provided:
 | `source` | the source from where to pick the grammar; see the [Sources](#sources) section. |
 
 The following fields are optional and have a default value associated with.
-Override only the values that need to — `{lang}` is replaced with the actual
-language grammar name:
+Override only the values that need to:
 
 | Field           | Description                                                                                                           | Default value                                                      |
 | -----           | -----------                                                                                                           | -------------                                                      |
@@ -70,25 +71,21 @@ language grammar name:
 
 ## `language`
 
-The `language` table contains language-keyed configuration — e.g.
-`language.rust`. Every language-keyed configuration contains more objects.
+The `language` table contains language-keyed configuration — e.g. `language.rust`.
 
-- `remove_default_highlighter`, for removing the default highlighter set by the
-  Kakoune distribution when enabling `kak-tree-sitter` support in a buffer.
-- `filetype_hook`, for activating a per-language that forwards the value of the
-  Kakoune `filetype` option to `tree_sitter_lang`.
-- `aliases`, a list of alternate language names (useful for when your language
-  can have several names, like `bash`, `sh`, etc.).
-- `grammar`, for linking with a grammar.
-- `queries`, for defining queries.
+| Field                        | Description                                                                                                               | Default |
+| -----                        | -----------                                                                                                               | ------- |
+| `remove_default_highlighter` | For removing the default highlighter set by the Kakoune distribution when enabling `kak-tree-sitter` support in a buffer. | `true`  |
+| `filetype_hook`              | For activating a per-language that forwards the value of theKakoune `filetype` option to `tree_sitter_lang`.              | `true`  |
+| `aliases`                    | A list of alternate language names (useful for when your language can have several names, like `bash`, `sh`, etc.).       |         |
+| `grammar`                    | For linking with a grammar.                                                                                               |         |
+| `queries`                    | For defining queries.                                                                                                     |         |
 
 ### `language.<lang>.remove_default_higlighter`
 
-> Default value: `true`
-
-Remove the default highlighter set by the Kakoune “standard library” (i.e.
-`window/<lang>`). For instance, for `rust` filetypes, the default highlighter is
-`window/rust`. Setting this option to `true` will remove this highlighter, which
+Remove the default highlighter set by the Kakoune _“standard library”_ (i.e.
+`window/<lang>`). For instance, for the `rust` `filetype`, the default highlighter
+is `window/rust`. Setting this option to `true` will remove this highlighter, which
 is almost always wanted (otherwise, the highlighting from KTS might not be
 applied properly).
 
@@ -97,8 +94,6 @@ might not want to remove the default highlighter. Set this option to `false` in
 such cases, then.
 
 ### `language.<lang>.filetype_hook`
-
-> Default value: `true`
 
 Install a hook for `<lang>` that will forward the content of `filetype` into
 `tree_sitter_lang`. This is highly recommended for most users, so you should not
@@ -110,8 +105,8 @@ List of language names that can be used in place of `<lang>`.
 
 ### `language.<lang>.grammar`
 
-A string representing a grammar name. Defining this will use the associated value
-instead of `<lang>`.
+A string representing a grammar name. Defining this will use the associated
+grammar instead of `<lang>`.
 
 ### `language.<lang>.queries`
 
@@ -119,14 +114,15 @@ This section provides the required data to know how to fetch queries.
 
 The following field(s) are mandatory:
 
-- `source`: optional source from where to pick the queries; see the
-  [Sources](#sources) section. If you omit it, the same `source` object is used
-  for both the grammar and queries.
+| Field    | Description                                                                                                                                                             |
+| -----    | -----------                                                                                                                                                             |
+| `source` | Optional source from where to pick the queries; see the [Sources](#sources) section. If you omit it, the same `source` object is used for both the grammar and queries. |
 
 The following fields are optional and you should only provide the ones you need:
 
-- `path`: path where to find the queries (the `.scm` files) directory. Defaults
-  to `runtime/queries/{lang}`
+| Field  | Description                                                 | Default                  |
+| -----  | -----------                                                 | -------                  |
+| `path` | Path where to find the queries (the `.scm` files) directory | `runtime/queries/{lang}` |
 
 # Sources
 
@@ -141,17 +137,16 @@ We currently support two sources:
 If you decide to use a `git` source:
 
 - Grammars must be _fetched_, _compiled_ and _installed_. `ktsctl` can do that
-  automatically for you, provided you have
-  the right configuration, by using the appropriate commands. See the
-  documentation of [ktsctl](ktsctl.md).
+  automatically for you, provided you have the right configuration, by using
+  the appropriate commands. See the documentation of [ktsctl](ktsctl.md).
 - Queries must be _fetched_ and _installed_, the same way as with grammars.
-- When you decide to install a “language”, both the grammars and queries might
+- When you decide to install a _“language”_, both the grammars and queries might
   be fetched, compiled and installed if the configuration requires both to be.
-  Hence, a single CLI command should basically do everything for you.
+  Hence, a single CLI command should basically do everything for you — `ktsctl sync`.
 
 If you decide to use a `local` source, **`ktsctl` will do nothing for you** and
 will simply display a message explaining that it will use a path. Nothing will
-be fetched, compiled nor installed. It’s up to you to do so.
+be fetched, compiled nor installed. **It’s up to you to do so.**
 
 For users installing `ktsctl` by using a binary release or compiling it
 themselves, the default configuration (which uses `git` sources) is enough.
