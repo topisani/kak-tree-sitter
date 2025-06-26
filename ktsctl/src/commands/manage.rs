@@ -220,8 +220,12 @@ impl Manager {
 
     // link into {lang}.so
     let report = Report::new(StatusIcon::Link, format!("linking {lang} grammar",));
-    let args: Vec<_> = grammar_config
+    let link_args: Vec<_> = grammar_config
       .link_args
+      .iter()
+      .map(|x| x.replace("{lang}", lang))
+      .collect();
+    let args: Vec<_> = link_args
       .iter()
       .map(|x| x.as_str())
       .chain(grammar_config.link_flags.iter().map(|x| x.as_str()))
@@ -339,7 +343,7 @@ impl Manager {
 
     Self::git_clone(report, lang, fetch_path, url, pin)?;
 
-    let path = &lang_config.queries.path;
+    let path = lang_config.queries.normalized_path(lang);
     let query_dir = fetch_path.join(path);
     self.install_git_queries(report, &query_dir, lang, pin)?;
 

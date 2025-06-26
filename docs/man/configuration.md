@@ -117,10 +117,16 @@ instead of `<lang>`.
 
 This section provides the required data to know how to fetch queries.
 
+The following field(s) are mandatory:
+
 - `source`: optional source from where to pick the queries; see the
   [Sources](#sources) section. If you omit it, the same `source` object is used
   for both the grammar and queries.
-- `path`: path where to find the queries (the `.scm` files) directory.
+
+The following fields are optional and you should only provide the ones you need:
+
+- `path`: path where to find the queries (the `.scm` files) directory. Defaults
+  to `runtime/queries/{lang}`
 
 # Sources
 

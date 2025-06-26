@@ -496,10 +496,24 @@ pub struct QueriesConfig {
   pub source: Option<Source>,
 
   /// Path to go to where to find the queries directory.
+  #[serde(default = "QueriesConfig::default_path")]
   pub path: PathBuf,
 }
 
 impl QueriesConfig {
+  fn default_path() -> PathBuf {
+    "runtime/queries/{lang}".into()
+  }
+
+  pub fn normalized_path(&self, lang: &str) -> PathBuf {
+    self
+      .path
+      .display()
+      .to_string()
+      .replace("{lang}", lang)
+      .into()
+  }
+
   fn merge_user_config(
     &mut self,
     user_config: UserLanguageQueriesConfig,

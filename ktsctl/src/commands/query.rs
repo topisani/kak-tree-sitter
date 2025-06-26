@@ -101,7 +101,7 @@ impl Query {
     };
 
     self
-      .lang_config_sections(lang_config, grammar_config)
+      .lang_config_sections(lang, lang_config, grammar_config)
       .chain(iter::once(self.lang_install_stats_section(
         lang,
         lang_config,
@@ -112,12 +112,13 @@ impl Query {
 
   fn lang_config_sections(
     &self,
+    lang_name: &str,
     lang_config: &LanguageConfig,
     grammar_config: &GrammarConfig,
   ) -> impl Iterator<Item = Section> + use<> {
     [
       self.lang_config_grammar_section(grammar_config),
-      self.lang_config_queries_section(lang_config),
+      self.lang_config_queries_section(lang_name, lang_config),
     ]
     .into_iter()
   }
@@ -179,7 +180,7 @@ impl Query {
       .build()
   }
 
-  fn lang_config_queries_section(&self, lang_config: &LanguageConfig) -> Section {
+  fn lang_config_queries_section(&self, lang_name: &str, lang_config: &LanguageConfig) -> Section {
     let queries = &lang_config.queries;
 
     let mut section = Section::new("Queries configuration");
@@ -191,7 +192,11 @@ impl Query {
     section
       .push(Field::kv(
         "Path".blue(),
-        queries.path.display().to_string().green(),
+        queries
+          .normalized_path(lang_name)
+          .display()
+          .to_string()
+          .green(),
       ))
       .push(Field::kv(
         "Remove default highlighter".blue(),
