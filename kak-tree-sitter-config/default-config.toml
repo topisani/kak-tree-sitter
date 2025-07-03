@@ -616,7 +616,17 @@ url = "https://github.com/helix-editor/helix"
 pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 # lean
-# TODO
+[grammar.lean.source.git]
+url = "https://github.com/Julian/tree-sitter-lean"
+pin = "efe6b87145608d12f5996bd7f0cf6095a0e82261"
+
+[grammar.lean]
+compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
+link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "lean.so"]
+
+[language.lean.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 # ledger
 # TODO
