@@ -1,4 +1,4 @@
-edition = "2018"
+edition = "2024"
 
 fn_params_layout = "Tall"
 force_explicit_abi = true
