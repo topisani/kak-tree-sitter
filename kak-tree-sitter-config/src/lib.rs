@@ -457,32 +457,28 @@ impl TryFrom<UserGrammarConfig> for GrammarConfig {
     let Some(source) = user_config.source else {
       return Err(ConfigError::missing_opt("source"));
     };
-    let Some(link_args) = user_config.link_args else {
-      return Err(ConfigError::missing_opt("link_args"));
-    };
 
     Ok(Self {
       source: Source::try_from(source)?,
-      path: user_config.path.unwrap_or_else(|| PathBuf::from("src")),
-      compile: user_config.compile.unwrap_or_else(|| "cc".to_owned()),
-      compile_args: user_config.compile_args.unwrap_or_else(|| {
-        vec![
-          "-c".to_owned(),
-          "-fpic".to_owned(),
-          "../parser.c".to_owned(),
-          "../scanner.c".to_owned(),
-          "-I".to_owned(),
-          "..".to_owned(),
-        ]
-      }),
+      path: user_config.path.unwrap_or_else(GrammarConfig::default_path),
+      compile: user_config
+        .compile
+        .unwrap_or_else(GrammarConfig::default_compile),
+      compile_args: user_config
+        .compile_args
+        .unwrap_or_else(GrammarConfig::default_compile_args),
       compile_flags: user_config
         .compile_flags
-        .unwrap_or_else(|| vec!["-O3".to_owned()]),
-      link: user_config.link.unwrap_or_else(|| "cc".to_owned()),
-      link_args,
+        .unwrap_or_else(GrammarConfig::default_compile_flags),
+      link: user_config
+        .link
+        .unwrap_or_else(GrammarConfig::default_compile),
+      link_args: user_config
+        .link_args
+        .unwrap_or_else(GrammarConfig::default_link_args),
       link_flags: user_config
         .link_flags
-        .unwrap_or_else(|| vec!["-O3".to_owned()]),
+        .unwrap_or_else(GrammarConfig::default_compile_flags),
     })
   }
 }
@@ -540,17 +536,16 @@ impl TryFrom<UserLanguageQueriesConfig> for QueriesConfig {
   type Error = ConfigError;
 
   fn try_from(user_config: UserLanguageQueriesConfig) -> Result<Self, Self::Error> {
-    let Some(path) = user_config.path else {
-      return Err(ConfigError::missing_opt("path"));
-    };
-
     let source = if let Some(source) = user_config.source {
       Some(Source::try_from(source)?)
     } else {
       None
     };
 
-    Ok(Self { source, path })
+    Ok(Self {
+      source,
+      path: user_config.path.unwrap_or_else(QueriesConfig::default_path),
+    })
   }
 }
 
