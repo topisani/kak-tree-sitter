@@ -503,8 +503,6 @@ impl ResponseQueue {
   fn run(self) -> JoinHandle<()> {
     spawn(move || {
       for resp in self.receiver {
-        log::trace!("sending response: {resp:?}");
-
         if let Err(err) = Session::send_response(resp) {
           log::error!("error while sending connected response: {err}");
         }

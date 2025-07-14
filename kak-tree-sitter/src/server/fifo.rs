@@ -154,8 +154,6 @@ impl Fifo {
       target.clear();
       target.push_str(&self.buf[..index]);
 
-      log::trace!("new buffer content:\n{target}");
-
       self.buf.drain(..index + self.sentinel.len());
       return Ok(true);
     }

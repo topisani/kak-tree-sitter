@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use kak_tree_sitter_config::Config;
 use mio::Token;
 
@@ -79,20 +81,32 @@ impl Handler {
     let tree = self.trees.get_tree_mut(&id)?;
 
     // update the tree
+    let timer = Instant::now();
     if !tree.update_buf()? {
       // early return if no update occurred
       return Ok(None);
     }
+
+    log::debug!(
+      "buffer tree {id:?} was recomputed in {}us",
+      timer.elapsed().as_micros()
+    );
 
     // run any additional post-processing on the buffer
     if !self.with_highlighting {
       return Ok(None);
     }
 
+    let timer = Instant::now();
     let lang = self.langs.get(tree.lang())?;
     let ranges = tree.highlight(lang, |inject_lang| {
       self.langs.get(inject_lang).ok().map(|lang| &lang.hl_config)
     })?;
+
+    log::debug!(
+      "highlights were recomputed in {}us",
+      timer.elapsed().as_micros()
+    );
 
     let resp = Response::new(
       id.session(),
