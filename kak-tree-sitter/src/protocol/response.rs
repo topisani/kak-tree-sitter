@@ -1,10 +1,12 @@
 //! Response sent from the daemon to Kakoune.
 
-use std::{collections::HashSet, fmt::Write, path::PathBuf, sync::mpsc::Sender};
+use std::{collections::HashSet, fmt::Write, path::PathBuf};
 
 use itertools::Itertools;
 
 use crate::{kakoune::selection::Sel, tree_sitter::highlighting::KakHighlightRange};
+
+use super::request::Metadata;
 
 /// Response sent from KTS to Kakoune.
 #[derive(Debug, Eq, PartialEq)]
@@ -28,6 +30,10 @@ impl Response {
       buffer: buffer.into(),
       payload,
     }
+  }
+
+  pub fn from_req_metadata(metadata: Metadata, payload: Payload) -> Self {
+    Self::new(metadata.session, metadata.client, metadata.buffer, payload)
   }
 
   pub fn session(&self) -> &str {
@@ -190,31 +196,6 @@ impl Payload {
         let sels_str = sels.iter().map(|sel| sel.to_kak_str()).join(" ");
         format!("select {sels_str}")
       }
-    }
-  }
-}
-
-/// Add replies to the response queue.
-///
-/// Response are not immediately sent back to Kakoune, but instead enqueued into
-/// the response queue. That is required so that we do not block while sending.
-#[derive(Clone, Debug)]
-pub struct EnqueueResponse {
-  sender: Sender<Response>,
-}
-
-impl EnqueueResponse {
-  /// Create a new [`ResponseSender`].
-  pub fn new(sender: Sender<Response>) -> Self {
-    Self { sender }
-  }
-
-  /// Enqueue a response.
-  ///
-  /// That function never fails as it logs any underlying errors.
-  pub fn enqueue(&self, resp: Response) {
-    if let Err(err) = self.sender.send(resp) {
-      log::error!("cannot send response: {err}");
     }
   }
 }

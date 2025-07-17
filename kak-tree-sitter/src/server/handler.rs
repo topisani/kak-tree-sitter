@@ -1,18 +1,102 @@
-use std::time::Instant;
+use std::{
+  path::PathBuf,
+  sync::mpsc::{Receiver, Sender, channel},
+  thread::{self, JoinHandle},
+  time::Instant,
+};
 
 use kak_tree_sitter_config::Config;
-use mio::Token;
 
 use crate::{
   error::OhNo,
-  kakoune::{buffer::BufferId, selection::Sel, text_objects::OperationMode},
-  protocol::response::{EnabledLang, Payload, Response},
+  kakoune::{selection::Sel, session::Session, text_objects::OperationMode},
+  protocol::{
+    request::Metadata,
+    response::{EnabledLang, Payload, Response},
+  },
   tree_sitter::{languages::Languages, nav, state::Trees},
 };
 
-use super::resources::ServerResources;
+use super::BackBuffer;
 
-/// Type responsible for handling tree-sitter requests.
+/// Commands for the handler.
+///
+/// The handler receives commands from the async IO handler, execute them and eventually replies back to
+/// Kakoune by sending responses to the response queue.
+#[derive(Debug)]
+pub enum Command {
+  /// Session initiated.
+  SessionInit { metadata: Metadata },
+
+  /// Session closed.
+  SessionEnd { metadata: Metadata },
+
+  /// Server shutdown.
+  Shutdown,
+
+  /// Buffer metadata changed.
+  BufferMetadata {
+    metadata: Metadata,
+    lang: String,
+    fifo_path: PathBuf,
+    sentinel: String,
+  },
+
+  /// Buffer closed.
+  BufferClose { metadata: Metadata },
+
+  /// Buffer updated.
+  ///
+  /// The `back_buffer_sender` should be used to send back a string of the buffer.
+  BufferUpdate {
+    metadata: Metadata,
+    buf: String,
+    back_buffer_sender: BackBuffer,
+  },
+
+  /// Text objects selections.
+  TextObjects {
+    metadata: Metadata,
+    pattern: String,
+    selections: Vec<Sel>,
+    mode: OperationMode,
+  },
+
+  /// Tree navigation.
+  Nav {
+    metadata: Metadata,
+    selections: Vec<Sel>,
+    dir: nav::Dir,
+  },
+}
+
+/// Send commands to the handler.
+#[derive(Debug)]
+pub struct CommandSender {
+  join_handle: Option<JoinHandle<()>>,
+  sender: Sender<Command>,
+}
+
+impl CommandSender {
+  pub fn send(&self, cmd: Command) -> Result<(), OhNo> {
+    self
+      .sender
+      .send(cmd)
+      .map_err(|err| OhNo::CannotSendCommand { err })
+  }
+}
+
+impl Drop for CommandSender {
+  fn drop(&mut self) {
+    if let Some(join_handle) = self.join_handle.take() {
+      if join_handle.join().is_err() {
+        log::error!("handler not properly closed");
+      }
+    }
+  }
+}
+
+/// Type responsible for handling tree-sitter changes.
 ///
 /// This type is stateful, as requests might have side-effect (i.e. tree-sitter
 /// parsing generates trees/highlighters that can be reused, for instance).
@@ -24,17 +108,101 @@ pub struct Handler {
 }
 
 impl Handler {
-  pub fn new(config: &Config, with_highlighting: bool) -> Self {
-    Self {
-      config: config.clone(),
-      trees: Trees::default(),
-      langs: Languages::new(config),
-      with_highlighting,
+  /// Create a new [`Handler`] and a [`CommandSender`] to send it commands.
+  pub fn new(config: &Config, with_highlighting: bool) -> CommandSender {
+    let (sender, cmds) = channel();
+
+    let config = config.clone();
+    let join_handle = thread::spawn(move || {
+      let langs = Languages::new(&config);
+      let handler = Self {
+        config,
+        trees: Trees::default(),
+        langs,
+        with_highlighting,
+      };
+
+      handler.start(cmds);
+    });
+
+    CommandSender {
+      join_handle: Some(join_handle),
+      sender,
+    }
+  }
+
+  fn start(mut self, cmds: Receiver<Command>) {
+    while let Ok(cmd) = cmds.recv() {
+      let resp = match cmd {
+        Command::SessionInit { metadata } => Ok(Some(self.handle_session_begin(metadata))),
+
+        Command::SessionEnd { metadata } => {
+          self.handle_session_end(metadata);
+          Ok(None)
+        }
+
+        Command::Shutdown => break,
+
+        Command::BufferMetadata {
+          metadata,
+          lang,
+          fifo_path,
+          sentinel,
+        } => self
+          .handle_buffer_metadata(metadata, lang, fifo_path, sentinel)
+          .map(Some),
+
+        Command::BufferClose { metadata } => self.handle_buffer_close(metadata).map(|_| None),
+
+        Command::BufferUpdate {
+          metadata,
+          buf,
+          back_buffer_sender,
+        } => self.handle_full_buffer_update(metadata, buf, back_buffer_sender),
+
+        Command::TextObjects {
+          metadata,
+          pattern,
+          selections,
+          mode,
+        } => self
+          .handle_text_objects(metadata, pattern, selections, mode)
+          .map(Some),
+
+        Command::Nav {
+          metadata,
+          selections,
+          dir,
+        } => self.handle_nav(metadata, selections, dir).map(Some),
+      };
+
+      match resp {
+        Ok(Some(resp)) => {
+          self.respond_to_kak(resp);
+        }
+
+        Err(err) => {
+          log::error!("error in handler: {err}");
+        }
+
+        _ => (),
+      }
+    }
+
+    log::debug!("handler loop exiting");
+  }
+
+  /// Send a response back to Kakoune.
+  ///
+  /// The response is constructed from metadata and payload computed by a handler function.
+  fn respond_to_kak(&self, resp: Response) {
+    if let Err(err) = Session::send_response(resp) {
+      log::error!("sending response to Kakoune failed: {err}");
     }
   }
 
   /// Initiate languages on session init.
-  pub fn handle_session_begin(&mut self) -> Payload {
+  pub fn handle_session_begin(&mut self, metadata: Metadata) -> Response {
     let enabled_langs = self
       .config
       .languages
@@ -47,50 +215,63 @@ impl Handler {
       })
       .collect();
 
-    Payload::Init { enabled_langs }
+    Response::from_req_metadata(metadata, Payload::Init { enabled_langs })
+  }
+
+  pub fn handle_session_end(&mut self, metadata: Metadata) {
+    self.trees.clean_session(&metadata.session);
   }
 
   /// Update buffer metadata change.
   pub fn handle_buffer_metadata(
     &mut self,
-    resources: &mut ServerResources,
-    id: &BufferId,
-    lang: &str,
-  ) -> Result<Payload, OhNo> {
+    metadata: Metadata,
+    lang: String,
+    fifo_path: PathBuf,
+    sentinel: String,
+  ) -> Result<Response, OhNo> {
     let lang = self.langs.get(lang)?;
-    let tree = self.trees.compute(resources, lang, id)?;
-    let fifo = tree.fifo();
-    let fifo_path = fifo.path().to_owned();
-    let sentinel = fifo.sentinel().to_owned();
+    let id = metadata.to_buffer_id()?;
 
-    Ok(Payload::BufferSetup {
+    // ensure the tree exists
+    self.trees.compute(lang, &id)?;
+
+    let payload = Payload::BufferSetup {
       fifo_path,
       sentinel,
-    })
+    };
+    Ok(Response::from_req_metadata(metadata, payload))
   }
 
   /// Handle buffer close.
-  pub fn handle_buffer_close(&mut self, id: &BufferId) {
-    self.trees.delete_tree(id);
+  pub fn handle_buffer_close(&mut self, metadata: Metadata) -> Result<(), OhNo> {
+    let id = metadata.to_buffer_id()?;
+    self.trees.delete_tree(&id);
+    Ok(())
   }
 
   /// Update a full buffer update.
-  pub fn handle_full_buffer_update(&mut self, tkn: Token) -> Result<Option<Response>, OhNo> {
-    let id = self.trees.get_buf_id(&tkn)?.clone();
-    log::debug!("updating {id:?}, token {tkn:?}");
+  pub fn handle_full_buffer_update(
+    &mut self,
+    metadata: Metadata,
+    buf: String,
+    back_buffer: BackBuffer,
+  ) -> Result<Option<Response>, OhNo> {
+    let id = metadata.to_buffer_id()?;
     let tree = self.trees.get_tree_mut(&id)?;
 
     // update the tree
     let timer = Instant::now();
-    if !tree.update_buf()? {
-      // early return if no update occurred
-      return Ok(None);
-    }
-
+    let old_buf = tree.update_buf(buf)?;
     log::debug!(
       "buffer tree {id:?} was recomputed in {}us",
       timer.elapsed().as_micros()
     );
+
+    // send back the buffer for reuse; this is optional but
+    // highly rebufcommended as it will allow the IO handler to use the
+    // recycled string buffer for next updates
+    back_buffer.send_back(old_buf);
 
     // run any additional post-processing on the buffer
     if !self.with_highlighting {
@@ -120,31 +301,39 @@ impl Handler {
 
   pub fn handle_text_objects(
     &mut self,
-    id: &BufferId,
-    pattern: &str,
-    selections: &[Sel],
-    mode: &OperationMode,
-  ) -> Result<Payload, OhNo> {
+    metadata: Metadata,
+    pattern: String,
+    selections: Vec<Sel>,
+    mode: OperationMode,
+  ) -> Result<Response, OhNo> {
+    let id = metadata.to_buffer_id()?;
     log::debug!("text-objects {pattern} for buffer {id:?}");
 
-    let tree_state = self.trees.get_tree(id)?;
+    let tree_state = self.trees.get_tree(&id)?;
     let lang = self.langs.get(tree_state.lang())?;
-    let sels = tree_state.text_objects(lang, pattern, selections, mode)?;
+    let sels = tree_state.text_objects(lang, &pattern, &selections, &mode)?;
 
-    Ok(Payload::Selections { sels })
+    Ok(Response::from_req_metadata(
+      metadata,
+      Payload::Selections { sels },
+    ))
   }
 
   pub fn handle_nav(
     &mut self,
-    id: &BufferId,
-    selections: &[Sel],
+    metadata: Metadata,
+    selections: Vec<Sel>,
     dir: nav::Dir,
-  ) -> Result<Payload, OhNo> {
+  ) -> Result<Response, OhNo> {
+    let id = metadata.to_buffer_id()?;
     log::debug!("nav {dir:?} for buffer {id:?}");
 
-    let tree_state = self.trees.get_tree(id)?;
-    let sels = tree_state.nav_tree(selections, dir);
+    let tree_state = self.trees.get_tree(&id)?;
+    let sels = tree_state.nav_tree(&selections, dir);
 
-    Ok(Payload::Selections { sels })
+    Ok(Response::from_req_metadata(
+      metadata,
+      Payload::Selections { sels },
+    ))
   }
 }

@@ -1,8 +1,10 @@
 //! Tree-sitter state (i.e. highlighting, tree walking, etc.)
 
-use std::collections::{HashMap, hash_map::Entry};
+use std::{
+  collections::{HashMap, hash_map::Entry},
+  mem,
+};
 
-use mio::Token;
 use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
 
 use crate::{
@@ -12,7 +14,6 @@ use crate::{
     selection::{ObjectFlags, Pos, Sel, SelectMode},
     text_objects::OperationMode,
   },
-  server::{fifo::Fifo, resources::ServerResources},
 };
 
 use super::{highlighting::KakHighlightRange, languages::Language, nav};
@@ -21,17 +22,11 @@ use super::{highlighting::KakHighlightRange, languages::Language, nav};
 #[derive(Default)]
 pub struct Trees {
   trees: HashMap<BufferId, TreeState>,
-  by_token: HashMap<Token, BufferId>,
 }
 
 impl Trees {
   /// Create or update a tree.
-  pub fn compute(
-    &mut self,
-    resources: &mut ServerResources,
-    lang: &Language,
-    id: &BufferId,
-  ) -> Result<&mut TreeState, OhNo> {
+  pub fn compute(&mut self, lang: &Language, id: &BufferId) -> Result<&mut TreeState, OhNo> {
     match self.trees.entry(id.clone()) {
       Entry::Occupied(entry) => {
         let tree = entry.into_mut();
@@ -40,9 +35,8 @@ impl Trees {
       }
 
       Entry::Vacant(entry) => {
-        let tree = TreeState::new(resources, lang)?;
+        let tree = TreeState::new(lang)?;
 
-        self.by_token.insert(*tree.fifo.token(), id.clone());
         Ok(entry.insert(tree))
       }
     }
@@ -62,18 +56,12 @@ impl Trees {
       .ok_or_else(|| OhNo::UnknownBuffer { id: id.clone() })
   }
 
-  pub fn get_buf_id(&mut self, tkn: &Token) -> Result<&BufferId, OhNo> {
-    self
-      .by_token
-      .get(tkn)
-      .ok_or(OhNo::UnknownToken { tkn: *tkn })
+  pub fn delete_tree(&mut self, id: &BufferId) {
+    self.trees.remove(id);
   }
 
-  pub fn delete_tree(&mut self, id: &BufferId) {
-    if let Some(tree) = self.trees.remove(id) {
-      let tkn = tree.fifo.token();
-      self.by_token.remove(tkn);
-    }
+  pub fn clean_session(&mut self, session: &str) {
+    self.trees.retain(|id, _| id.session() != session);
   }
 }
 
@@ -86,7 +74,6 @@ pub struct TreeState {
   tree: tree_sitter::Tree,
   buf: String,
   lang: String,
-  fifo: Fifo,
 
   // TODO: for now, we don’t support custom highlighting, and hence have to use tree-sitter-highlight; see
   // #26 for further information
@@ -94,7 +81,7 @@ pub struct TreeState {
 }
 
 impl TreeState {
-  pub fn new(resources: &mut ServerResources, lang: &Language) -> Result<Self, OhNo> {
+  pub fn new(lang: &Language) -> Result<Self, OhNo> {
     let mut parser = Parser::new();
     parser.set_language(lang.grammar().lang())?;
 
@@ -103,24 +90,17 @@ impl TreeState {
       .ok_or(OhNo::CannotParseBuffer)?;
     let highlighter = tree_sitter_highlight::Highlighter::new();
 
-    let fifo = resources.new_fifo()?;
-
     Ok(Self {
       parser,
       tree,
       buf: String::default(),
       lang: lang.name.clone(),
-      fifo,
       highlighter,
     })
   }
 
   pub fn lang(&self) -> &str {
     &self.lang
-  }
-
-  pub fn fifo(&self) -> &Fifo {
-    &self.fifo
   }
 
   pub fn change_lang(&mut self, lang: &Language) -> Result<(), OhNo> {
@@ -132,19 +112,15 @@ impl TreeState {
     self.recompute_tree()
   }
 
-  /// Read the associated FIFO, update the buffer and recompute the tree.
-  ///
-  /// Return `true` if the buffer was updated.
-  pub fn update_buf(&mut self) -> Result<bool, OhNo> {
-    if self.fifo.read_to_buf(&mut self.buf)? {
-      self.recompute_tree()?;
-      return Ok(true);
-    }
-
-    Ok(false)
+  /// Update the internal buffer with the `buf` argument, recompute the tree and return the old buffer for
+  /// recycling.
+  pub fn update_buf(&mut self, buf: String) -> Result<String, OhNo> {
+    let old_buf = mem::replace(&mut self.buf, buf);
+    self.recompute_tree()?;
+    Ok(old_buf)
   }
 
-  fn recompute_tree(&mut self) -> Result<(), OhNo> {
+  pub fn recompute_tree(&mut self) -> Result<(), OhNo> {
     self.tree = self
       .parser
       .parse(self.buf.as_bytes(), None)

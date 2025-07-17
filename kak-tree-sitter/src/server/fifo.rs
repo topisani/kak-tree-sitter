@@ -18,6 +18,56 @@ use crate::error::OhNo;
 
 use super::tokens::Tokens;
 
+/// Result of reading from a fifo.
+#[derive(Debug)]
+pub enum FifoResult<'a> {
+  /// The fifo still misses bytes.
+  Unready,
+
+  /// The fifo can be read.
+  Ready(ReadyFifo<'a>),
+}
+
+impl<'a> FifoResult<'a> {
+  /// Get access to the underlying buffer if the fifo is ready.
+  pub fn ready(self) -> Option<ReadyFifo<'a>> {
+    match self {
+      FifoResult::Unready => None,
+      FifoResult::Ready(ready) => Some(ready),
+    }
+  }
+}
+
+/// Ready-to-read fifo.
+#[derive(Debug)]
+pub struct ReadyFifo<'a> {
+  /// Start index in the buffer where to read the content.
+  start_index: usize,
+
+  /// End index in the buffer where to read the content.
+  end_index: usize,
+
+  /// Content.
+  buf: &'a mut String,
+}
+
+impl ReadyFifo<'_> {
+  pub fn len(&self) -> usize {
+    self.end_index - self.start_index
+  }
+
+  /// Copy the content of the fifo to the target string and clean up.
+  pub fn copy_to(self, target: &mut String) {
+    // clear the target and copy the content into it
+    target.clear();
+    target.push_str(&self.buf[self.start_index..self.end_index]);
+
+    // this is safe to do as we know there is nothing after the buffer, so we want to prepare the buffer
+    // for the next streaming
+    self.buf.clear();
+  }
+}
+
 #[derive(Debug)]
 pub struct Fifo {
   registry: Arc<Registry>,
@@ -112,8 +162,8 @@ impl Fifo {
     self.tokens.lock().expect("tokens").recycle(self.tkn);
   }
 
-  pub fn token(&self) -> &Token {
-    &self.tkn
+  pub fn token(&self) -> Token {
+    self.tkn
   }
 
   pub fn path(&self) -> &Path {
@@ -124,14 +174,15 @@ impl Fifo {
     &self.sentinel
   }
 
-  pub fn read_to_buf(&mut self, target: &mut String) -> Result<bool, OhNo> {
+  /// Read on the fifo until the buffer can be read.
+  pub fn read(&mut self) -> Result<FifoResult, OhNo> {
     loop {
       match self.file.read_to_string(&mut self.buf) {
-        Ok(0) => break,
+        Ok(0) => break, // return to the event loop
         Ok(_) => continue,
 
         Err(err) => match err.kind() {
-          ErrorKind::WouldBlock => break,
+          ErrorKind::WouldBlock => break, // return to the event loop
 
           _ => {
             // reset the buffer in case of errors
@@ -142,23 +193,36 @@ impl Fifo {
       }
     }
 
+    // TODO: we can drop that sentinel thing once we have varlen prefixes
     // search for the sentinel; if we find it, it means we have a complete
     // buffer; cut it from the data and reset to be ready to read the next
     // buffer
-    if let Some(index) = self.buf.find(&self.sentinel) {
-      log::trace!(
-        "found sentinel {sentinel} in buffer {path}",
-        sentinel = self.sentinel,
-        path = self.path.display()
-      );
-      target.clear();
-      target.push_str(&self.buf[..index]);
+    let Some(index) = self.buf.find(&self.sentinel) else {
+      return Ok(FifoResult::Unready);
+    };
 
-      self.buf.drain(..index + self.sentinel.len());
-      return Ok(true);
+    log::trace!(
+      "found sentinel {sentinel} in buffer {path}",
+      sentinel = self.sentinel,
+      path = self.path.display()
+    );
+
+    // check that there is no extra data after the buffer; if so, the fifo considered non-ready and
+    // we need to drop the data as the new data has higher priority
+    let end_index = index + self.sentinel.len();
+    if end_index != self.buf.len() {
+      log::warn!("receiving buffer updates too fast; dropping current data to prioritize next");
+      self.buf.drain(..end_index);
+      return Ok(FifoResult::Unready);
     }
 
-    Ok(false)
+    Ok(FifoResult::Ready(ReadyFifo {
+      // TODO: we use 0 because we use sentinels, but we should be using variable length prefixes at some
+      // point; we will use start_index there
+      start_index: 0,
+      end_index: index,
+      buf: &mut self.buf,
+    }))
   }
 }
 

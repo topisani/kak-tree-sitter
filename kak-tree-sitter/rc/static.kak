@@ -54,6 +54,13 @@ define-command -hidden tree-sitter-request-with-session-buffer -params 1 %{
   kak-tree-sitter "{ ""session"": ""%val{session}"", ""buffer"": ""%val{buffile}"", ""payload"": %arg{1} }"
 }
 
+# Create a command to send to Kakoune for the current session, client and buffer.
+#
+# The parameter is the string to be used as payload.
+define-command -hidden tree-sitter-request-with-session-client-buffer -params 1 %{
+  kak-tree-sitter "{ ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""buffer"": ""%val{buffile}"", ""payload"": %arg{1} }"
+}
+
 # Notify KTS that a session exists.
 define-command tree-sitter-session-begin %{
   tree-sitter-request-with-session 'session_begin'
@@ -109,14 +116,14 @@ define-command tree-sitter-text-objects -params 2 %{
 #
 # First parameter is the pattern.
 define-command tree-sitter-object-text-objects -params 1 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{buffile}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": { ""object"": { ""mode"": ""%val{select_mode}"", ""flags"": ""%val{object_flags}"" } } }"
+  tree-sitter-request-with-session-client-buffer "{ ""type"": ""text_objects"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": { ""object"": { ""mode"": ""%val{select_mode}"", ""flags"": ""%val{object_flags}"" } } }"
 }
 
 # Request KTS to navigate the tree-sitter tree on selections.
 #
 # The first parameter is the direction to move to.
 define-command tree-sitter-nav -params 1 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""nav"", ""buffer"": ""%val{buffile}"", ""selections"": ""%val{selections_desc}"", ""dir"": %arg{1} }"
+  tree-sitter-request-with-session-client-buffer "{ ""type"": ""nav"", ""selections"": ""%val{selections_desc}"", ""dir"": %arg{1} }"
 }
 
 # User-overrideable command called right after inserting the tree-sitter

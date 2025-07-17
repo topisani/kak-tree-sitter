@@ -2,18 +2,45 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error::OhNo, kakoune::text_objects::OperationMode, tree_sitter::nav};
+use crate::{
+  error::OhNo,
+  kakoune::{buffer::BufferId, text_objects::OperationMode},
+  tree_sitter::nav,
+};
 
-use super::response::{self, Response};
+/// Metadata associated with the request.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub struct Metadata {
+  pub session: String,
+  pub client: Option<String>,
+  pub buffer: Option<String>,
+}
+
+impl Metadata {
+  fn new(session: impl Into<String>) -> Self {
+    Self {
+      session: session.into(),
+      client: None,
+      buffer: None,
+    }
+  }
+
+  pub fn to_buffer_id(&self) -> Result<BufferId, OhNo> {
+    let buffer = self.buffer.clone().ok_or_else(|| OhNo::UnknownBuffer {
+      id: BufferId::new(self.session.clone(), String::new()),
+    })?;
+
+    Ok(BufferId::new(self.session.clone(), buffer))
+  }
+}
 
 /// Request.
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub struct Request {
-  session: String,
-  client: Option<String>,
-  buffer: Option<String>,
-  payload: Payload,
+  pub metadata: Metadata,
+  pub payload: Payload,
 }
 
 impl Request {
@@ -28,32 +55,13 @@ impl Request {
 
   pub fn init_session(session: impl Into<String>) -> Self {
     Self {
-      session: session.into(),
-      client: None,
-      buffer: None,
+      metadata: Metadata::new(session),
       payload: Payload::SessionBegin,
     }
   }
 
   pub fn session(&self) -> &str {
-    &self.session
-  }
-
-  pub fn buffer(&self) -> Option<&str> {
-    self.buffer.as_deref()
-  }
-
-  pub fn payload(&self) -> &Payload {
-    &self.payload
-  }
-
-  pub fn reply(&self, payload: response::Payload) -> Response {
-    Response::new(
-      self.session.clone(),
-      self.client.clone(),
-      self.buffer.clone(),
-      payload,
-    )
+    &self.metadata.session
   }
 }
 
@@ -84,18 +92,13 @@ pub enum Payload {
 
   /// Request to apply text-objects on selections.
   TextObjects {
-    buffer: String,
     pattern: String,
     selections: String,
     mode: OperationMode,
   },
 
   /// Request to navigate the tree-sitter tree on selections.
-  Nav {
-    buffer: String,
-    selections: String,
-    dir: nav::Dir,
-  },
+  Nav { selections: String, dir: nav::Dir },
 }
 
 /// Possible way of updating a buffer.

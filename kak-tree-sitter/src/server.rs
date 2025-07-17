@@ -1,19 +1,20 @@
 pub mod fifo;
-mod handler;
+pub mod handler;
 pub mod resources;
 mod tokens;
 
 use std::{
-  collections::HashMap,
+  collections::{HashMap, hash_map::Entry},
   io::{self, Read},
   sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
-    mpsc::{Receiver, channel},
+    mpsc::{Receiver, Sender, channel},
   },
-  thread::{JoinHandle, spawn},
 };
 
+use fifo::Fifo;
+use handler::{Command, CommandSender};
 use kak_tree_sitter_config::Config;
 use mio::{
   Events, Interest, Poll, Token, Waker,
@@ -29,8 +30,8 @@ use crate::{
     session::{Session, SessionTracker},
   },
   protocol::{
-    request::{self, Request},
-    response::{self, EnqueueResponse, Response},
+    request::{self, Metadata, Request},
+    response::{self, Response},
   },
 };
 
@@ -47,8 +48,6 @@ pub enum Feedback {
 }
 
 pub struct Server {
-  _resp_queue_handle: JoinHandle<()>,
-  enqueue_response: EnqueueResponse,
   io_handler: IOHandler,
   session_tracker: SessionTracker,
 }
@@ -65,8 +64,6 @@ impl Server {
       resources.paths().socket_path().display()
     );
 
-    let (resp_queue, enqueue_response) = ResponseQueue::new();
-
     log::debug!("creating session tracker");
     let session_tracker = SessionTracker::default();
 
@@ -77,15 +74,9 @@ impl Server {
       cli.with_highlighting || config.features.highlighting,
       resources,
       poll,
-      enqueue_response.clone(),
     )?;
 
-    log::debug!("creating response queue");
-    let _resp_queue_handle = resp_queue.run();
-
     Ok(Server {
-      _resp_queue_handle,
-      enqueue_response,
       io_handler,
       session_tracker,
     })
@@ -146,25 +137,54 @@ impl Server {
   fn disconnect_sessions(&self) {
     for session_name in self.session_tracker.sessions() {
       let resp = Response::new(session_name, None, None, response::Payload::Deinit);
-      self.enqueue_response.enqueue(resp);
+      if let Err(err) = Session::send_response(resp) {
+        log::error!("error while sending disconnect: {err}");
+      }
     }
   }
 }
 
-/// UNIX socket request handler.
+/// Send a buffer back from the handler to the async IO handler.
 ///
-/// This type is responsible for accepting UNIX socket connection, forwarding
-/// the request to the appropriate handler and then sending back responses to
-/// Kakoune via the response queue.
+/// When the async IO hander computes a new buffer to be sent to the handler via a command, it expects
+/// the hander to send back a buffer string. This is an optimization to prevent allocating all over the place
+/// and allow for reusing previous strings.
+#[derive(Clone, Debug)]
+pub struct BackBuffer {
+  sender: Sender<String>,
+}
+
+impl BackBuffer {
+  pub fn new(sender: Sender<String>) -> Self {
+    Self { sender }
+  }
+
+  pub fn send_back(self, s: String) {
+    if let Err(err) = self.sender.send(s) {
+      log::warn!("cannot send back buffer: {err}");
+    }
+  }
+}
+
+/// Async IO handler.
+///
+/// This type is responsible for reading both Unix socket and FIFO buffer content as fast as possible,
+/// creating requests based on these, and forwarding the requests to the actual [`ReqHander`].
 struct IOHandler {
   is_standalone: bool,
   with_highlighting: bool,
   resources: ServerResources,
+  fifos: HashMap<Token, (Metadata, Fifo)>,
+  tkn_buffer_ids: HashMap<BufferId, Token>,
   poll: Poll,
   unix_listener: UnixListener,
   connections: HashMap<Token, BufferedClient>,
-  enqueue_response: EnqueueResponse,
-  handler: Handler,
+  command_sender: CommandSender,
+
+  // A small pre-allocated strings to send buffers as [`Command`]. Prevents allocating more strings.
+  buffer_strs: Vec<String>,
+  buffer_receiver: Receiver<String>,
+  back_buffer: BackBuffer,
 }
 
 impl IOHandler {
@@ -177,11 +197,12 @@ impl IOHandler {
     with_highlighting: bool,
     resources: ServerResources,
     poll: Poll,
-    enqueue_response: EnqueueResponse,
   ) -> Result<Self, OhNo> {
     let mut unix_listener = UnixListener::bind(resources.paths().socket_path())
       .map_err(|err| OhNo::CannotStartServer { err })?;
     let connections = HashMap::default();
+    let fifos = HashMap::new();
+    let tkn_buffer_ids = HashMap::new();
 
     poll
       .registry()
@@ -192,17 +213,23 @@ impl IOHandler {
       )
       .map_err(|err| OhNo::PollError { err })?;
 
-    let handler = Handler::new(config, with_highlighting);
+    let command_sender = Handler::new(config, with_highlighting);
+    let (back_buffer_sender, buffer_receiver) = channel();
+    let back_buffer = BackBuffer::new(back_buffer_sender);
 
     Ok(Self {
       is_standalone,
       with_highlighting,
       resources,
+      fifos,
+      tkn_buffer_ids,
       poll,
       unix_listener,
       connections,
-      enqueue_response,
-      handler,
+      command_sender,
+      buffer_strs: Vec::new(),
+      buffer_receiver,
+      back_buffer,
     })
   }
 
@@ -270,6 +297,7 @@ impl IOHandler {
         .registry()
         .register(&mut client, token, Interest::READABLE)
         .map_err(|err| OhNo::PollError { err });
+
       if let Err(err) = res {
         self
           .resources
@@ -282,7 +310,6 @@ impl IOHandler {
       }
 
       log::debug!("{client:?} will be using token {token:?}");
-
       self.connections.insert(token, BufferedClient::new(client));
     }
 
@@ -325,12 +352,12 @@ impl IOHandler {
       return Ok(None);
     };
 
+    // read the client request; exit and get back to the polling loop if not complete yet
     let Some(s) = client.read()? else {
       return Ok(None);
     };
 
     let req = Request::from_json(s)?;
-
     self.process_req(session_tracker, req).map(Some)
   }
 
@@ -339,7 +366,7 @@ impl IOHandler {
     session_tracker: &mut SessionTracker,
     req: Request,
   ) -> Result<Feedback, OhNo> {
-    match req.payload() {
+    match req.payload {
       request::Payload::SessionBegin => {
         let session = req.session();
         if session_tracker.tracks(session) {
@@ -352,14 +379,18 @@ impl IOHandler {
         let session = Session::new(req.session())?;
         session_tracker.track(session);
 
-        let resp_payload = self.handler.handle_session_begin();
-        let resp = req.reply(resp_payload);
-
-        self.enqueue_response.enqueue(resp);
+        self.command_sender.send(Command::SessionInit {
+          metadata: req.metadata,
+        })?;
       }
 
       request::Payload::SessionEnd => {
         log::info!("session {} exit", req.session());
+
+        self.command_sender.send(Command::SessionEnd {
+          metadata: req.metadata.clone(),
+        })?;
+
         session_tracker.untrack(req.session());
 
         // only shutdown if were started with an initial session (non standalone)
@@ -380,60 +411,91 @@ impl IOHandler {
 
       request::Payload::Shutdown => {
         log::info!("shutting down");
+        self.command_sender.send(Command::Shutdown)?;
         return Ok(Feedback::ShouldExit);
       }
 
       request::Payload::BufferMetadata { lang } => {
-        let buffer = req.buffer().ok_or_else(|| OhNo::UnknownBuffer {
-          id: BufferId::new(req.session(), String::new()),
+        let metadata = req.metadata;
+        let id = metadata.to_buffer_id()?;
+        log::info!("buffer metadata {metadata:?} ({lang})");
+
+        // ensure we have a fifo for this buffer; if not, create one
+        let (fifo_path, sentinel) = match self.tkn_buffer_ids.entry(id.clone()) {
+          Entry::Occupied(entry) => {
+            let tkn = *entry.get();
+            let (_, fifo) = self
+              .fifos
+              .get(&tkn)
+              .ok_or_else(|| OhNo::UnknownToken { tkn })?;
+            (fifo.path().to_owned(), fifo.sentinel().to_owned())
+          }
+
+          Entry::Vacant(entry) => {
+            // create a new fifo associated with a token if none exists
+            let fifo = self.resources.new_fifo()?;
+            let tkn = fifo.token();
+            let ret = (fifo.path().to_owned(), fifo.sentinel().to_owned());
+
+            entry.insert(tkn);
+            self.fifos.insert(tkn, (metadata.clone(), fifo));
+
+            ret
+          }
+        };
+
+        self.command_sender.send(Command::BufferMetadata {
+          metadata,
+          lang,
+          fifo_path,
+          sentinel,
         })?;
-
-        log::info!("buffer metadata {buffer} ({lang})");
-        let id = BufferId::new(req.session(), buffer);
-
-        let resp_payload = self
-          .handler
-          .handle_buffer_metadata(&mut self.resources, &id, lang)?;
-        self.enqueue_response.enqueue(req.reply(resp_payload));
       }
 
       request::Payload::BufferClose => {
-        if let Some(buffer) = req.buffer() {
-          log::info!("buffer close {buffer}");
-          let id = BufferId::new(req.session(), buffer);
-          self.handler.handle_buffer_close(&id);
+        let metadata = req.metadata;
+        let id = metadata.to_buffer_id()?;
+        log::info!("buffer close {metadata:?}");
+
+        // remove the fifo and reverse lookup; the fifo content is cleaned up on drop
+        if let Some(tkn) = self.tkn_buffer_ids.remove(&id) {
+          self.fifos.remove(&tkn);
         }
+
+        self
+          .command_sender
+          .send(Command::BufferClose { metadata })?;
       }
 
       request::Payload::TextObjects {
-        buffer,
         pattern,
         selections,
         mode,
       } => {
-        log::info!("text objects for buffer {buffer}, pattern {pattern}, mode {mode:?}");
+        let metadata = req.metadata;
+        log::info!("text objects for {metadata:?}, pattern {pattern}, mode {mode:?}",);
 
-        let id = BufferId::new(req.session(), buffer);
-        let sels = Sel::parse_many(selections);
+        let selections = Sel::parse_many(&selections);
 
-        let resp_payload = self
-          .handler
-          .handle_text_objects(&id, pattern, &sels, mode)?;
-        self.enqueue_response.enqueue(req.reply(resp_payload));
+        self.command_sender.send(Command::TextObjects {
+          metadata,
+          pattern,
+          selections,
+          mode,
+        })?;
       }
 
-      request::Payload::Nav {
-        buffer,
-        selections,
-        dir,
-      } => {
-        log::info!("nav for buffer {buffer}, dir {dir:?}");
+      request::Payload::Nav { selections, dir } => {
+        let metadata = req.metadata;
+        log::info!("nav for buffer {metadata:?}, dir {dir:?}",);
 
-        let id = BufferId::new(req.session(), buffer);
-        let sels = Sel::parse_many(selections);
+        let selections = Sel::parse_many(&selections);
 
-        let resp_payload = self.handler.handle_nav(&id, &sels, *dir)?;
-        self.enqueue_response.enqueue(req.reply(resp_payload));
+        self.command_sender.send(Command::Nav {
+          metadata,
+          selections,
+          dir,
+        })?;
       }
     }
 
@@ -442,9 +504,29 @@ impl IOHandler {
 
   /// Read the buffer associated with the argument token.
   fn read_buffer(&mut self, tkn: Token) -> Result<(), OhNo> {
-    if let Some(resp) = self.handler.handle_full_buffer_update(tkn)? {
-      self.enqueue_response.enqueue(resp);
-    }
+    let Some((metadata, fifo)) = self.fifos.get_mut(&tkn) else {
+      return Err(OhNo::UnknownToken { tkn });
+    };
+
+    let Some(ready_fifo) = fifo.read()?.ready() else {
+      // return to the event loop
+      return Ok(());
+    };
+
+    // grab a buffer string; we start with available buffer string; if none exists, we try to get one
+    // from the back buffer channel; if none is present, we allocate one with the buffer length
+    let mut buf = self
+      .buffer_strs
+      .pop()
+      .or_else(|| self.buffer_receiver.try_recv().ok())
+      .unwrap_or_else(|| String::with_capacity(ready_fifo.len()));
+
+    ready_fifo.copy_to(&mut buf);
+    self.command_sender.send(Command::BufferUpdate {
+      metadata: metadata.clone(),
+      buf,
+      back_buffer_sender: self.back_buffer.clone(),
+    })?;
 
     Ok(())
   }
@@ -458,7 +540,7 @@ impl IOHandler {
       }
     };
 
-    self.handler = Handler::new(&config, self.with_highlighting);
+    self.command_sender = Handler::new(&config, self.with_highlighting);
   }
 }
 
@@ -485,28 +567,5 @@ impl BufferedClient {
         _ => continue,
       }
     }
-  }
-}
-
-/// Response queue, responsible in sending responses to Kakoune session.
-struct ResponseQueue {
-  receiver: Receiver<Response>,
-}
-
-impl ResponseQueue {
-  fn new() -> (Self, EnqueueResponse) {
-    let (sender, receiver) = channel();
-    (Self { receiver }, EnqueueResponse::new(sender))
-  }
-
-  /// Run the response queue by dequeuing connected responses as they arrive in a dedicated thread.
-  fn run(self) -> JoinHandle<()> {
-    spawn(move || {
-      for resp in self.receiver {
-        if let Err(err) = Session::send_response(resp) {
-          log::error!("error while sending connected response: {err}");
-        }
-      }
-    })
   }
 }
