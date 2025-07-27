@@ -37,28 +37,28 @@ define-command -hidden kak-tree-sitter -params .. %{
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session -params 1 %{
-  kak-tree-sitter "{ ""session"": ""%val{session}"", ""payload"": { ""type"": ""%arg{1}"" } }"
+  kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"" }, ""payload"": { ""type"": ""%arg{1}"" } }"
 }
 
 # Create a command to send to Kakoune for the current session and client.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-client -params 1 %{
-  kak-tree-sitter "{ ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""payload"": %arg{1} }"
+  kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""client"": ""%val{client}"" }, ""payload"": %arg{1} }"
 }
 
 # Create a command to send to Kakoune for the current session and buffer.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-buffer -params 1 %{
-  kak-tree-sitter "{ ""session"": ""%val{session}"", ""buffer"": ""%val{buffile}"", ""payload"": %arg{1} }"
+  kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""buffer"": ""%val{buffile}"" }, ""payload"": %arg{1} }"
 }
 
 # Create a command to send to Kakoune for the current session, client and buffer.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-client-buffer -params 1 %{
-  kak-tree-sitter "{ ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""buffer"": ""%val{buffile}"", ""payload"": %arg{1} }"
+  kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""buffer"": ""%val{buffile}"" }, ""payload"": %arg{1} }"
 }
 
 # Notify KTS that a session exists.

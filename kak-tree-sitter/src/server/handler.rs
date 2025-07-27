@@ -17,7 +17,7 @@ use crate::{
   tree_sitter::{languages::Languages, nav, state::Trees},
 };
 
-use super::BackBuffer;
+use super::io::BackBuffer;
 
 /// Commands for the handler.
 ///
@@ -74,13 +74,15 @@ pub enum Command {
 #[derive(Debug)]
 pub struct CommandSender {
   join_handle: Option<JoinHandle<()>>,
-  sender: Sender<Command>,
+  sender: Option<Sender<Command>>,
 }
 
 impl CommandSender {
   pub fn send(&self, cmd: Command) -> Result<(), OhNo> {
     self
       .sender
+      .as_ref()
+      .unwrap()
       .send(cmd)
       .map_err(|err| OhNo::CannotSendCommand { err })
   }
@@ -88,6 +90,9 @@ impl CommandSender {
 
 impl Drop for CommandSender {
   fn drop(&mut self) {
+    // this should cause the thread counterpart to exit
+    self.sender = None;
+
     if let Some(join_handle) = self.join_handle.take() {
       if join_handle.join().is_err() {
         log::error!("handler not properly closed");
@@ -127,11 +132,13 @@ impl Handler {
 
     CommandSender {
       join_handle: Some(join_handle),
-      sender,
+      sender: Some(sender),
     }
   }
 
   fn start(mut self, cmds: Receiver<Command>) {
+    log::info!("handler started");
+
     while let Ok(cmd) = cmds.recv() {
       let resp = match cmd {
         Command::SessionInit { metadata } => Ok(Some(self.handle_session_begin(metadata))),
