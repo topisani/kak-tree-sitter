@@ -108,7 +108,7 @@ impl IOHandler {
       )
       .map_err(|err| OhNo::PollError { err })?;
 
-    let command_sender = Handler::new(config, with_highlighting);
+    let command_sender = Handler::create(config, with_highlighting);
     let (back_buffer_sender, buffer_receiver) = channel();
     let back_buffer = BackBuffer::new(back_buffer_sender);
 
@@ -368,9 +368,10 @@ impl IOHandler {
         mode,
       } => {
         let metadata = req.metadata;
-        log::info!("text objects for {metadata:?}, pattern {pattern}, mode {mode:?}",);
-
         let selections = Sel::parse_many(&selections);
+        log::info!(
+          "text objects for {metadata:?}, pattern {pattern}, mode {mode:?}, selections: {selections:?}"
+        );
 
         self.command_sender.send(Command::TextObjects {
           metadata,
@@ -435,7 +436,7 @@ impl IOHandler {
       }
     };
 
-    self.command_sender = Handler::new(&config, self.with_highlighting);
+    self.command_sender = Handler::create(&config, self.with_highlighting);
   }
 }
 

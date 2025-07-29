@@ -109,7 +109,7 @@ define-command tree-sitter-buffer-close %{
 # First parameter is the pattern.
 # Second parameter is the operation mode.
 define-command tree-sitter-text-objects -params 2 %{
-  tree-sitter-request-with-session-client "{ ""type"": ""text_objects"", ""buffer"": ""%val{buffile}"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": ""%arg{2}"" }"
+  tree-sitter-request-with-session-client-buffer "{ ""type"": ""text_objects"", ""pattern"": ""%arg{1}"", ""selections"": ""%val{selections_desc}"", ""mode"": ""%arg{2}"" }"
 }
 
 # Request KTS to apply “object-mode” text-objects on selections.

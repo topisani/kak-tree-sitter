@@ -114,7 +114,7 @@ pub struct Handler {
 
 impl Handler {
   /// Create a new [`Handler`] and a [`CommandSender`] to send it commands.
-  pub fn new(config: &Config, with_highlighting: bool) -> CommandSender {
+  pub fn create(config: &Config, with_highlighting: bool) -> CommandSender {
     let (sender, cmds) = channel();
 
     let config = config.clone();
@@ -314,14 +314,18 @@ impl Handler {
     mode: OperationMode,
   ) -> Result<Response, OhNo> {
     let id = metadata.to_buffer_id()?;
-    log::debug!("text-objects {pattern} for buffer {id:?}");
+    log::debug!("text-objects {pattern}, mode {mode:?} for buffer {id:?}");
 
     let tree_state = self.trees.get_tree(&id)?;
     let lang = self.langs.get(tree_state.lang())?;
     let sels = tree_state.text_objects(lang, &pattern, &selections, &mode)?;
 
-    Ok(Response::from_req_metadata(
-      metadata,
+    log::trace!("text-objects selections: {sels:?}");
+
+    Ok(Response::new(
+      metadata.session,
+      metadata.client,
+      None,
       Payload::Selections { sels },
     ))
   }
@@ -338,8 +342,10 @@ impl Handler {
     let tree_state = self.trees.get_tree(&id)?;
     let sels = tree_state.nav_tree(&selections, dir);
 
-    Ok(Response::from_req_metadata(
-      metadata,
+    Ok(Response::new(
+      metadata.session,
+      metadata.client,
+      None,
       Payload::Selections { sels },
     ))
   }

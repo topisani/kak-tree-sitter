@@ -24,6 +24,7 @@ impl Connection {
     let Some(s) = resp.to_kak() else {
       return Ok(());
     };
+    log::trace!("sending response back to Kakoune: {s}");
     let bytes = s.as_bytes();
 
     // content is encoded length + raw message

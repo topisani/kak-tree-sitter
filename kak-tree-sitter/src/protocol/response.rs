@@ -193,8 +193,14 @@ impl Payload {
       }
 
       Payload::Selections { sels } => {
-        let sels_str = sels.iter().map(|sel| sel.to_kak_str()).join(" ");
-        format!("select {sels_str}")
+        if sels.is_empty() {
+          "info -title tree-sitter 'no selection'".to_owned()
+        } else {
+          let sels_str = sels.iter().map(|sel| sel.to_kak_str()).join(" ");
+          log::trace!("selections response: select {sels_str}");
+
+          format!("select {sels_str}")
+        }
       }
     }
   }
