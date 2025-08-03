@@ -3,6 +3,7 @@ pub mod handler;
 pub mod io;
 pub mod resources;
 mod tokens;
+pub mod triple_buffer;
 
 use std::sync::{
   Arc,

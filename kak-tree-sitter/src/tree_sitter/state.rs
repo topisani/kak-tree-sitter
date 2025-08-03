@@ -1,9 +1,6 @@
 //! Tree-sitter state (i.e. highlighting, tree walking, etc.)
 
-use std::{
-  collections::{HashMap, hash_map::Entry},
-  mem,
-};
+use std::collections::{HashMap, hash_map::Entry};
 
 use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
 
@@ -14,6 +11,7 @@ use crate::{
     selection::{ObjectFlags, Pos, Sel, SelectMode},
     text_objects::OperationMode,
   },
+  server::triple_buffer::TripleBufferReader,
 };
 
 use super::{highlighting::KakHighlightRange, languages::Language, nav};
@@ -112,12 +110,12 @@ impl TreeState {
     self.recompute_tree()
   }
 
-  /// Update the internal buffer with the `buf` argument, recompute the tree and return the old buffer for
-  /// recycling.
-  pub fn update_buf(&mut self, buf: String) -> Result<String, OhNo> {
-    let old_buf = mem::replace(&mut self.buf, buf);
-    self.recompute_tree()?;
-    Ok(old_buf)
+  /// Read a triple buffer to replace our internal buffer.
+  pub fn update_buf(&mut self, reader: TripleBufferReader) -> Result<(), OhNo> {
+    if reader.read_to(&mut self.buf) {
+      self.recompute_tree()?;
+    }
+    Ok(())
   }
 
   pub fn recompute_tree(&mut self) -> Result<(), OhNo> {

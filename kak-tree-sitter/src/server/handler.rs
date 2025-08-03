@@ -17,7 +17,7 @@ use crate::{
   tree_sitter::{languages::Languages, nav, state::Trees},
 };
 
-use super::io::BackBuffer;
+use super::triple_buffer::TripleBufferReader;
 
 /// Commands for the handler.
 ///
@@ -50,8 +50,7 @@ pub enum Command {
   /// The `back_buffer_sender` should be used to send back a string of the buffer.
   BufferUpdate {
     metadata: Metadata,
-    buf: String,
-    back_buffer_sender: BackBuffer,
+    reader: TripleBufferReader,
   },
 
   /// Text objects selections.
@@ -84,7 +83,7 @@ impl CommandSender {
       .as_ref()
       .unwrap()
       .send(cmd)
-      .map_err(|err| OhNo::CannotSendCommand { err })
+      .map_err(|_| OhNo::CannotSendCommand)
   }
 }
 
@@ -161,11 +160,9 @@ impl Handler {
 
         Command::BufferClose { metadata } => self.handle_buffer_close(metadata).map(|_| None),
 
-        Command::BufferUpdate {
-          metadata,
-          buf,
-          back_buffer_sender,
-        } => self.handle_full_buffer_update(metadata, buf, back_buffer_sender),
+        Command::BufferUpdate { metadata, reader } => {
+          self.handle_full_buffer_update(metadata, reader)
+        }
 
         Command::TextObjects {
           metadata,
@@ -261,24 +258,18 @@ impl Handler {
   pub fn handle_full_buffer_update(
     &mut self,
     metadata: Metadata,
-    buf: String,
-    back_buffer: BackBuffer,
+    reader: TripleBufferReader,
   ) -> Result<Option<Response>, OhNo> {
     let id = metadata.to_buffer_id()?;
     let tree = self.trees.get_tree_mut(&id)?;
 
     // update the tree
     let timer = Instant::now();
-    let old_buf = tree.update_buf(buf)?;
+    tree.update_buf(reader)?;
     log::debug!(
       "buffer tree {id:?} was recomputed in {}us",
       timer.elapsed().as_micros()
     );
-
-    // send back the buffer for reuse; this is optional but
-    // highly rebufcommended as it will allow the IO handler to use the
-    // recycled string buffer for next updates
-    back_buffer.send_back(old_buf);
 
     // run any additional post-processing on the buffer
     if !self.with_highlighting {

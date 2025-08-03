@@ -4,7 +4,6 @@ use std::{
   sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
-    mpsc::{Receiver, Sender, channel},
   },
   time::Duration,
 };
@@ -30,6 +29,7 @@ use super::{
   fifo::Fifo,
   handler::{CommandSender, Handler},
   resources::ServerResources,
+  triple_buffer::TripleBuffer,
 };
 
 /// Feedback provided after a request has finished. Mainly used to shutdown.
@@ -37,28 +37,6 @@ use super::{
 pub enum Feedback {
   Ok,
   ShouldExit,
-}
-
-/// Send a buffer back from the handler to the async IO handler.
-///
-/// When the async IO hander computes a new buffer to be sent to the handler via a command, it expects
-/// the hander to send back a buffer string. This is an optimization to prevent allocating all over the place
-/// and allow for reusing previous strings.
-#[derive(Clone, Debug)]
-pub struct BackBuffer {
-  sender: Sender<String>,
-}
-
-impl BackBuffer {
-  pub fn new(sender: Sender<String>) -> Self {
-    Self { sender }
-  }
-
-  pub fn send_back(self, s: String) {
-    if let Err(err) = self.sender.send(s) {
-      log::warn!("cannot send back buffer: {err}");
-    }
-  }
 }
 
 /// Async IO handler.
@@ -69,17 +47,12 @@ pub struct IOHandler {
   is_standalone: bool,
   with_highlighting: bool,
   resources: ServerResources,
-  fifos: HashMap<Token, (Metadata, Fifo)>,
+  fifos: HashMap<Token, (Metadata, Fifo, TripleBuffer)>,
   tkn_buffer_ids: HashMap<BufferId, Token>,
   poll: Poll,
   unix_listener: UnixListener,
   connections: HashMap<Token, BufferedClient>,
   command_sender: CommandSender,
-
-  // A small pre-allocated strings to send buffers as [`Command`]. Prevents allocating more strings.
-  buffer_strs: Vec<String>,
-  buffer_receiver: Receiver<String>,
-  back_buffer: BackBuffer,
 }
 
 impl IOHandler {
@@ -109,8 +82,6 @@ impl IOHandler {
       .map_err(|err| OhNo::PollError { err })?;
 
     let command_sender = Handler::create(config, with_highlighting);
-    let (back_buffer_sender, buffer_receiver) = channel();
-    let back_buffer = BackBuffer::new(back_buffer_sender);
 
     Ok(Self {
       is_standalone,
@@ -122,9 +93,6 @@ impl IOHandler {
       unix_listener,
       connections,
       command_sender,
-      buffer_strs: Vec::new(),
-      buffer_receiver,
-      back_buffer,
     })
   }
 
@@ -319,7 +287,7 @@ impl IOHandler {
         let (fifo_path, sentinel) = match self.tkn_buffer_ids.entry(id.clone()) {
           hash_map::Entry::Occupied(entry) => {
             let tkn = *entry.get();
-            let (_, fifo) = self
+            let (_, fifo, _) = self
               .fifos
               .get(&tkn)
               .ok_or_else(|| OhNo::UnknownToken { tkn })?;
@@ -333,7 +301,9 @@ impl IOHandler {
             let ret = (fifo.path().to_owned(), fifo.sentinel().to_owned());
 
             entry.insert(tkn);
-            self.fifos.insert(tkn, (metadata.clone(), fifo));
+            self
+              .fifos
+              .insert(tkn, (metadata.clone(), fifo, TripleBuffer::new()));
 
             ret
           }
@@ -400,7 +370,7 @@ impl IOHandler {
 
   /// Read the buffer associated with the argument token.
   fn read_buffer(&mut self, tkn: Token) -> Result<(), OhNo> {
-    let Some((metadata, fifo)) = self.fifos.get_mut(&tkn) else {
+    let Some((metadata, fifo, triple_buffer)) = self.fifos.get_mut(&tkn) else {
       return Err(OhNo::UnknownToken { tkn });
     };
 
@@ -409,20 +379,11 @@ impl IOHandler {
       return Ok(());
     };
 
-    // grab a buffer string; we start with available buffer string; if none exists, we try to get one
-    // from the back buffer channel; if none is present, we allocate one with the buffer length
-    let mut buf = self
-      .buffer_strs
-      .pop()
-      .or_else(|| self.buffer_receiver.try_recv().ok())
-      .unwrap_or_else(|| String::with_capacity(ready_fifo.len()));
-
-    ready_fifo.copy_to(&mut buf);
+    triple_buffer.writer.write(ready_fifo.as_str());
     fifo.clear();
     self.command_sender.send(Command::BufferUpdate {
       metadata: metadata.clone(),
-      buf,
-      back_buffer_sender: self.back_buffer.clone(),
+      reader: triple_buffer.reader.clone(),
     })?;
 
     Ok(())

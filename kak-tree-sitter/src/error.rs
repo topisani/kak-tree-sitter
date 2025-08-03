@@ -1,4 +1,4 @@
-use std::{fmt, io, path::PathBuf, sync::mpsc::SendError};
+use std::{fmt, io, path::PathBuf};
 
 use kak_tree_sitter_config::error::ConfigError;
 use log::SetLoggerError;
@@ -6,7 +6,7 @@ use mio::Token;
 use thiserror::Error;
 use tree_sitter::{LanguageError, QueryError};
 
-use crate::{kakoune::buffer::BufferId, server::handler};
+use crate::kakoune::buffer::BufferId;
 
 #[derive(Debug, Error)]
 pub enum OhNo {
@@ -86,8 +86,8 @@ pub enum OhNo {
   #[error("cannot send request: {err}")]
   CannotSendRequest { err: String },
 
-  #[error("cannot send command: {err}")]
-  CannotSendCommand { err: SendError<handler::Command> },
+  #[error("cannot send command")]
+  CannotSendCommand,
 
   #[error("cannot parse buffer")]
   CannotParseBuffer,

@@ -52,15 +52,8 @@ pub struct ReadyFifo<'a> {
 }
 
 impl ReadyFifo<'_> {
-  pub fn len(&self) -> usize {
-    self.end_index - self.start_index
-  }
-
-  /// Copy the content of the fifo to the target string and clean up.
-  pub fn copy_to(self, target: &mut String) {
-    // clear the target and copy the content into it
-    target.clear();
-    target.push_str(&self.buf[self.start_index..self.end_index]);
+  pub fn as_str(&self) -> &str {
+    &self.buf[self.start_index..self.end_index]
   }
 }
 
