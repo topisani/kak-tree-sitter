@@ -61,10 +61,6 @@ impl ReadyFifo<'_> {
     // clear the target and copy the content into it
     target.clear();
     target.push_str(&self.buf[self.start_index..self.end_index]);
-
-    // this is safe to do as we know there is nothing after the buffer, so we want to prepare the buffer
-    // for the next streaming
-    self.buf.clear();
   }
 }
 
@@ -223,6 +219,11 @@ impl Fifo {
       end_index: index,
       buf: &mut self.buf,
     }))
+  }
+
+  /// Clear the associated buffer.
+  pub fn clear(&mut self) {
+    self.buf.clear();
   }
 }
 

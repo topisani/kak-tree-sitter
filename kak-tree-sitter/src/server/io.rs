@@ -418,6 +418,7 @@ impl IOHandler {
       .unwrap_or_else(|| String::with_capacity(ready_fifo.len()));
 
     ready_fifo.copy_to(&mut buf);
+    fifo.clear();
     self.command_sender.send(Command::BufferUpdate {
       metadata: metadata.clone(),
       buf,
