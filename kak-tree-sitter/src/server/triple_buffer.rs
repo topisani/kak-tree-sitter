@@ -72,3 +72,30 @@ impl TripleBufferWriter {
       .store(false, std::sync::atomic::Ordering::Relaxed);
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn triple_buffer() {
+    let tb = TripleBuffer::new();
+    let writer = "writer".to_owned();
+    let mut reader = String::new();
+
+    let was_read = tb.reader.read_to(&mut reader);
+    assert_eq!(reader, "");
+    assert!(was_read);
+
+    let was_read = tb.reader.read_to(&mut reader);
+    assert!(!was_read);
+
+    tb.writer.write(&writer);
+    let was_read = tb.reader.read_to(&mut reader);
+    assert_eq!(reader, "writer");
+    assert!(was_read);
+
+    let was_read = tb.reader.read_to(&mut reader);
+    assert!(!was_read);
+  }
+}
