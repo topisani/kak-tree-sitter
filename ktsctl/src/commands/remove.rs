@@ -12,15 +12,30 @@ use crate::{
 };
 
 /// Delete resources associated with a given language.
-pub fn remove(
+pub fn remove<'lang>(
   config: &Config,
   resources: &Resources,
   grammar: bool,
   queries: bool,
   prune: bool,
-  lang: impl AsRef<str>,
+  langs: impl Iterator<Item = &'lang str>,
+) {
+  for lang in langs {
+    if let Err(err) = remove_lang(config, resources, grammar, queries, prune, lang) {
+      log::error!("{err}");
+    }
+  }
+}
+
+/// Delete resources associated with a given language.
+pub fn remove_lang(
+  config: &Config,
+  resources: &Resources,
+  grammar: bool,
+  queries: bool,
+  prune: bool,
+  lang: &str,
 ) -> Result<(), HellNo> {
-  let lang = lang.as_ref();
   let lang_config = config.languages.get_lang_config(lang)?;
   let grammar_config = config
     .grammars

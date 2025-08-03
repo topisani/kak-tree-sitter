@@ -100,11 +100,3 @@ pub enum Payload {
   /// Request to navigate the tree-sitter tree on selections.
   Nav { selections: String, dir: nav::Dir },
 }
-
-/// Possible way of updating a buffer.
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum BufferUpdate {
-  /// The full buffer is sent over the buffer FIFO.
-  Full,
-}

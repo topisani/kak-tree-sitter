@@ -164,7 +164,7 @@ impl Fifo {
   }
 
   /// Read on the fifo until the buffer can be read.
-  pub fn read(&mut self) -> Result<FifoResult, OhNo> {
+  pub fn read(&mut self) -> Result<FifoResult<'_>, OhNo> {
     loop {
       match self.file.read_to_string(&mut self.buf) {
         Ok(0) => break, // return to the event loop

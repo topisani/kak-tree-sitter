@@ -287,10 +287,7 @@ impl IOHandler {
         let (fifo_path, sentinel) = match self.tkn_buffer_ids.entry(id.clone()) {
           hash_map::Entry::Occupied(entry) => {
             let tkn = *entry.get();
-            let (_, fifo, _) = self
-              .fifos
-              .get(&tkn)
-              .ok_or_else(|| OhNo::UnknownToken { tkn })?;
+            let (_, fifo, _) = self.fifos.get(&tkn).ok_or(OhNo::UnknownToken { tkn })?;
             (fifo.path().to_owned(), fifo.sentinel().to_owned())
           }
 

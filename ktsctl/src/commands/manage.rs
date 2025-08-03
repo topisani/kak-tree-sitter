@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Main flags to fetch, compile and/or install resources.
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ManageFlags {
   pub fetch: bool,
   pub compile: bool,

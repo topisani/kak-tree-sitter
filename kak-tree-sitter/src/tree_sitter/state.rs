@@ -537,7 +537,7 @@ impl TreeState {
   }
 
   /// Find the node for a selection.
-  fn find_sel_node(&self, sel: &Sel) -> Option<Node> {
+  fn find_sel_node(&self, sel: &Sel) -> Option<Node<'_>> {
     log::trace!("finding node for selection {sel:?}");
 
     let start = sel.anchor.min(sel.cursor);

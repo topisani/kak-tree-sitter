@@ -45,24 +45,24 @@ fn start() -> Result<(), HellNo> {
   log::debug!("ktsctl configuration:\n{config:#?}");
 
   match cli.cmd {
-    cli::Cmd::Fetch { all, lang } => {
+    cli::Cmd::Fetch { all, langs } => {
       let flags = ManageFlags::new(true, false, false, false);
-      manage(config, flags, all, lang.as_deref())?
+      manage(config, flags, all, langs)?
     }
 
-    cli::Cmd::Compile { all, lang } => {
+    cli::Cmd::Compile { all, langs } => {
       let flags = ManageFlags::new(false, true, false, false);
-      manage(config, flags, all, lang.as_deref())?
+      manage(config, flags, all, langs)?
     }
 
-    cli::Cmd::Install { all, lang } => {
+    cli::Cmd::Install { all, langs } => {
       let flags = ManageFlags::new(false, false, true, false);
-      manage(config, flags, all, lang.as_deref())?
+      manage(config, flags, all, langs)?
     }
 
-    cli::Cmd::Sync { all, lang } => {
+    cli::Cmd::Sync { all, langs } => {
       let flags = ManageFlags::new(false, false, false, true);
-      manage(config, flags, all, lang.as_deref())?
+      manage(config, flags, all, langs)?
     }
 
     cli::Cmd::Query { lang, all } => {
@@ -82,7 +82,7 @@ fn start() -> Result<(), HellNo> {
       mut grammar,
       mut queries,
       prune,
-      lang,
+      langs,
     } => {
       let resources = Resources::new()?;
       if !grammar && !queries {
@@ -90,7 +90,14 @@ fn start() -> Result<(), HellNo> {
         queries = true;
       }
 
-      remove::remove(&config, &resources, grammar, queries, prune, lang)?;
+      remove::remove(
+        &config,
+        &resources,
+        grammar,
+        queries,
+        prune,
+        langs.iter().map(String::as_str),
+      );
     }
 
     cli::Cmd::Prune => {
@@ -106,16 +113,25 @@ fn manage(
   config: Config,
   manage_flags: ManageFlags,
   all: bool,
-  lang: Option<&str>,
+  langs: Vec<String>,
 ) -> Result<(), HellNo> {
-  if let Some(lang) = lang {
-    let manager = Manager::new(config, manage_flags)?;
-    manager.manage(lang)?;
-  } else if all {
+  // no language passed and all used; synchronize everything known in the configuration
+  if langs.is_empty() && all {
     let all_langs: HashSet<_> = config.languages.language.keys().cloned().collect();
     let manager = Manager::new(config, manage_flags)?;
     manager.manage_all(all_langs.iter().map(|s| s.as_str()));
+  } else {
+    for lang in langs {
+      if let Err(err) = manage_lang(config.clone(), manage_flags.clone(), &lang) {
+        log::error!("{err}");
+      }
+    }
   }
 
   Ok(())
+}
+
+fn manage_lang(config: Config, manage_flags: ManageFlags, lang: &str) -> Result<(), HellNo> {
+  let manager = Manager::new(config, manage_flags)?;
+  manager.manage(lang)
 }

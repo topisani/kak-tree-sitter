@@ -31,8 +31,10 @@ pub enum Cmd {
     #[clap(short, long)]
     all: bool,
 
-    /// Language to manage.
-    lang: Option<String>,
+    /// Languages to manage.
+    ///
+    /// Space separated.
+    langs: Vec<String>,
   },
 
   /// Compile resources.
@@ -43,8 +45,10 @@ pub enum Cmd {
     #[clap(short, long)]
     all: bool,
 
-    /// Language to manage.
-    lang: Option<String>,
+    /// Languages to manage.
+    ///
+    /// Space separated.
+    langs: Vec<String>,
   },
 
   /// Install resources.
@@ -55,8 +59,10 @@ pub enum Cmd {
     #[clap(short, long)]
     all: bool,
 
-    /// Language to manage.
-    lang: Option<String>,
+    /// Languages to manage.
+    ///
+    /// Space separated.
+    langs: Vec<String>,
   },
 
   /// Synchronize resources (implies fetch, compile and install).
@@ -70,8 +76,10 @@ pub enum Cmd {
     #[clap(short, long)]
     all: bool,
 
-    /// Language to manage.
-    lang: Option<String>,
+    /// Languages to manage.
+    ///
+    /// Space separated.
+    langs: Vec<String>,
   },
 
   /// Get information on installed resources.
@@ -108,7 +116,7 @@ pub enum Cmd {
     prune: bool,
 
     /// Remove resources for the specific language.
-    lang: String,
+    langs: Vec<String>,
   },
 
   /// Prune resources.
