@@ -111,11 +111,16 @@ impl TreeState {
   }
 
   /// Read a triple buffer to replace our internal buffer.
-  pub fn update_buf(&mut self, reader: TripleBufferReader) -> Result<(), OhNo> {
-    if reader.read_to(&mut self.buf) {
+  ///
+  /// Return `true` if the buffer has changed.
+  pub fn update_buf(&mut self, reader: TripleBufferReader) -> Result<bool, OhNo> {
+    let changed = reader.read_to(&mut self.buf);
+
+    if changed {
       self.recompute_tree()?;
     }
-    Ok(())
+
+    Ok(changed)
   }
 
   pub fn recompute_tree(&mut self) -> Result<(), OhNo> {

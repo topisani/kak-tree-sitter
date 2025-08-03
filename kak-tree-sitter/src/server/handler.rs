@@ -265,7 +265,11 @@ impl Handler {
 
     // update the tree
     let timer = Instant::now();
-    tree.update_buf(reader)?;
+    if !tree.update_buf(reader)? {
+      // nothing changed; abort early
+      return Ok(None);
+    }
+
     log::debug!(
       "buffer tree {id:?} was recomputed in {}us",
       timer.elapsed().as_micros()
