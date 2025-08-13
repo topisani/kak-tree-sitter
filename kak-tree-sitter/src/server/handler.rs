@@ -113,7 +113,7 @@ pub struct Handler {
 
 impl Handler {
   /// Create a new [`Handler`] and a [`CommandSender`] to send it commands.
-  pub fn create(config: &Config, with_highlighting: bool) -> CommandSender {
+  pub fn create(config: &Config, with_highlighting: bool, with_tree_house: bool) -> CommandSender {
     let (sender, cmds) = channel();
 
     let config = config.clone();
@@ -121,7 +121,7 @@ impl Handler {
       let langs = Languages::new(&config);
       let handler = Self {
         config,
-        trees: Trees::default(),
+        trees: Trees::default().with_tree_house(with_tree_house),
         langs,
         with_highlighting,
       };
@@ -238,7 +238,7 @@ impl Handler {
     let id = metadata.to_buffer_id()?;
 
     // ensure the tree exists
-    self.trees.compute(lang, &id)?;
+    self.trees.compute(&self.langs, lang, &id)?;
 
     let payload = Payload::BufferSetup {
       fifo_path,
@@ -265,7 +265,7 @@ impl Handler {
 
     // update the tree
     let timer = Instant::now();
-    if !tree.update_buf(reader)? {
+    if !tree.update_buf(&self.langs, reader)? {
       // nothing changed; abort early
       return Ok(None);
     }
@@ -281,7 +281,7 @@ impl Handler {
     }
 
     let timer = Instant::now();
-    let lang = self.langs.get(tree.lang())?;
+    let lang = self.langs.get(tree.lang_name())?;
     let ranges = tree.highlight(lang, |inject_lang| {
       self.langs.get(inject_lang).ok().map(|lang| &lang.hl_config)
     })?;
@@ -312,7 +312,7 @@ impl Handler {
     log::debug!("text-objects {pattern}, mode {mode:?} for buffer {id:?}");
 
     let tree_state = self.trees.get_tree(&id)?;
-    let lang = self.langs.get(tree_state.lang())?;
+    let lang = self.langs.get(tree_state.lang_name())?;
     let sels = tree_state.text_objects(lang, &pattern, &selections, &mode)?;
 
     log::trace!("text-objects selections: {sels:?}");
@@ -335,7 +335,7 @@ impl Handler {
     log::debug!("nav {dir:?} for buffer {id:?}");
 
     let tree_state = self.trees.get_tree(&id)?;
-    let sels = tree_state.nav_tree(&selections, dir);
+    let sels = tree_state.tree_sitter_nav_tree(&selections, dir);
 
     Ok(Response::new(
       metadata.session,

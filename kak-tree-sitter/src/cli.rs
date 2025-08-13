@@ -60,6 +60,10 @@ pub struct Cli {
   #[arg(long)]
   pub with_text_objects: bool,
 
+  /// Use tree_house instead of tree-sitter-highlight.
+  #[arg(long)]
+  pub with_tree_house: bool,
+
   /// Specify a custom user-config.
   #[arg(long)]
   pub config: Option<PathBuf>,

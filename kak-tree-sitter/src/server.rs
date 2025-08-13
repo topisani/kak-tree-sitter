@@ -53,6 +53,7 @@ impl Server {
       cli.with_highlighting || config.features.highlighting,
       resources,
       poll,
+      cli.with_tree_house,
     )?;
 
     Ok(Server {

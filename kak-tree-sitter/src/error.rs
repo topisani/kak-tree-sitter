@@ -62,10 +62,23 @@ pub enum OhNo {
   CannotStartServer { err: io::Error },
 
   #[error("cannot load grammar for language {lang}: {err}")]
+  #[deprecated = "use CannotLoadGrammar2 instead"]
   CannotLoadGrammar { lang: String, err: String },
+
+  #[error("cannot load grammar for language {lang}: {err}")]
+  CannotLoadGrammar2 { lang: String, err: String },
 
   #[error("cannot load queries for language {lang}: {err}")]
   CannotLoadQueries { lang: String, err: String },
+
+  #[error("cannot parse queries: {err}")]
+  LangConfig {
+    #[from]
+    err: tree_house_bindings::query::ParseError,
+  },
+
+  #[error("error while operating on tree-sitter tree: {err}")]
+  TreeHouse { err: String },
 
   #[cfg(feature = "direct-unix-socket")]
   #[error("Kakoune Unix socket error: {err:?}")]

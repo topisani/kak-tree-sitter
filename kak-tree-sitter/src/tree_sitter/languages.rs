@@ -20,12 +20,15 @@ use crate::{error::OhNo, tree_sitter::queries::Queries};
 
 pub struct Language {
   pub name: String,
+  pub language: tree_house::Language,
   pub hl_config: HighlightConfiguration,
   pub hl_names: Vec<String>,
   // query to use for text objects, if supported by the language
   pub textobject_query: Option<Query>,
 
+  #[deprecated = "use grammar2, which is using tree_house_bindings"]
   grammar: Rc<Grammar>,
+  lang_config: tree_house::LanguageConfig,
 }
 
 impl Language {
@@ -33,11 +36,20 @@ impl Language {
     &self.name
   }
 
+  pub fn language(&self) -> tree_house::Language {
+    self.language
+  }
+
   pub fn grammar(&self) -> &Rc<Grammar> {
     &self.grammar
   }
+
+  pub fn lang_config(&self) -> &tree_house::LanguageConfig {
+    &self.lang_config
+  }
 }
 
+#[deprecated = "use tree_house_bindings::Grammar instead"]
 pub struct Grammar {
   ts_lang: tree_sitter::Language,
   _ts_lib: libloading::Library,
@@ -74,25 +86,38 @@ impl From<Language> for CachedLanguage {
 pub struct Languages {
   /// Map a `kts_lang` to the tree-sitter [`Language`] and its queries.
   langs: HashMap<String, LazyLang>,
+
+  /// Reverse lookup mapping a numeric idea (Language)
+  lang_ids: Vec<String>,
 }
 
 type LazyLang = LazyCell<CachedLanguage, Box<dyn FnOnce() -> CachedLanguage + 'static>>;
 pub type GrammarCache = Rc<RefCell<HashMap<String, Rc<Grammar>>>>;
+pub type Grammar2Cache = Rc<RefCell<HashMap<String, tree_house_bindings::Grammar>>>;
 
 impl Languages {
   pub fn new(config: &Config) -> Self {
-    let grammars: Rc<RefCell<HashMap<String, Rc<Grammar>>>> = Rc::new(RefCell::new(HashMap::new()));
+    let grammars: GrammarCache = Rc::new(RefCell::new(HashMap::new()));
+    let grammars2: Grammar2Cache = Rc::new(RefCell::new(HashMap::new()));
 
-    let langs = config
+    let lang_list: Vec<_> = config
       .languages
       .iter()
-      .map(|(lang_name, _)| {
+      .zip(0..)
+      .map(|((lang_name, _), idx)| {
         let config = config.clone();
         let lang_name2 = lang_name.to_owned();
         let grammars = grammars.clone();
+        let grammars2 = grammars2.clone();
 
         let lazy = LazyLang::new(Box::new(move || {
-          match Self::load_lang(&grammars, &config, &lang_name2) {
+          match Self::load_lang(
+            &grammars,
+            &grammars2,
+            &config,
+            &lang_name2,
+            tree_house::Language(idx),
+          ) {
             Ok(lang) => CachedLanguage::Loaded(Box::new(lang)),
 
             Err(err) => {
@@ -105,7 +130,10 @@ impl Languages {
         (lang_name.to_owned(), lazy)
       })
       .collect();
-    Self { langs }
+    let lang_ids = lang_list.iter().map(|(name, _)| name.clone()).collect();
+    let langs = lang_list.into_iter().collect();
+
+    Self { langs, lang_ids }
   }
 
   fn load_grammar(lang_name: &str, grammar_config: &GrammarConfig) -> Result<Grammar, OhNo> {
@@ -138,6 +166,30 @@ impl Languages {
     })
   }
 
+  fn load_grammar2(
+    lang_name: &str,
+    grammar_config: &GrammarConfig,
+  ) -> Result<tree_house_bindings::Grammar, OhNo> {
+    let Some(path) = GrammarsConfig::get_grammar_path(grammar_config, lang_name) else {
+      return Err(OhNo::CannotLoadGrammar2 {
+        lang: lang_name.to_owned(),
+        err: format!("no grammar path for language {lang_name}"),
+      });
+    };
+    log::debug!("  grammar path: {}", path.display());
+
+    let grammar = unsafe {
+      tree_house_bindings::Grammar::new(lang_name, &path).map_err(|err| {
+        OhNo::CannotLoadGrammar2 {
+          lang: lang_name.to_owned(),
+          err: err.to_string(),
+        }
+      })?
+    };
+
+    Ok(grammar)
+  }
+
   fn load_queries(lang_name: &str, lang_config: &LanguageConfig) -> Result<Queries, OhNo> {
     let Some(queries_dir) = LanguagesConfig::get_queries_dir(lang_config, lang_name) else {
       return Err(OhNo::CannotLoadQueries {
@@ -151,10 +203,12 @@ impl Languages {
   }
 
   /// Load a specific language.
-  pub fn load_lang(
+  fn load_lang(
     grammars: &GrammarCache,
+    grammars2: &Grammar2Cache,
     config: &Config,
     lang_name: impl AsRef<str>,
+    language: tree_house::Language,
   ) -> Result<Language, OhNo> {
     let lang_name = lang_name.as_ref();
     log::info!("loading configuration for {lang_name}");
@@ -177,6 +231,16 @@ impl Languages {
 
       grammar
     };
+    let grammar2 = if let Some(grammar) = grammars2.borrow().get(lang_name) {
+      log::debug!("grammar {lang_name} alread loaded; using cached version");
+      tree_house_bindings::Grammar::clone(grammar)
+    } else {
+      let grammar = Self::load_grammar2(grammar_name, grammar_config)?;
+
+      grammars2.borrow_mut().insert(lang_name.to_owned(), grammar);
+
+      grammar
+    };
 
     let queries = Self::load_queries(lang_name, lang_config)?;
 
@@ -196,12 +260,21 @@ impl Languages {
       .map(|q| Query::new(grammar.lang(), q).map(Some))
       .unwrap_or_else(|| Ok(None))?;
 
+    let lang_config = tree_house::LanguageConfig::new(
+      grammar2,
+      queries.highlights.as_deref().unwrap_or(""),
+      queries.injections.as_deref().unwrap_or(""),
+      queries.locals.as_deref().unwrap_or(""),
+    )?;
+
     let lang = Language {
       name: lang_name.to_owned(),
+      language,
       hl_config,
       hl_names,
       textobject_query,
       grammar,
+      lang_config,
     };
 
     Ok(lang)
@@ -222,5 +295,29 @@ impl Languages {
           lang: lang_name.to_owned(),
         }),
       })
+  }
+}
+
+impl tree_house::LanguageLoader for Languages {
+  fn language_for_marker(
+    &self,
+    marker: tree_house::InjectionLanguageMarker,
+  ) -> Option<tree_house::Language> {
+    match marker {
+      tree_house::InjectionLanguageMarker::Name(name) => {
+        self.get(name).ok().map(|lang| lang.language)
+      }
+
+      tree_house::InjectionLanguageMarker::Match(name)
+      | tree_house::InjectionLanguageMarker::Filename(name)
+      | tree_house::InjectionLanguageMarker::Shebang(name) => {
+        self.get(name.as_str()?).ok().map(|lang| lang.language)
+      }
+    }
+  }
+
+  fn get_config(&self, lang: tree_house::Language) -> Option<&tree_house::LanguageConfig> {
+    let lang_name = self.lang_ids.get(lang.0 as usize)?.as_str();
+    self.get(lang_name).ok().map(|lang| &lang.lang_config)
   }
 }

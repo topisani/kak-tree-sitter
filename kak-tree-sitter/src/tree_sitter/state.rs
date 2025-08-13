@@ -1,7 +1,11 @@
 //! Tree-sitter state (i.e. highlighting, tree walking, etc.)
 
-use std::collections::{HashMap, hash_map::Entry};
+use std::{
+  collections::{HashMap, hash_map::Entry},
+  time::Duration,
+};
 
+use ropey::RopeSlice;
 use tree_sitter::{Node, Parser, QueryCursor, StreamingIterator as _};
 
 use crate::{
@@ -12,6 +16,7 @@ use crate::{
     text_objects::OperationMode,
   },
   server::triple_buffer::TripleBufferReader,
+  tree_sitter::languages::Languages,
 };
 
 use super::{highlighting::KakHighlightRange, languages::Language, nav};
@@ -20,21 +25,31 @@ use super::{highlighting::KakHighlightRange, languages::Language, nav};
 #[derive(Default)]
 pub struct Trees {
   trees: HashMap<BufferId, TreeState>,
+  use_tree_house: bool,
 }
 
 impl Trees {
+  pub fn with_tree_house(mut self, use_tree_house: bool) -> Self {
+    self.use_tree_house = use_tree_house;
+    self
+  }
+
   /// Create or update a tree.
-  pub fn compute(&mut self, lang: &Language, id: &BufferId) -> Result<&mut TreeState, OhNo> {
+  pub fn compute(
+    &mut self,
+    languages: &Languages,
+    lang: &Language,
+    id: &BufferId,
+  ) -> Result<&mut TreeState, OhNo> {
     match self.trees.entry(id.clone()) {
       Entry::Occupied(entry) => {
         let tree = entry.into_mut();
-        tree.change_lang(lang)?;
+        tree.change_lang(languages, lang)?;
         Ok(tree)
       }
 
       Entry::Vacant(entry) => {
-        let tree = TreeState::new(lang)?;
-
+        let tree = TreeState::new(self.use_tree_house, languages, lang)?;
         Ok(entry.insert(tree))
       }
     }
@@ -71,15 +86,19 @@ pub struct TreeState {
   parser: Parser,
   tree: tree_sitter::Tree,
   buf: String,
-  lang: String,
+  lang_name: String,
+  lang: tree_house::Language,
 
   // TODO: for now, we don’t support custom highlighting, and hence have to use tree-sitter-highlight; see
   // #26 for further information
   highlighter: tree_sitter_highlight::Highlighter,
+
+  syntax: tree_house::Syntax,
+  use_tree_house: bool,
 }
 
 impl TreeState {
-  pub fn new(lang: &Language) -> Result<Self, OhNo> {
+  pub fn new(use_tree_house: bool, languages: &Languages, lang: &Language) -> Result<Self, OhNo> {
     let mut parser = Parser::new();
     parser.set_language(lang.grammar().lang())?;
 
@@ -88,46 +107,78 @@ impl TreeState {
       .ok_or(OhNo::CannotParseBuffer)?;
     let highlighter = tree_sitter_highlight::Highlighter::new();
 
+    let syntax = tree_house::Syntax::new(
+      RopeSlice::from(""),
+      lang.language(),
+      Duration::from_millis(100),
+      languages,
+    )
+    .map_err(|err| OhNo::TreeHouse {
+      err: err.to_string(),
+    })?;
+
     Ok(Self {
       parser,
       tree,
       buf: String::default(),
-      lang: lang.name.clone(),
+      lang_name: lang.name.clone(),
+      lang: lang.language(),
       highlighter,
+      syntax,
+      use_tree_house,
     })
   }
 
-  pub fn lang(&self) -> &str {
-    &self.lang
+  pub fn lang_name(&self) -> &str {
+    &self.lang_name
   }
 
-  pub fn change_lang(&mut self, lang: &Language) -> Result<(), OhNo> {
-    lang.lang_name().clone_into(&mut self.lang);
+  pub fn change_lang(&mut self, languages: &Languages, lang: &Language) -> Result<(), OhNo> {
+    lang.lang_name().clone_into(&mut self.lang_name);
 
-    self.parser = Parser::new();
-    self.parser.set_language(lang.grammar().lang())?;
+    if !self.use_tree_house {
+      self.parser = Parser::new();
+      self.parser.set_language(lang.grammar().lang())?;
+    }
 
-    self.recompute_tree()
+    self.recompute_tree(languages)
   }
 
   /// Read a triple buffer to replace our internal buffer.
   ///
   /// Return `true` if the buffer has changed.
-  pub fn update_buf(&mut self, reader: TripleBufferReader) -> Result<bool, OhNo> {
+  pub fn update_buf(
+    &mut self,
+    languages: &Languages,
+    reader: TripleBufferReader,
+  ) -> Result<bool, OhNo> {
     let changed = reader.read_to(&mut self.buf);
 
     if changed {
-      self.recompute_tree()?;
+      self.recompute_tree(languages)?;
     }
 
     Ok(changed)
   }
 
-  pub fn recompute_tree(&mut self) -> Result<(), OhNo> {
-    self.tree = self
-      .parser
-      .parse(self.buf.as_bytes(), None)
-      .ok_or(OhNo::CannotParseBuffer)?;
+  pub fn recompute_tree(&mut self, languages: &Languages) -> Result<(), OhNo> {
+    if self.use_tree_house {
+      self.syntax = tree_house::Syntax::new(
+        RopeSlice::from(self.buf.as_str()),
+        self.lang,
+        Duration::from_millis(100),
+        languages,
+      )
+      .map_err(|err| OhNo::TreeHouse {
+        err: err.to_string(),
+      })?;
+    } else {
+      self.tree = self
+        .parser
+        .parse(self.buf.as_bytes(), None)
+        .ok_or(OhNo::CannotParseBuffer)?;
+    }
+
     Ok(())
   }
 
@@ -137,18 +188,22 @@ impl TreeState {
     injection_callback: impl FnMut(&str) -> Option<&'a tree_sitter_highlight::HighlightConfiguration>
     + 'a,
   ) -> Result<Vec<KakHighlightRange>, OhNo> {
-    let events = self.highlighter.highlight(
-      &lang.hl_config,
-      self.buf.as_bytes(),
-      None,
-      injection_callback,
-    )?;
+    if self.use_tree_house {
+      unimplemented!()
+    } else {
+      let events = self.highlighter.highlight(
+        &lang.hl_config,
+        self.buf.as_bytes(),
+        None,
+        injection_callback,
+      )?;
 
-    Ok(KakHighlightRange::from_iter(
-      &self.buf,
-      &lang.hl_names,
-      events.flatten(),
-    ))
+      Ok(KakHighlightRange::from_iter(
+        &self.buf,
+        &lang.hl_names,
+        events.flatten(),
+      ))
+    }
   }
 
   /// Get the text-objects for the given pattern.
@@ -162,132 +217,145 @@ impl TreeState {
     selections: &[Sel],
     mode: &OperationMode,
   ) -> Result<Vec<Sel>, OhNo> {
-    // first, check whether the language supports text-objects, and also check whether it has the text-object type in
-    // its capture names
-    let query = lang
-      .textobject_query
-      .as_ref()
-      .ok_or(OhNo::UnsupportedTextObjects)?;
+    if self.use_tree_house {
+      unimplemented!()
+    } else {
+      // first, check whether the language supports text-objects, and also check whether it has the text-object type in
+      // its capture names
+      let query = lang
+        .textobject_query
+        .as_ref()
+        .ok_or(OhNo::UnsupportedTextObjects)?;
 
-    // get captures’ nodes for the given pattern; this is a function because the pattern might be dynamically recomputed
-    // (e.g. object mode)
-    let get_captures_nodes = |pattern| {
-      let capture_index =
-        query
-          .capture_index_for_name(pattern)
-          .ok_or(OhNo::UnknownTextObjectQuery {
-            pattern: pattern.to_owned(),
-          })?;
-      let mut cursor = QueryCursor::new();
-      let mut iter = cursor.captures(query, self.tree.root_node(), self.buf.as_bytes());
-      let mut nodes = Vec::new();
+      // get captures’ nodes for the given pattern; this is a function because the pattern might be dynamically recomputed
+      // (e.g. object mode)
+      let get_captures_nodes = |pattern| {
+        let capture_index =
+          query
+            .capture_index_for_name(pattern)
+            .ok_or(OhNo::UnknownTextObjectQuery {
+              pattern: pattern.to_owned(),
+            })?;
+        let mut cursor = QueryCursor::new();
+        let mut iter = cursor.captures(query, self.tree.root_node(), self.buf.as_bytes());
+        let mut nodes = Vec::new();
 
-      iter.advance();
-      while let Some((cm, _)) = iter.get() {
-        for cq in cm.captures.iter().filter(|cq| cq.index == capture_index) {
-          nodes.push(cq.node);
-        }
         iter.advance();
-      }
-      <Result<_, OhNo>>::Ok(nodes)
-    };
+        while let Some((cm, _)) = iter.get() {
+          for cq in cm.captures.iter().filter(|cq| cq.index == capture_index) {
+            nodes.push(cq.node);
+          }
+          iter.advance();
+        }
+        <Result<_, OhNo>>::Ok(nodes)
+      };
 
-    let sels = match mode {
-      OperationMode::SearchNext => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::search_next_text_object(sel, nodes.iter().cloned()))
-          .collect()
-      }
+      let sels = match mode {
+        OperationMode::SearchNext => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_search_next_text_object(sel, nodes.iter().cloned()))
+            .collect()
+        }
 
-      OperationMode::SearchPrev => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::search_prev_text_object(sel, nodes.iter().cloned()))
-          .collect()
-      }
+        OperationMode::SearchPrev => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_search_prev_text_object(sel, nodes.iter().cloned()))
+            .collect()
+        }
 
-      OperationMode::SearchExtendNext => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::search_extend_next_text_object(sel, nodes.iter().cloned()))
-          .collect()
-      }
+        OperationMode::SearchExtendNext => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| {
+              Self::tree_sitter_search_extend_next_text_object(sel, nodes.iter().cloned())
+            })
+            .collect()
+        }
 
-      OperationMode::SearchExtendPrev => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::search_extend_prev_text_object(sel, nodes.iter().cloned()))
-          .collect()
-      }
+        OperationMode::SearchExtendPrev => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| {
+              Self::tree_sitter_search_extend_prev_text_object(sel, nodes.iter().cloned())
+            })
+            .collect()
+        }
 
-      OperationMode::FindNext => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::find_text_object(sel, nodes.iter().cloned(), false))
-          .collect()
-      }
+        OperationMode::FindNext => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_find_text_object(sel, nodes.iter().cloned(), false))
+            .collect()
+        }
 
-      OperationMode::FindPrev => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::find_text_object(sel, nodes.iter().cloned(), true))
-          .collect()
-      }
+        OperationMode::FindPrev => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_find_text_object(sel, nodes.iter().cloned(), true))
+            .collect()
+        }
 
-      OperationMode::ExtendNext => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::extend_text_object(sel, nodes.iter().cloned(), false))
-          .collect()
-      }
+        OperationMode::ExtendNext => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_extend_text_object(sel, nodes.iter().cloned(), false))
+            .collect()
+        }
 
-      OperationMode::ExtendPrev => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::extend_text_object(sel, nodes.iter().cloned(), true))
-          .collect()
-      }
+        OperationMode::ExtendPrev => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_extend_text_object(sel, nodes.iter().cloned(), true))
+            .collect()
+        }
 
-      OperationMode::Select => {
-        let nodes = get_captures_nodes(pattern)?;
-        selections
-          .iter()
-          .flat_map(|sel| Self::select_text_object(sel, nodes.iter().cloned()))
-          .collect()
-      }
+        OperationMode::Select => {
+          let nodes = get_captures_nodes(pattern)?;
+          selections
+            .iter()
+            .flat_map(|sel| Self::tree_sitter_select_text_object(sel, nodes.iter().cloned()))
+            .collect()
+        }
 
-      OperationMode::Object { mode, flags } => {
-        let flags = ObjectFlags::parse_kak_str(flags);
+        OperationMode::Object { mode, flags } => {
+          let flags = ObjectFlags::parse_kak_str(flags);
 
-        let pattern = format!(
-          "{pattern}.{}",
-          if flags.inner { "inside" } else { "around" }
-        );
-        let nodes = get_captures_nodes(&pattern)?;
+          let pattern = format!(
+            "{pattern}.{}",
+            if flags.inner { "inside" } else { "around" }
+          );
+          let nodes = get_captures_nodes(&pattern)?;
 
-        selections
-          .iter()
-          .flat_map(|sel| Self::object_text_object(sel, nodes.iter().cloned(), *mode, flags))
-          .collect()
-      }
-    };
+          selections
+            .iter()
+            .flat_map(|sel| {
+              Self::tree_sitter_object_text_object(sel, nodes.iter().cloned(), *mode, flags)
+            })
+            .collect()
+        }
+      };
 
-    Ok(sels)
+      Ok(sels)
+    }
   }
 
   /// Search the next text-object for a given selection.
-  fn search_next_text_object<'a>(sel: &Sel, nodes: impl Iterator<Item = Node<'a>>) -> Option<Sel> {
+  fn tree_sitter_search_next_text_object<'a>(
+    sel: &Sel,
+    nodes: impl Iterator<Item = Node<'a>>,
+  ) -> Option<Sel> {
     let p = sel.anchor.max(sel.cursor);
-    let node = Self::node_after(&p, nodes)?;
+    let node = Self::tree_sitter_node_after(&p, nodes)?;
     let start = Pos::from(node.start_position());
     let mut end = Pos::from(node.end_position());
     end.col -= 1;
@@ -296,9 +364,12 @@ impl TreeState {
   }
 
   /// Search the prev text-object for a given selection.
-  fn search_prev_text_object<'a>(sel: &Sel, nodes: impl Iterator<Item = Node<'a>>) -> Option<Sel> {
+  fn tree_sitter_search_prev_text_object<'a>(
+    sel: &Sel,
+    nodes: impl Iterator<Item = Node<'a>>,
+  ) -> Option<Sel> {
     let p = sel.anchor.min(sel.cursor);
-    let node = Self::node_before(&p, nodes)?;
+    let node = Self::tree_sitter_node_before(&p, nodes)?;
     let start = Pos::from(node.start_position());
     let mut end = Pos::from(node.end_position());
     end.col -= 1;
@@ -307,11 +378,11 @@ impl TreeState {
   }
 
   /// Search-extend the next text-object for a given selection.
-  fn search_extend_next_text_object<'a>(
+  fn tree_sitter_search_extend_next_text_object<'a>(
     sel: &Sel,
     nodes: impl Iterator<Item = Node<'a>>,
   ) -> Option<Sel> {
-    let node = Self::node_after(&sel.cursor, nodes)?;
+    let node = Self::tree_sitter_node_after(&sel.cursor, nodes)?;
     let cursor = Pos::from(node.start_position());
 
     Some(Sel {
@@ -321,11 +392,11 @@ impl TreeState {
   }
 
   /// Search extend the prev text-object for a given selection.
-  fn search_extend_prev_text_object<'a>(
+  fn tree_sitter_search_extend_prev_text_object<'a>(
     sel: &Sel,
     nodes: impl Iterator<Item = Node<'a>>,
   ) -> Option<Sel> {
-    let node = Self::node_before(&sel.cursor, nodes)?;
+    let node = Self::tree_sitter_node_before(&sel.cursor, nodes)?;
     let cursor = Pos::from(node.start_position());
 
     Some(Sel {
@@ -335,15 +406,15 @@ impl TreeState {
   }
 
   /// Find the next/prev text-object for a given selection.
-  fn find_text_object<'a>(
+  fn tree_sitter_find_text_object<'a>(
     sel: &Sel,
     nodes: impl Iterator<Item = Node<'a>>,
     is_prev: bool,
   ) -> Option<Sel> {
     let node = if is_prev {
-      Self::node_before(&sel.cursor, nodes)?
+      Self::tree_sitter_node_before(&sel.cursor, nodes)?
     } else {
-      Self::node_after(&sel.cursor, nodes)?
+      Self::tree_sitter_node_after(&sel.cursor, nodes)?
     };
     let cursor = node.start_position().into();
     let anchor = sel.cursor;
@@ -352,15 +423,15 @@ impl TreeState {
   }
 
   /// Extend onto the next/prev text-object for a given selection.
-  fn extend_text_object<'a>(
+  fn tree_sitter_extend_text_object<'a>(
     sel: &Sel,
     nodes: impl Iterator<Item = Node<'a>>,
     is_prev: bool,
   ) -> Option<Sel> {
     let node = if is_prev {
-      Self::node_before(&sel.cursor, nodes)?
+      Self::tree_sitter_node_before(&sel.cursor, nodes)?
     } else {
-      Self::node_after(&sel.cursor, nodes)?
+      Self::tree_sitter_node_after(&sel.cursor, nodes)?
     };
     let cursor = node.start_position().into();
     let anchor = sel.anchor;
@@ -369,7 +440,7 @@ impl TreeState {
   }
 
   /// Select text-object occurrences inside the current selection.
-  fn select_text_object<'a>(
+  fn tree_sitter_select_text_object<'a>(
     sel: &'a Sel,
     nodes: impl 'a + Iterator<Item = Node<'a>>,
   ) -> impl 'a + Iterator<Item = Sel> {
@@ -384,13 +455,13 @@ impl TreeState {
   ///
   /// Object-mode is a special in Kakoune aggregating many features, allowing to match inner / whole objects. The
   /// tree-sitter version enhances the mode with all possible tree-sitter capture groups.
-  fn object_text_object<'a>(
+  fn tree_sitter_object_text_object<'a>(
     sel: &Sel,
     nodes: impl Iterator<Item = Node<'a>>,
     mode: SelectMode,
     flags: ObjectFlags,
   ) -> Option<Sel> {
-    let node = Self::narrowest_enclosing_node(&sel.cursor, nodes)?;
+    let node = Self::tree_sitter_narrowest_enclosing_node(&sel.cursor, nodes)?;
 
     match mode {
       // extend only moves the cursor
@@ -433,7 +504,10 @@ impl TreeState {
   }
 
   /// Get the next node after given position.
-  fn node_after<'a>(p: &Pos, nodes: impl Iterator<Item = Node<'a>>) -> Option<Node<'a>> {
+  fn tree_sitter_node_after<'a>(
+    p: &Pos,
+    nodes: impl Iterator<Item = Node<'a>>,
+  ) -> Option<Node<'a>> {
     // tree-sitter API here is HORRIBLE as it mutates in-place on Iterator::next(); we can’t collect();
     //
     // Related discussions:
@@ -448,7 +522,10 @@ impl TreeState {
   }
 
   /// Get the previous node before a given position.
-  fn node_before<'a>(p: &Pos, nodes: impl Iterator<Item = Node<'a>>) -> Option<Node<'a>> {
+  fn tree_sitter_node_before<'a>(
+    p: &Pos,
+    nodes: impl Iterator<Item = Node<'a>>,
+  ) -> Option<Node<'a>> {
     // tree-sitter API here is HORRIBLE as it mutates in-place on Iterator::next(); we can’t collect();
     //
     // Related discussions:
@@ -463,7 +540,7 @@ impl TreeState {
   }
 
   /// Get the narrowest enclosing node of a given position.
-  fn narrowest_enclosing_node<'a>(
+  fn tree_sitter_narrowest_enclosing_node<'a>(
     p: &Pos,
     nodes: impl Iterator<Item = Node<'a>>,
   ) -> Option<Node<'a>> {
@@ -485,12 +562,12 @@ impl TreeState {
   /// This function will apply the direction on all selections, expanding or collapsing them. If a selection is not
   /// spanning on a node, the closet node is selected first, so that if you have the cursor and anchor at the same
   /// location and you want to select the next child, your cursor will expand to the whole nearest enclosing node first.
-  pub fn nav_tree(&self, selections: &[Sel], dir: nav::Dir) -> Vec<Sel> {
+  pub fn tree_sitter_nav_tree(&self, selections: &[Sel], dir: nav::Dir) -> Vec<Sel> {
     selections
       .iter()
       .map(|sel| {
         self
-          .find_sel_node(sel)
+          .tree_sitter_find_sel_node(sel)
           .and_then(|node| {
             // if our selection is not the same as the node, we pick the node
             if !sel.fully_selects(&node) {
@@ -518,10 +595,10 @@ impl TreeState {
                   .and_then(|i| parent.child(i))
               }),
               nav::Dir::PrevSibling { cousin } if cousin => {
-                Self::find_prev_sibling_or_cousin(&node)
+                Self::tree_sitter_find_prev_sibling_or_cousin(&node)
               }
               nav::Dir::NextSibling { cousin } if cousin => {
-                Self::find_next_sibling_or_cousin(&node)
+                Self::tree_sitter_find_next_sibling_or_cousin(&node)
               }
               nav::Dir::PrevSibling { .. } => node.prev_sibling(),
               nav::Dir::NextSibling { .. } => node.next_sibling(),
@@ -537,7 +614,7 @@ impl TreeState {
   }
 
   /// Find the node for a selection.
-  fn find_sel_node(&self, sel: &Sel) -> Option<Node<'_>> {
+  fn tree_sitter_find_sel_node(&self, sel: &Sel) -> Option<Node<'_>> {
     log::trace!("finding node for selection {sel:?}");
 
     let start = sel.anchor.min(sel.cursor);
@@ -554,7 +631,7 @@ impl TreeState {
   }
 
   /// Get the next sibiling or cousin.
-  fn find_next_sibling_or_cousin<'a>(node: &Node<'a>) -> Option<Node<'a>> {
+  fn tree_sitter_find_next_sibling_or_cousin<'a>(node: &Node<'a>) -> Option<Node<'a>> {
     node.next_sibling().or_else(|| {
       let parent = node.parent()?;
       let parent_sibling = parent.next_sibling()?;
@@ -568,7 +645,7 @@ impl TreeState {
   }
 
   /// Get the previous sibiling or cousin.
-  fn find_prev_sibling_or_cousin<'a>(node: &Node<'a>) -> Option<Node<'a>> {
+  fn tree_sitter_find_prev_sibling_or_cousin<'a>(node: &Node<'a>) -> Option<Node<'a>> {
     node.prev_sibling().or_else(|| {
       let parent = node.parent()?;
       let parent_sibling = parent.prev_sibling()?;
