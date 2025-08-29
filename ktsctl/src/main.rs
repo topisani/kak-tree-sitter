@@ -125,6 +125,9 @@ fn start() -> Result<(), HellNo> {
       report!(report, "pruning");
       remove::prune_unpinned(report.incr(), &config, &resources)?;
     }
+    cli::Cmd::Default => {
+      println!("{}", Config::DEFAULT_CONFIG_CONTENT);
+    }
   }
 
   Ok(())

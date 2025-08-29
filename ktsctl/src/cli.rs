@@ -124,4 +124,7 @@ pub enum Cmd {
   /// This command iterates over all languages’ resources and remove everything that
   /// is not pinned in the configuration.
   Prune,
+
+  /// Print default configuration
+  Default,
 }

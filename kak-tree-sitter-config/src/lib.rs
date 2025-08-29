@@ -31,7 +31,7 @@ pub struct Config {
 
 impl Config {
   /// Default configuration using the `default-config.toml` file.
-  const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../default-config.toml");
+  pub const DEFAULT_CONFIG_CONTENT: &'static str = include_str!("../default-config.toml");
 
   /// Default configuration.
   pub fn default_config() -> Result<Self, ConfigError> {
