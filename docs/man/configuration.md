@@ -69,6 +69,13 @@ Override only the values that need to:
 | `link_args`     | Arguments to pass to `link` to link the grammar.                                                                      | `["-shared", "-fpic", "parser.o", "-o", "{lang}.so"]` |
 | `link_flags`    | Optimization / debug / additional libraries to link flags.                                                            | `["-O3"]`                                                          |
 
+Grammars are compiled from a directory inside of the directory specified with `path`.
+In `compile_args`, you must use the parent directory (`../`) to reference the source
+files.
+
+Grammars will typically consist of a `parser.c` file, and potentially a `scanner.c.`
+These are generated from [tree-sitter's `generate` command](https://tree-sitter.github.io/tree-sitter/cli/generate.html)
+
 ## `language`
 
 The `language` table contains language-keyed configuration — e.g. `language.rust`.
