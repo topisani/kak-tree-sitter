@@ -38,7 +38,6 @@ impl SessionTracker {
 pub struct Session {
   name: String,
 }
-
 impl Session {
   /// Create a new [`Session`] for the given name.
   pub fn new(name: impl Into<String>) -> Result<Self, OhNo> {
@@ -69,14 +68,12 @@ impl Session {
   fn send_response_kakp(resp: Response) -> Result<(), OhNo> {
     use std::io::Write as _;
 
-    let Some(data) = resp.to_kak() else {
-      // FIXME: this is a weird situation where the [`Response`] doesn’t really
-      // have any Kakoune counterpart; I plan on removing that ~soon
-      return Ok(());
-    };
+    let mut resp_str = String::new();
+    resp
+      .serialize_into(&mut resp_str)
+      .map_err(|err| OhNo::ResponseSerialization { err })?;
 
     // spawn the kak -p process
-    // TODO: we want to switch that from directly connecting to the UNIX socket
     let mut child = std::process::Command::new("kak")
       .args(["-p", resp.session()])
       .stdin(std::process::Stdio::piped())
@@ -92,7 +89,7 @@ impl Session {
       })?;
 
     child_stdin
-      .write_all(data.as_bytes())
+      .write_all(resp_str.as_bytes())
       .map_err(|err| OhNo::CannotSendRequest {
         err: err.to_string(),
       })?;

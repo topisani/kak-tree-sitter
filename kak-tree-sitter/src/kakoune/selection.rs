@@ -1,7 +1,10 @@
 //! Selections as recognized by Kakoune, as well as associated types and functions.
 
+use std::fmt::{self, Write as _};
+
+use ropey::RopeSlice;
 use serde::{Deserialize, Serialize};
-use tree_sitter::{Node, Point};
+use tree_house_bindings::Node;
 
 /// A single position in a buffer.
 ///
@@ -10,24 +13,6 @@ use tree_sitter::{Node, Point};
 pub struct Pos {
   pub line: usize,
   pub col: usize,
-}
-
-impl From<Point> for Pos {
-  fn from(p: Point) -> Self {
-    Self {
-      line: p.row + 1,
-      col: p.column + 1,
-    }
-  }
-}
-
-impl From<Pos> for Point {
-  fn from(p: Pos) -> Self {
-    Self {
-      row: p.line - 1,
-      column: p.col - 1,
-    }
-  }
 }
 
 impl Pos {
@@ -40,6 +25,28 @@ impl Pos {
     let col = parts.next()?;
 
     Some(Self { line, col })
+  }
+
+  /// Compute the position of a byte offset in a rope.
+  ///
+  /// Kakoune selections only understand bytes, so rows and columns are expressed in bytes. Lines are zero
+  /// indexed in ropey, but Kakoune is 1-indexed.
+  pub fn from_tree_sitter(buf: RopeSlice, byte: u32) -> Self {
+    let byte = byte as usize;
+    let line = buf.byte_to_line(byte);
+    let line_byte = buf.line_to_byte(line);
+    let col = byte - line_byte;
+
+    // Kakoune is 1-indexed for its selections
+    Self {
+      line: line + 1,
+      col: col + 1,
+    }
+  }
+
+  /// Convert a [`Pos`] into a byte representation (tree-sitter).
+  pub fn into_tree_sitter(self, buf: RopeSlice) -> usize {
+    buf.line_to_byte(self.line) + self.col
   }
 }
 
@@ -75,8 +82,9 @@ impl Sel {
   /// Kakoune string representation.
   ///
   /// The anchor always come first; then the cursor.
-  pub fn to_kak_str(&self) -> String {
-    format!(
+  pub fn serialize_into(&self, resp_str: &mut String) -> Result<(), fmt::Error> {
+    write!(
+      resp_str,
       "{anchor_line}.{anchor_col},{cursor_line}.{cursor_col}",
       anchor_line = self.anchor.line,
       anchor_col = self.anchor.col,
@@ -105,16 +113,16 @@ impl Sel {
   }
 
   /// Same as [`Sel::replace`], but with a node’s content.
-  pub fn replace_with_node(&self, node: &Node) -> Self {
-    let mut b: Pos = node.end_position().into();
+  pub fn replace_with_node(&self, buf: RopeSlice, node: &Node) -> Self {
+    let mut b = Pos::from_tree_sitter(buf, node.end_byte() as _);
     b.col -= 1; // kakoune selections are inclusive
-    self.replace(&node.start_position().into(), &b)
+    self.replace(&Pos::from_tree_sitter(buf, node.start_byte() as _), &b)
   }
 
   /// Check whether a selection selects a node.
-  pub fn selects(&self, node: &Node) -> bool {
-    let start: Pos = node.start_position().into();
-    let mut end: Pos = node.end_position().into();
+  pub fn selects(&self, buf: RopeSlice, node: &Node<'_>) -> bool {
+    let start = Pos::from_tree_sitter(buf, node.start_byte() as _);
+    let mut end = Pos::from_tree_sitter(buf, node.end_byte() as _);
     end.col -= 1;
 
     if self.anchor <= self.cursor {
@@ -125,9 +133,9 @@ impl Sel {
   }
 
   /// Check whether a selection fully selects a node.
-  pub fn fully_selects(&self, node: &Node) -> bool {
-    let start: Pos = node.start_position().into();
-    let mut end: Pos = node.end_position().into();
+  pub fn fully_selects(&self, buf: RopeSlice, node: &Node) -> bool {
+    let start = Pos::from_tree_sitter(buf, node.start_byte() as _);
+    let mut end = Pos::from_tree_sitter(buf, node.end_byte() as _);
     end.col -= 1;
 
     if self.anchor <= self.cursor {

@@ -1,8 +1,11 @@
 //! Response sent from the daemon to Kakoune.
 
-use std::{collections::HashSet, fmt::Write, path::PathBuf};
-
-use itertools::Itertools;
+use std::{
+  collections::HashSet,
+  fmt::{self, Write},
+  path::PathBuf,
+  rc::Rc,
+};
 
 use crate::{kakoune::selection::Sel, tree_sitter::highlighting::KakHighlightRange};
 
@@ -40,25 +43,20 @@ impl Response {
     &self.session
   }
 
-  pub fn to_kak(&self) -> Option<String> {
-    let payload = self.payload.to_kak();
+  pub fn serialize_into(&self, resp_str: &mut String) -> Result<(), fmt::Error> {
+    write!(resp_str, "evaluate-commands -no-hooks ")?;
 
-    // empty payload means no response
-    if payload.is_empty() {
-      return None;
+    if let Some(ref buffer) = self.buffer {
+      write!(resp_str, "-buffer '{buffer}' ")?;
+    } else if let Some(ref client) = self.client {
+      write!(resp_str, "-try-client '{client}' ")?;
     }
 
-    let prefix = if let Some(ref buffer) = self.buffer {
-      format!("-buffer '{buffer}' ")
-    } else if let Some(ref client) = self.client {
-      format!("-try-client '{client}' ")
-    } else {
-      String::new()
-    };
+    write!(resp_str, "-- %[ ")?;
+    self.payload.serialize_into(resp_str)?;
+    writeln!(resp_str, " ]")?;
 
-    Some(format!(
-      "evaluate-commands -no-hooks {prefix} -- %[ {payload} ]"
-    ))
+    Ok(())
   }
 }
 
@@ -90,7 +88,10 @@ pub enum Payload {
   /// Highlights.
   ///
   /// This response is generated when new highlights are available.
-  Highlights { ranges: Vec<KakHighlightRange> },
+  Highlights {
+    hl_names: Rc<Vec<String>>,
+    ranges: Vec<KakHighlightRange>,
+  },
 
   /// Selections.
   ///
@@ -100,109 +101,107 @@ pub enum Payload {
 
 impl Payload {
   /// Turn the [`Payload`] into a Kakoune command that can be executed remotely.
-  pub fn to_kak(&self) -> String {
+  pub fn serialize_into(&self, resp_str: &mut String) -> Result<(), fmt::Error> {
     match self {
       Payload::Init { enabled_langs } => {
-        let add_hl =
-          "add-highlighter -override buffer/tree-sitter-highlighter ranges tree_sitter_hl_ranges";
-        let per_lang = enabled_langs
-          .iter()
-          .map(|enabled_lang| {
-            let name = &enabled_lang.name;
+        for enabled_lang in enabled_langs {
+          let name = &enabled_lang.name;
 
-            // try to remove the highlighter of the already existing opened buffer
-            let remove_default_hl = if enabled_lang.remove_default_highlighter {
-              format!("try 'remove-highlighter window/{name}'")
-            } else {
-              String::new()
-            };
+          // logic to run when a buffer sets tree_sitter_lang
+          writeln!(
+            resp_str,
+            "hook -group tree-sitter global WinSetOption tree_sitter_lang={name} %<"
+          )?;
 
-            // logic to run when a buffer sets tree_sitter_lang
-            let mut config = String::new();
-            write!(
-              &mut config,
-              "hook -group tree-sitter global WinSetOption tree_sitter_lang={name} %<
-                 {remove_default_hl}
-                 tree-sitter-buffer-metadata
-                 {add_hl}
-                 tree-sitter-user-after-highlighter
-               >",
-            )
-            .unwrap();
+          // try to remove the highlighter of the already existing opened buffer
+          if enabled_lang.remove_default_highlighter {
+            writeln!(resp_str, "try 'remove-highlighter window/{name}'")?;
+          }
 
-            // automatic config for the language and its aliases
-            if enabled_lang.filetype_hook {
-              for alias in enabled_lang.aliases.iter().chain(Some(name)) {
-                // remove the hook that set a default highlighter
-                if enabled_lang.remove_default_highlighter {
-                  config.push_str(&format!("\ntry 'remove-hooks global {alias}-highlight'"));
-                }
+          writeln!(resp_str, "tree-sitter-buffer-metadata")?;
+          writeln!(
+            resp_str,
+            "add-highlighter -override buffer/tree-sitter-highlighter ranges tree_sitter_hl_ranges"
+          )?;
+          writeln!(resp_str, "tree-sitter-user-after-highlighter")?;
+          writeln!(resp_str, ">")?;
 
-                // set the alias tree-sitter name to the enabled language `name`
-                write!(
-                  &mut config,
-                  r#"
+          // automatic config for the language and its aliases
+          if enabled_lang.filetype_hook {
+            for alias in enabled_lang.aliases.iter().chain(Some(name)) {
+              // remove the hook that set a default highlighter
+              if enabled_lang.remove_default_highlighter {
+                writeln!(resp_str, "try 'remove-hooks global {alias}-highlight'")?;
+              }
+
+              // set the alias tree-sitter name to the enabled language `name`
+              writeln!(
+                resp_str,
+                r#"
                   hook -group tree-sitter global BufSetOption filetype={alias} %{{
                     # Forward the filetype as tree-sitter language.
                     set-option buffer tree_sitter_lang {name}
                   }}"#
-                )
-                .unwrap();
-              }
+              )?;
             }
+          }
+        }
 
-            config
-          })
-          .join("\n");
-
-        [
-          per_lang,
-          "tree-sitter-hook-install-session".to_owned(),
-          "tree-sitter-initial-set-buffer-lang".to_owned(),
-        ]
-        .join("\n")
+        writeln!(resp_str, "tree-sitter-hook-install-session")?;
+        writeln!(resp_str, "tree-sitter-initial-set-buffer-lang")?;
       }
 
-      Payload::Deinit => "tree-sitter-remove-all".to_owned(),
+      Payload::Deinit => writeln!(resp_str, "tree-sitter-remove-all")?,
 
       Payload::BufferSetup {
         fifo_path,
         sentinel,
-      } => [
-        format!(
+      } => {
+        writeln!(
+          resp_str,
           "set-option buffer tree_sitter_buf_fifo_path {}",
           fifo_path.display()
-        ),
-        format!("set-option buffer tree_sitter_buf_sentinel {sentinel}"),
-        "tree-sitter-hook-install-update".to_owned(),
-      ]
-      .into_iter()
-      .filter(|s| !s.is_empty())
-      .join("\n"),
+        )?;
 
-      Payload::Highlights { ranges } => {
-        let ranges_str = ranges
-          .iter()
-          .map(KakHighlightRange::to_kak_range_str)
-          .join(" ");
+        writeln!(
+          resp_str,
+          "set-option buffer tree_sitter_buf_sentinel {sentinel}"
+        )?;
 
-        format!(
-          "{range_specs} %val{{timestamp}} {ranges_str}",
-          range_specs = "set buffer tree_sitter_hl_ranges",
-        )
+        writeln!(resp_str, "tree-sitter-hook-install-update")?;
+      }
+
+      Payload::Highlights { hl_names, ranges } => {
+        write!(
+          resp_str,
+          "set buffer tree_sitter_hl_ranges %val{{timestamp}} "
+        )?;
+
+        for range in ranges {
+          resp_str.push(' ');
+          range.serialize_into(hl_names, resp_str)?;
+        }
+
+        writeln!(resp_str)?;
       }
 
       Payload::Selections { sels } => {
         if sels.is_empty() {
-          "info -title tree-sitter 'no selection'".to_owned()
+          writeln!(resp_str, "info -title tree-sitter 'no selection'")?;
         } else {
-          let sels_str = sels.iter().map(|sel| sel.to_kak_str()).join(" ");
-          log::trace!("selections response: select {sels_str}");
+          write!(resp_str, "select ")?;
 
-          format!("select {sels_str}")
+          for sel in sels {
+            resp_str.push(' ');
+            sel.serialize_into(resp_str)?;
+          }
+
+          writeln!(resp_str)?;
         }
       }
     }
+
+    Ok(())
   }
 }
 

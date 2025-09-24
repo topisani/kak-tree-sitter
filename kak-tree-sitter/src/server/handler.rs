@@ -113,7 +113,7 @@ pub struct Handler {
 
 impl Handler {
   /// Create a new [`Handler`] and a [`CommandSender`] to send it commands.
-  pub fn create(config: &Config, with_highlighting: bool, with_tree_house: bool) -> CommandSender {
+  pub fn create(config: &Config, with_highlighting: bool) -> CommandSender {
     let (sender, cmds) = channel();
 
     let config = config.clone();
@@ -121,7 +121,7 @@ impl Handler {
       let langs = Languages::new(&config);
       let handler = Self {
         config,
-        trees: Trees::default().with_tree_house(with_tree_house),
+        trees: Trees::default(),
         langs,
         with_highlighting,
       };
@@ -281,10 +281,7 @@ impl Handler {
     }
 
     let timer = Instant::now();
-    let lang = self.langs.get(tree.lang_name())?;
-    let ranges = tree.highlight(lang, |inject_lang| {
-      self.langs.get(inject_lang).ok().map(|lang| &lang.hl_config)
-    })?;
+    let ranges = tree.highlight(&self.langs)?;
 
     log::debug!(
       "highlights were recomputed in {}us",
@@ -295,7 +292,10 @@ impl Handler {
       id.session(),
       None,
       id.buffer().to_owned(),
-      Payload::Highlights { ranges },
+      Payload::Highlights {
+        hl_names: self.langs.hl_names().clone(),
+        ranges,
+      },
     );
 
     Ok(Some(resp))

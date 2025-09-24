@@ -62,10 +62,6 @@ pub enum OhNo {
   CannotStartServer { err: io::Error },
 
   #[error("cannot load grammar for language {lang}: {err}")]
-  #[deprecated = "use CannotLoadGrammar2 instead"]
-  CannotLoadGrammar { lang: String, err: String },
-
-  #[error("cannot load grammar for language {lang}: {err}")]
   CannotLoadGrammar2 { lang: String, err: String },
 
   #[error("cannot load queries for language {lang}: {err}")]
@@ -102,9 +98,6 @@ pub enum OhNo {
   #[error("cannot send command")]
   CannotSendCommand,
 
-  #[error("cannot parse buffer")]
-  CannotParseBuffer,
-
   #[error("highlight error: {err}")]
   HighlightError {
     #[from]
@@ -137,10 +130,13 @@ pub enum OhNo {
 
   #[error("text-objects not supported")]
   UnsupportedTextObjects,
-
+  //
   #[error("no such {pattern} text-object query")]
   UnknownTextObjectQuery { pattern: String },
 
   #[error("face initialization error: {err}")]
   FaceInit { err: fmt::Error },
+
+  #[error("response serialization error: {err}")]
+  ResponseSerialization { err: fmt::Error },
 }

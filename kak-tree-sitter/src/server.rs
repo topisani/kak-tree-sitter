@@ -53,7 +53,6 @@ impl Server {
       cli.with_highlighting || config.features.highlighting,
       resources,
       poll,
-      cli.with_tree_house,
     )?;
 
     Ok(Server {
@@ -117,6 +116,7 @@ impl Server {
   fn disconnect_sessions(&self) {
     for session_name in self.session_tracker.sessions() {
       let resp = Response::new(session_name, None, None, response::Payload::Deinit);
+      // NOTE: we do not pass the list of languages here, because deinitialization doesn’t require them
       if let Err(err) = Session::send_response(resp) {
         log::error!("error while sending disconnect: {err}");
       }

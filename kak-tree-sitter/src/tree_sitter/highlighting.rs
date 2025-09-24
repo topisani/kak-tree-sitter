@@ -1,7 +1,21 @@
 //! Convert from tree-sitter-highlight events to Kakoune ranges highlighter.
 
-use tree_sitter_highlight::{Highlight, HighlightEvent};
+use std::fmt;
+
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::tree_sitter::languages::Languages;
+
+#[derive(Debug, Eq, PartialEq)]
+struct Face {
+  id: usize,
+}
+
+impl Face {
+  fn new(id: usize) -> Self {
+    Self { id }
+  }
+}
 
 /// A convenient representation of a single highlight range for Kakoune.
 ///
@@ -12,95 +26,96 @@ pub struct KakHighlightRange {
   col_byte_start: usize,
   line_end: usize,
   col_byte_end: usize,
-  face: String,
+  face: Face,
 }
 
 impl KakHighlightRange {
-  pub fn new(
+  fn new(
     line_start: usize,
     col_byte_start: usize,
     line_end: usize,
     col_byte_end: usize,
-    face: impl Into<String>,
+    face: Face,
   ) -> Self {
     Self {
       line_start,
       col_byte_start,
       line_end,
       col_byte_end,
-      face: face.into(),
+      face,
     }
   }
 
-  /// Given an iterator of [`HighlightEvent`], generate a list of Kakoune highlights.
-  pub fn from_iter(
+  pub fn from_tree_house<'a, 'b: 'a>(
     source: &str,
-    hl_names: &[String],
-    hl_events: impl Iterator<Item = HighlightEvent>,
+    mut highlighter: tree_house::highlighter::Highlighter<'a, 'b, Languages>,
   ) -> Vec<Self> {
     let mut kak_hls = Vec::new();
-    let mut faces: Vec<&str> = Vec::new();
+    let mut tree_house_hls = Vec::new();
     let mut mapper = ByteLineColMapper::new(source.graphemes(true));
 
-    // iterate on the highlight event
-    for event in hl_events {
+    // (byte, line, column)
+    let mut last_position = (0, 0, 0);
+
+    loop {
+      let offset = highlighter.next_event_offset();
+      if offset == u32::MAX {
+        break;
+      }
+
+      mapper.advance(offset as _);
+      let line = mapper.line();
+      let col = mapper.col_byte();
+
+      let (event, hl_list) = highlighter.advance();
+
+      if offset == last_position.0 {
+        continue;
+      }
+
       match event {
-        HighlightEvent::Source { start, end } => {
-          if start == end {
-            continue;
-          }
+        // reset highlights
+        tree_house::highlighter::HighlightEvent::Refresh => {
+          tree_house_hls.clear();
+          tree_house_hls.extend(hl_list);
+        }
 
-          mapper.advance(start);
-          let line_start = mapper.line();
-          let col_byte_start = mapper.col_byte();
+        // stack up highlights
+        tree_house::highlighter::HighlightEvent::Push => tree_house_hls.extend(hl_list),
+      }
 
-          mapper.advance(end - 1);
-          let line_end = mapper.line();
-          let col_byte_end = mapper.col_byte();
-
-          let face = faces.last().copied().unwrap_or("unknown");
-
+      if !tree_house_hls.is_empty() {
+        for hl in &tree_house_hls {
           kak_hls.push(KakHighlightRange::new(
-            line_start,
-            col_byte_start,
-            line_end,
-            col_byte_end,
-            format!("ts_{}", face.replace('.', "_")),
+            last_position.1,
+            last_position.2,
+            line,
+            col,
+            Face::new(hl.idx()),
           ));
         }
-
-        HighlightEvent::HighlightStart(Highlight(idx)) => {
-          if idx >= hl_names.len() {
-            log::error!(
-              "unrecognized highlight group index: {idx} (len: {len}), groups = {hl_names:?}",
-              len = hl_names.len()
-            );
-          } else {
-            faces.push(&hl_names[idx]);
-          }
-        }
-
-        HighlightEvent::HighlightEnd => {
-          faces.pop();
-        }
       }
-    }
 
-    #[cfg(feature = "debug-hl-ranges")]
-    log::debug!("highlight ranges: {kak_hls:#?}");
+      last_position = (offset, line, col);
+    }
 
     kak_hls
   }
 
   /// Display as a string recognized by the `ranges` Kakoune highlighter.
-  pub fn to_kak_range_str(&self) -> String {
-    format!(
+  pub fn serialize_into(
+    &self,
+    hl_names: &[String],
+    output: &mut impl fmt::Write,
+  ) -> Result<(), fmt::Error> {
+    write!(
+      output,
       "{}.{},{}.{}|{}",
       self.line_start,
       self.col_byte_start + 1, // range-specs is 1-indexed
       self.line_end,
       self.col_byte_end + 1, // ditto
-      self.face
+      hl_names[self.face.id]
     )
   }
 }

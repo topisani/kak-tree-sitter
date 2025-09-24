@@ -21,11 +21,13 @@ impl Connection {
   }
 
   pub fn send(&mut self, resp: Response) -> Result<(), OhNo> {
-    let Some(s) = resp.to_kak() else {
-      return Ok(());
-    };
-    log::trace!("sending response back to Kakoune: {s}");
-    let bytes = s.as_bytes();
+    let mut resp_str = String::new();
+    resp
+      .serialize_into(&mut resp_str)
+      .map_err(|err| OhNo::ResponseSerialization { err })?;
+
+    log::trace!("sending response back to Kakoune: {resp_str}");
+    let bytes = resp_str.as_bytes();
 
     // content is encoded length + raw message
     let mut content = Vec::new();

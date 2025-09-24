@@ -5,7 +5,6 @@ use std::{
     Arc,
     atomic::{AtomicBool, Ordering},
   },
-  time::Duration,
 };
 
 use kak_tree_sitter_config::Config;
@@ -46,7 +45,6 @@ pub enum Feedback {
 pub struct IOHandler {
   is_standalone: bool,
   with_highlighting: bool,
-  with_tree_house: bool,
   resources: ServerResources,
   fifos: HashMap<Token, (Metadata, Fifo, TripleBuffer)>,
   tkn_buffer_ids: HashMap<BufferId, Token>,
@@ -66,7 +64,6 @@ impl IOHandler {
     with_highlighting: bool,
     resources: ServerResources,
     poll: Poll,
-    with_tree_house: bool,
   ) -> Result<Self, OhNo> {
     let mut unix_listener = UnixListener::bind(resources.paths().socket_path())
       .map_err(|err| OhNo::CannotStartServer { err })?;
@@ -83,12 +80,11 @@ impl IOHandler {
       )
       .map_err(|err| OhNo::PollError { err })?;
 
-    let command_sender = Handler::create(config, with_highlighting, with_tree_house);
+    let command_sender = Handler::create(config, with_highlighting);
 
     Ok(Self {
       is_standalone,
       with_highlighting,
-      with_tree_house,
       resources,
       fifos,
       tkn_buffer_ids,
@@ -104,7 +100,7 @@ impl IOHandler {
 
     log::debug!("starting event loop");
     'event_loop: loop {
-      match self.poll.poll(&mut events, Some(Duration::from_secs(1))) {
+      match self.poll.poll(&mut events, None) {
         Err(err) if err.kind() == std::io::ErrorKind::Interrupted => continue,
 
         Err(err) => {
@@ -398,7 +394,7 @@ impl IOHandler {
       }
     };
 
-    self.command_sender = Handler::create(&config, self.with_highlighting, self.with_tree_house);
+    self.command_sender = Handler::create(&config, self.with_highlighting);
   }
 }
 
