@@ -1,6 +1,6 @@
 //! Face definition.
 
-use std::fmt::Write;
+use std::fmt::{Display, Write};
 
 use kak_tree_sitter_config::Config;
 
@@ -9,6 +9,12 @@ use crate::error::OhNo;
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Face {
   name: String,
+}
+
+impl Display for Face {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    self.name.fmt(f)
+  }
 }
 
 impl Face {

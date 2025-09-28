@@ -293,7 +293,7 @@ impl Handler {
       None,
       id.buffer().to_owned(),
       Payload::Highlights {
-        hl_names: self.langs.hl_names().clone(),
+        faces: self.langs.faces().clone(),
         ranges,
       },
     );

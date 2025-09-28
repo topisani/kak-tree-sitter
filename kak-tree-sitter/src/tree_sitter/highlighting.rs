@@ -4,14 +4,14 @@ use std::fmt;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::tree_sitter::languages::Languages;
+use crate::{kakoune::face::Face, tree_sitter::languages::Languages};
 
 #[derive(Debug, Eq, PartialEq)]
-struct Face {
+struct FaceId {
   id: usize,
 }
 
-impl Face {
+impl FaceId {
   fn new(id: usize) -> Self {
     Self { id }
   }
@@ -26,7 +26,7 @@ pub struct KakHighlightRange {
   col_byte_start: usize,
   line_end: usize,
   col_byte_end: usize,
-  face: Face,
+  face: FaceId,
 }
 
 impl KakHighlightRange {
@@ -35,7 +35,7 @@ impl KakHighlightRange {
     col_byte_start: usize,
     line_end: usize,
     col_byte_end: usize,
-    face: Face,
+    face: FaceId,
   ) -> Self {
     Self {
       line_start,
@@ -91,7 +91,7 @@ impl KakHighlightRange {
             last_position.2,
             line,
             col,
-            Face::new(hl.idx()),
+            FaceId::new(hl.idx()),
           ));
         }
       }
@@ -105,7 +105,7 @@ impl KakHighlightRange {
   /// Display as a string recognized by the `ranges` Kakoune highlighter.
   pub fn serialize_into(
     &self,
-    hl_names: &[String],
+    faces: &[Face],
     output: &mut impl fmt::Write,
   ) -> Result<(), fmt::Error> {
     write!(
@@ -115,7 +115,7 @@ impl KakHighlightRange {
       self.col_byte_start + 1, // range-specs is 1-indexed
       self.line_end,
       self.col_byte_end + 1, // ditto
-      hl_names[self.face.id]
+      faces[self.face.id]
     )
   }
 }

@@ -15,7 +15,7 @@ use kak_tree_sitter_config::{
 use tree_house::{highlighter::Highlight, text_object::TextObjectQuery};
 use tree_house_bindings::Query;
 
-use crate::{error::OhNo, tree_sitter::queries::Queries};
+use crate::{error::OhNo, kakoune::face::Face, tree_sitter::queries::Queries};
 
 pub struct Language {
   pub name: String,
@@ -65,8 +65,8 @@ pub struct Languages {
   /// Reverse lookup mapping a numeric ID (Language) to its langage name.
   lang_ids: Vec<String>,
 
-  /// List of highlight groups; used to resolved highlights based off their indices.
-  hl_names: Rc<Vec<String>>,
+  /// List of faces; used to resolve face names from their indices.
+  faces: Rc<Vec<Face>>,
 }
 
 type LazyLang = LazyCell<CachedLanguage, Box<dyn FnOnce() -> CachedLanguage + 'static>>;
@@ -74,7 +74,10 @@ pub type Grammar2Cache = Rc<RefCell<HashMap<String, tree_house_bindings::Grammar
 
 impl Languages {
   pub fn new(config: &Config) -> Self {
-    let hl_names: Rc<Vec<_>> = Rc::new(config.highlight.groups.iter().cloned().collect());
+    let hl_names: Vec<_> = config.highlight.groups.iter().cloned().collect();
+    let faces = Rc::new(hl_names.iter().map(Face::from_capture_group).collect());
+    let hl_names = Rc::new(hl_names.clone());
+
     let grammars2: Grammar2Cache = Rc::new(RefCell::new(HashMap::new()));
 
     let lang_list: Vec<_> = config
@@ -113,7 +116,7 @@ impl Languages {
     Self {
       langs,
       lang_ids,
-      hl_names,
+      faces,
     }
   }
 
@@ -231,9 +234,8 @@ impl Languages {
       })
   }
 
-  /// Get the list of highlight groups.
-  pub fn hl_names(&self) -> &Rc<Vec<String>> {
-    &self.hl_names
+  pub fn faces(&self) -> &Rc<Vec<Face>> {
+    &self.faces
   }
 }
 

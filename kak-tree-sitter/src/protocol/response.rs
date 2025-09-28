@@ -7,7 +7,10 @@ use std::{
   rc::Rc,
 };
 
-use crate::{kakoune::selection::Sel, tree_sitter::highlighting::KakHighlightRange};
+use crate::{
+  kakoune::{face::Face, selection::Sel},
+  tree_sitter::highlighting::KakHighlightRange,
+};
 
 use super::request::Metadata;
 
@@ -89,7 +92,7 @@ pub enum Payload {
   ///
   /// This response is generated when new highlights are available.
   Highlights {
-    hl_names: Rc<Vec<String>>,
+    faces: Rc<Vec<Face>>,
     ranges: Vec<KakHighlightRange>,
   },
 
@@ -171,7 +174,7 @@ impl Payload {
         writeln!(resp_str, "tree-sitter-hook-install-update")?;
       }
 
-      Payload::Highlights { hl_names, ranges } => {
+      Payload::Highlights { faces, ranges } => {
         write!(
           resp_str,
           "set buffer tree_sitter_hl_ranges %val{{timestamp}} "
@@ -179,7 +182,7 @@ impl Payload {
 
         for range in ranges {
           resp_str.push(' ');
-          range.serialize_into(hl_names, resp_str)?;
+          range.serialize_into(faces, resp_str)?;
         }
 
         writeln!(resp_str)?;
