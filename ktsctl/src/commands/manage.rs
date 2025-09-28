@@ -347,7 +347,7 @@ impl Manager {
     let query_dir = fetch_path.join(path);
     self.install_git_queries(report, &query_dir, lang, pin)?;
 
-    report.success(format!("synchronized {lang} grammar"));
+    report.success(format!("synchronized {lang} queries"));
     Ok(())
   }
 
