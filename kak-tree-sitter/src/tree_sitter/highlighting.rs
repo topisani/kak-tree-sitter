@@ -180,6 +180,10 @@ where
 
 #[cfg(test)]
 mod tests {
+  use std::{cmp::Reverse, time::Duration};
+
+  use ropey::RopeSlice;
+  use tree_house::Syntax;
   use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
   use unicode_segmentation::UnicodeSegmentation;
 
@@ -404,5 +408,290 @@ mod tests {
         HighlightEvent::HighlightEnd
       ]
     ));
+  }
+
+  #[test]
+  fn kak_hl_ranges_from_tree_house() {
+    let source = RopeSlice::from("fn foo(a: i32, b: /* ® */ impl Into<Option<String>>) {}");
+    let mut hl_names: Vec<_> = [
+      "constant",
+      "function",
+      "keyword",
+      "variable",
+      "comment",
+      "type",
+      "punctuation",
+      "punctuation.delimiter",
+      "punctuation.bracket",
+    ]
+    .into_iter()
+    .collect();
+
+    // NOTE: sorting in descending order allows to ensure that we will always match against the longest (more accurate)
+    // capture groups first; even though we have `punctuation`, parenthesis match `punctuation.bracket` and commas
+    // match `punctuation.delimiter`, so we want to resolve them as the more accurate capture group for better
+    // highlighting support.
+    hl_names.sort_by_key(|&name| Reverse(name));
+
+    let function_hl = hl_names
+      .iter()
+      .position(|&name| name == "function")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let keyword_hl = hl_names
+      .iter()
+      .position(|&name| name == "keyword")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let variable_hl = hl_names
+      .iter()
+      .position(|&name| name == "variable")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let comment_hl = hl_names
+      .iter()
+      .position(|&name| name == "comment")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let type_hl = hl_names
+      .iter()
+      .position(|&name| name == "type")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let punctuation_delimiter_hl = hl_names
+      .iter()
+      .position(|&name| name == "punctuation.delimiter")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+    let punctuation_bracket_hl = hl_names
+      .iter()
+      .position(|&name| name == "punctuation.bracket")
+      .map(|id| tree_house::highlighter::Highlight::new(id as _))
+      .unwrap();
+
+    let grammar: tree_house_bindings::Grammar = tree_sitter_rust::LANGUAGE.try_into().unwrap();
+    let config = tree_house::LanguageConfig::new(
+      grammar,
+      tree_sitter_rust::HIGHLIGHTS_QUERY,
+      tree_sitter_rust::INJECTIONS_QUERY,
+      "",
+    )
+    .unwrap();
+
+    config.configure(|name| {
+      hl_names
+        .iter()
+        .position(|&name2| name.starts_with(name2))
+        .map(|pos| tree_house::highlighter::Highlight::new(pos as _))
+    });
+
+    struct Loader {
+      config: tree_house::LanguageConfig,
+    }
+
+    impl tree_house::LanguageLoader for Loader {
+      fn language_for_marker(
+        &self,
+        _: tree_house::InjectionLanguageMarker,
+      ) -> Option<tree_house::Language> {
+        // NOTE: we won’t do injection so we can ignore this
+        None
+      }
+
+      fn get_config(&self, _: tree_house::Language) -> Option<&tree_house::LanguageConfig> {
+        // NOTE: same thing; we will only work in Rust
+        Some(&self.config)
+      }
+    }
+
+    let loader = Loader { config };
+    let syntax = tree_house::Syntax::new(
+      source,
+      tree_house::Language::new(0),
+      Duration::from_secs(1),
+      &loader,
+    )
+    .unwrap();
+    let mut highlighter = tree_house::highlighter::Highlighter::new(&syntax, source, &loader, ..);
+
+    assert_eq!(highlighter.next_event_offset(), 0);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![keyword_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 2);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 3);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![function_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 6);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 7);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![variable_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 8);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_delimiter_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 9);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 10);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![type_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 13);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_delimiter_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 14);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 15);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![variable_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 16);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_delimiter_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 17);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 18);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![comment_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 26);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 27);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![keyword_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 31);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 32);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![type_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 36);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 37);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![type_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 43);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 44);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![type_hl]);
+
+    assert_eq!(highlighter.next_event_offset(), 50);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 51);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 52);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 53);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), 54);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Push);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 55);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(
+      hls.into_iter().collect::<Vec<_>>(),
+      vec![punctuation_bracket_hl]
+    );
+
+    assert_eq!(highlighter.next_event_offset(), 56);
+    let (event, hls) = highlighter.advance();
+    assert_eq!(event, tree_house::highlighter::HighlightEvent::Refresh);
+    assert_eq!(hls.into_iter().collect::<Vec<_>>(), vec![]);
+
+    assert_eq!(highlighter.next_event_offset(), u32::MAX);
   }
 }
