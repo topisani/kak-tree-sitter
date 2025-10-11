@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use unicode_segmentation::UnicodeSegmentation;
+use ropey::RopeSlice;
 
 use crate::{kakoune::face::Face, tree_sitter::languages::Languages};
 
@@ -17,24 +17,42 @@ impl FaceId {
   }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct LineZeroIndexed(usize);
+
+impl LineZeroIndexed {
+  pub fn into_one_indexed(self) -> usize {
+    self.0 + 1
+  }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ColZeroIndexed(usize);
+
+impl ColZeroIndexed {
+  pub fn into_one_indexed(self) -> usize {
+    self.0 + 1
+  }
+}
+
 /// A convenient representation of a single highlight range for Kakoune.
 ///
 /// `:doc highlighters`, `ranges`, for further documentation.
 #[derive(Debug, Eq, PartialEq)]
 pub struct KakHighlightRange {
-  line_start: usize,
-  col_byte_start: usize,
-  line_end: usize,
-  col_byte_end: usize,
+  line_start: LineZeroIndexed,
+  col_byte_start: ColZeroIndexed,
+  line_end: LineZeroIndexed,
+  col_byte_end: ColZeroIndexed,
   face: FaceId,
 }
 
 impl KakHighlightRange {
   fn new(
-    line_start: usize,
-    col_byte_start: usize,
-    line_end: usize,
-    col_byte_end: usize,
+    line_start: LineZeroIndexed,
+    col_byte_start: ColZeroIndexed,
+    line_end: LineZeroIndexed,
+    col_byte_end: ColZeroIndexed,
     face: FaceId,
   ) -> Self {
     Self {
@@ -47,15 +65,14 @@ impl KakHighlightRange {
   }
 
   pub fn from_tree_house<'a, 'b: 'a>(
-    source: &str,
+    source: RopeSlice,
     mut highlighter: tree_house::highlighter::Highlighter<'a, 'b, Languages>,
   ) -> Vec<Self> {
     let mut kak_hls = Vec::new();
-    let mut tree_house_hls = Vec::new();
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
+    let mut tree_house_hls: Vec<tree_house::highlighter::Highlight> = Vec::new();
 
     // (byte, line, column)
-    let mut last_position = (0, 0, 0);
+    let mut last_position = (0, LineZeroIndexed(0), ColZeroIndexed(0));
 
     loop {
       let offset = highlighter.next_event_offset();
@@ -63,29 +80,15 @@ impl KakHighlightRange {
         break;
       }
 
-      mapper.advance(offset as _);
-      let line = mapper.line();
-      let col = mapper.col_byte();
+      let line = LineZeroIndexed(source.byte_to_line(offset as _));
+      let col = ColZeroIndexed(offset as usize - source.line_to_byte(line.0));
 
       let (event, hl_list) = highlighter.advance();
 
-      if offset == last_position.0 {
-        continue;
-      }
-
-      match event {
-        // reset highlights
-        tree_house::highlighter::HighlightEvent::Refresh => {
-          tree_house_hls.clear();
-          tree_house_hls.extend(hl_list);
-        }
-
-        // stack up highlights
-        tree_house::highlighter::HighlightEvent::Push => tree_house_hls.extend(hl_list),
-      }
-
       if !tree_house_hls.is_empty() {
-        for hl in &tree_house_hls {
+        log::trace!("--> {tree_house_hls:?}");
+        // for hl in &tree_house_hls {
+        if let Some(hl) = tree_house_hls.last() {
           kak_hls.push(KakHighlightRange::new(
             last_position.1,
             last_position.2,
@@ -93,6 +96,21 @@ impl KakHighlightRange {
             col,
             FaceId::new(hl.idx()),
           ));
+        }
+      }
+
+      match event {
+        // apply highlights
+        tree_house::highlighter::HighlightEvent::Refresh => {
+          log::trace!("Refresh: {offset}, {line:?}, {col:?}");
+          tree_house_hls.clear();
+          tree_house_hls.extend(hl_list);
+        }
+
+        // stack up highlights
+        tree_house::highlighter::HighlightEvent::Push => {
+          tree_house_hls.extend(hl_list);
+          log::trace!("Push: {offset}, {line:?}, {col:?}; {tree_house_hls:?}");
         }
       }
 
@@ -111,70 +129,12 @@ impl KakHighlightRange {
     write!(
       output,
       "{}.{},{}.{}|{}",
-      self.line_start,
-      self.col_byte_start + 1, // range-specs is 1-indexed
-      self.line_end,
-      self.col_byte_end + 1, // ditto
+      self.line_start.into_one_indexed(),
+      self.col_byte_start.into_one_indexed(),
+      self.line_end.into_one_indexed(),
+      self.col_byte_end.into_one_indexed(),
       faces[self.face.id]
     )
-  }
-}
-
-/// Map byte indices to line and column.
-#[derive(Debug)]
-struct ByteLineColMapper<C> {
-  chars: C,
-  byte_idx: usize,
-  line: usize,
-  col_byte: usize,
-}
-
-impl<'a, C> ByteLineColMapper<C>
-where
-  C: Iterator<Item = &'a str>,
-{
-  fn new(chars: C) -> Self {
-    Self {
-      chars,
-      byte_idx: 0,
-      line: 1,
-      col_byte: 0,
-    }
-  }
-
-  fn line(&self) -> usize {
-    self.line
-  }
-
-  fn col_byte(&self) -> usize {
-    self.col_byte
-  }
-
-  fn should_change_line(s: &str) -> bool {
-    ["\n", "\r\n"].contains(&s)
-  }
-
-  /// Advance the mapper until the given byte is read (or just passed over).
-  fn advance(&mut self, til: usize) {
-    loop {
-      if self.byte_idx >= til {
-        break;
-      }
-
-      if let Some(grapheme) = self.chars.next() {
-        let bytes = grapheme.len();
-        self.byte_idx += bytes;
-
-        if Self::should_change_line(grapheme) {
-          self.line += 1;
-          self.col_byte = 0;
-        } else {
-          self.col_byte += bytes;
-        }
-      } else {
-        break;
-      }
-    }
   }
 }
 
@@ -183,123 +143,7 @@ mod tests {
   use std::{cmp::Reverse, time::Duration};
 
   use ropey::RopeSlice;
-  use tree_house::Syntax;
   use tree_sitter_highlight::{Highlight, HighlightConfiguration, HighlightEvent, Highlighter};
-  use unicode_segmentation::UnicodeSegmentation;
-
-  use super::ByteLineColMapper;
-
-  #[test]
-  fn idempotent_mapper() {
-    let source = "Hello, world!";
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
-
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 0);
-
-    mapper.advance(1);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 1);
-    mapper.advance(1);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 1);
-
-    mapper.advance(4);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 4);
-    mapper.advance(4);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 4);
-  }
-
-  #[test]
-  fn lines_mapper() {
-    let source = "const x: &'str = \"Hello, world!\";\nconst y = 3;";
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
-
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 0);
-
-    mapper.advance(4);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 4);
-
-    mapper.advance(33);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 33);
-
-    mapper.advance(34);
-    assert_eq!(mapper.line(), 2);
-    assert_eq!(mapper.col_byte(), 0);
-
-    mapper.advance(35);
-    assert_eq!(mapper.line(), 2);
-    assert_eq!(mapper.col_byte(), 1);
-  }
-
-  #[test]
-  fn unicode_mapper() {
-    let source = "const ᾩ = 1"; // the unicode symbol is 3-bytes
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
-
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 0);
-
-    mapper.advance(1);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 1);
-
-    mapper.advance(5);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 5);
-
-    mapper.advance(6);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 6);
-
-    mapper.advance(7);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 9);
-
-    mapper.advance(8);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 9);
-
-    mapper.advance(9);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 9);
-  }
-
-  #[test]
-  fn unicode_mapper_more() {
-    let source = "× a"; // 2 bytes
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
-
-    mapper.advance(1);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 2);
-  }
-
-  #[test]
-  fn newline_mapper() {
-    let source = "×\na"; // 2 bytes, 1 byte, 1 byte
-    let mut mapper = ByteLineColMapper::new(source.graphemes(true));
-
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 0);
-
-    mapper.advance(1);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 2);
-
-    mapper.advance(2);
-    assert_eq!(mapper.line(), 1);
-    assert_eq!(mapper.col_byte(), 2);
-
-    mapper.advance(3);
-    assert_eq!(mapper.line(), 2);
-    assert_eq!(mapper.col_byte(), 0);
-  }
 
   #[test]
   fn kak_hl_ranges_from_iter() {

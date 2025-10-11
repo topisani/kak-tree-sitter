@@ -123,6 +123,9 @@ impl TreeState {
     let changed = reader.read_to(&mut self.buf);
 
     if changed {
+      // Ensure we always have a trimmed buffer. Kakoune doesn’t like adding highlighters past the end of the buffer’s
+      // last line.
+      self.buf.truncate(self.buf.trim_end().len());
       self.recompute_tree(languages)?;
     }
 
@@ -144,14 +147,12 @@ impl TreeState {
   }
 
   pub fn highlight(&mut self, langs: &Languages) -> Result<Vec<KakHighlightRange>, OhNo> {
-    let highlighter = tree_house::highlighter::Highlighter::new(
-      &self.syntax,
-      RopeSlice::from(self.buf.as_str()),
-      langs,
-      ..,
-    );
+    let rope = RopeSlice::from(self.buf.as_str());
 
-    let hls = KakHighlightRange::from_tree_house(&self.buf, highlighter);
+    log::trace!("highlighting buffer: {rope:?}",);
+    let highlighter = tree_house::highlighter::Highlighter::new(&self.syntax, rope, langs, ..);
+
+    let hls = KakHighlightRange::from_tree_house(rope, highlighter);
 
     Ok(hls)
   }

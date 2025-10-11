@@ -74,7 +74,14 @@ pub type Grammar2Cache = Rc<RefCell<HashMap<String, tree_house_bindings::Grammar
 
 impl Languages {
   pub fn new(config: &Config) -> Self {
-    let hl_names: Vec<_> = config.highlight.groups.iter().cloned().collect();
+    let mut hl_names: Vec<_> = config.highlight.groups.iter().cloned().collect();
+
+    // NOTE: sorting in descending order allows to ensure that we will always match against the longest (more accurate)
+    // capture groups first; even though we have `punctuation`, parenthesis match `punctuation.bracket` and commas
+    // match `punctuation.delimiter`, so we want to resolve them as the more accurate capture group for better
+    // highlighting support.
+    hl_names.sort_by(|a, b| b.cmp(a));
+
     let faces = Rc::new(hl_names.iter().map(Face::from_capture_group).collect());
     let hl_names = Rc::new(hl_names.clone());
 
@@ -203,7 +210,7 @@ impl Languages {
     lang_config.configure(|name| {
       hl_names
         .iter()
-        .position(|hl_name| hl_name == name)
+        .position(|hl_name| name.starts_with(hl_name))
         .map(|idx| Highlight::new(idx as _))
     });
 
