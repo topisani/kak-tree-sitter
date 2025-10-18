@@ -180,7 +180,7 @@ impl Languages {
 
     // load the grammar if not already cached
     let grammar = if let Some(grammar) = grammars2.borrow().get(lang_name) {
-      log::debug!("grammar {lang_name} alread loaded; using cached version");
+      log::debug!("grammar {lang_name} already loaded; using cached version");
       tree_house_bindings::Grammar::clone(grammar)
     } else {
       let grammar = Self::load_grammar(grammar_name, grammar_config)?;
