@@ -139,12 +139,11 @@ impl Languages {
     };
     log::debug!("  grammar path: {}", path.display());
 
+    let fn_sym = format!("tree_sitter_{}", lang_name.replace(['.', '-'], "_"));
     let grammar = unsafe {
-      tree_house_bindings::Grammar::new(lang_name, &path).map_err(|err| {
-        OhNo::CannotLoadGrammar2 {
-          lang: lang_name.to_owned(),
-          err: err.to_string(),
-        }
+      tree_house_bindings::Grammar::new(&fn_sym, &path).map_err(|err| OhNo::CannotLoadGrammar2 {
+        lang: fn_sym,
+        err: err.to_string(),
       })?
     };
 
