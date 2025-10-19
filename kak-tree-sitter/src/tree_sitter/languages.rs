@@ -139,10 +139,10 @@ impl Languages {
     };
     log::debug!("  grammar path: {}", path.display());
 
-    let fn_sym = format!("tree_sitter_{}", lang_name.replace(['.', '-'], "_"));
+    let name = lang_name.replace(['.', '-'], "_");
     let grammar = unsafe {
-      tree_house_bindings::Grammar::new(&fn_sym, &path).map_err(|err| OhNo::CannotLoadGrammar2 {
-        lang: fn_sym,
+      tree_house_bindings::Grammar::new(&name, &path).map_err(|err| OhNo::CannotLoadGrammar2 {
+        lang: name,
         // FIXME: remove the formatting and use .to_string() once <https://github.com/helix-editor/tree-house/pull/28> is merged
         err: format!("{err:?}"),
       })?
