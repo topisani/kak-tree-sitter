@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use clap::Parser;
 use cli::Cli;
-use colored::Colorize;
 use error::HellNo;
 use kak_tree_sitter_config::Config;
 
@@ -13,19 +12,21 @@ use crate::{
     remove,
   },
   resources::Resources,
+  ui::report::Report,
 };
 
+#[macro_use]
+mod ui;
 mod cli;
 mod commands;
 mod error;
 mod git;
 mod process;
 mod resources;
-mod ui;
 
 fn main() {
   if let Err(err) = start() {
-    eprintln!("{}", err.to_string().red());
+    report_error!(Report::new(), "{}", err.to_string().red());
     std::process::exit(1);
   }
 }
@@ -47,22 +48,34 @@ fn start() -> Result<(), HellNo> {
   match cli.cmd {
     cli::Cmd::Fetch { all, langs } => {
       let flags = ManageFlags::new(true, false, false, false);
-      manage(config, flags, all, langs)?
+
+      let report = Report::new();
+      report!(report, "fetching languages: {langs:?}");
+      manage(report.incr(), config, flags, all, langs)?
     }
 
     cli::Cmd::Compile { all, langs } => {
       let flags = ManageFlags::new(false, true, false, false);
-      manage(config, flags, all, langs)?
+
+      let report = Report::new();
+      report!(report, "compiling languages: {langs:?}");
+      manage(report.incr(), config, flags, all, langs)?
     }
 
     cli::Cmd::Install { all, langs } => {
       let flags = ManageFlags::new(false, false, true, false);
-      manage(config, flags, all, langs)?
+
+      let report = Report::new();
+      report!(report, "installing languages: {langs:?}");
+      manage(report.incr(), config, flags, all, langs)?
     }
 
     cli::Cmd::Sync { all, langs } => {
       let flags = ManageFlags::new(false, false, false, true);
-      manage(config, flags, all, langs)?
+
+      let report = Report::new();
+      report!(report, "synchronizing languages: {langs:?}");
+      manage(report.incr(), config, flags, all, langs)?
     }
 
     cli::Cmd::Query { lang, all } => {
@@ -85,12 +98,17 @@ fn start() -> Result<(), HellNo> {
       langs,
     } => {
       let resources = Resources::new()?;
+
+      // if none of grammar and queries are provided, we assume we want to delete everything
       if !grammar && !queries {
         grammar = true;
         queries = true;
       }
 
+      let report = Report::new();
+      report!(report, "removing languages: {langs:?}");
       remove::remove(
+        report.incr(),
         &config,
         &resources,
         grammar,
@@ -102,7 +120,10 @@ fn start() -> Result<(), HellNo> {
 
     cli::Cmd::Prune => {
       let resources = Resources::new()?;
-      remove::prune_unpinned(&config, &resources)?;
+
+      let report = Report::new();
+      report!(report, "pruning");
+      remove::prune_unpinned(report.incr(), &config, &resources)?;
     }
   }
 
@@ -110,6 +131,7 @@ fn start() -> Result<(), HellNo> {
 }
 
 fn manage(
+  report: Report,
   config: Config,
   manage_flags: ManageFlags,
   all: bool,
@@ -119,11 +141,11 @@ fn manage(
   if langs.is_empty() && all {
     let all_langs: HashSet<_> = config.languages.language.keys().cloned().collect();
     let manager = Manager::new(config, manage_flags)?;
-    manager.manage_all(all_langs.iter().map(|s| s.as_str()));
+    manager.manage_all(report, all_langs.iter().map(|s| s.as_str()));
   } else {
     for lang in langs {
-      if let Err(err) = manage_lang(config.clone(), manage_flags.clone(), &lang) {
-        log::error!("{err}");
+      if let Err(err) = manage_lang(report, config.clone(), manage_flags.clone(), &lang) {
+        report_error!(report, "{err}", err = err.to_string().red());
       }
     }
   }
@@ -131,7 +153,12 @@ fn manage(
   Ok(())
 }
 
-fn manage_lang(config: Config, manage_flags: ManageFlags, lang: &str) -> Result<(), HellNo> {
+fn manage_lang(
+  report: Report,
+  config: Config,
+  manage_flags: ManageFlags,
+  lang: &str,
+) -> Result<(), HellNo> {
   let manager = Manager::new(config, manage_flags)?;
-  manager.manage(lang)
+  manager.manage(report, lang)
 }

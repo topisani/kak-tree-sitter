@@ -17,16 +17,17 @@ pub enum Clone {
 /// Clone a git repository.
 ///
 /// Return `Ok(true)` if something was cloned; `Ok(false)` if it was already there.
-pub fn clone(report: &Report, fetch_path: &Path, url: &str) -> Result<Clone, HellNo> {
-  // check if the fetch path already exists; if not, we clone the repository
-  let fetched;
-  if let Ok(false) = fetch_path.try_exists() {
-    report.fetch(format!("cloning {url}"));
+pub fn clone(report: Report, fetch_path: &Path, url: &str) -> Result<Clone, HellNo> {
+  // ensure the path exists
+  fs::create_dir_all(fetch_path).map_err(|err| HellNo::CannotCreateDir {
+    dir: fetch_path.to_owned(),
+    err,
+  })?;
 
-    fs::create_dir_all(fetch_path).map_err(|err| HellNo::CannotCreateDir {
-      dir: fetch_path.to_owned(),
-      err,
-    })?;
+  // check whether the path has a .git in it; if not, clone
+  let fetched;
+  if let Ok(false) = fetch_path.join(".git").try_exists() {
+    report!(report, "cloning {url}");
 
     // shallow clone of the repository
     let git_clone_args = [
@@ -48,22 +49,54 @@ pub fn clone(report: &Report, fetch_path: &Path, url: &str) -> Result<Clone, Hel
 }
 
 /// Checkout a source at a given pin.
-pub fn checkout(report: &Report, url: &str, fetch_path: &Path, pin: &str) -> Result<(), HellNo> {
-  report.info(format!("checking out {url} at {pin}"));
-  Process::new("git").run(fetch_path, &["checkout", pin])
+pub fn checkout(report: Report, url: &str, fetch_path: &Path, pin: &str) -> Result<(), HellNo> {
+  report!(
+    report,
+    "checking out {url} at {pin}",
+    url = url.italic(),
+    pin = pin.yellow()
+  );
+  let report = report.incr();
+
+  Process::new("git").run(fetch_path, &["checkout", pin])?;
+
+  report_success!(
+    report,
+    "checked out {url} at {pin}",
+    url = url.italic(),
+    pin = pin.yellow()
+  );
+  Ok(())
 }
 
 /// Fetch remote git objects.
 ///
 /// This function expects a `pin` to prevent fetching the whole remote repository.
 pub fn fetch(
-  report: &Report,
+  report: Report,
   lang: &str,
   fetch_path: &Path,
   url: &str,
   pin: &str,
 ) -> Result<(), HellNo> {
-  report.sync(format!("fetching {lang} git remote objects {url}"));
+  report!(
+    report,
+    "fetching {lang} git remote objects {url}",
+    lang = lang.blue(),
+    url = url.italic()
+  );
+  let report = report.incr();
+
   Process::new("git").run(fetch_path, &["fetch", "origin", "--prune", pin])?;
-  checkout(report, url, fetch_path, pin)
+
+  checkout(report.incr(), url, fetch_path, pin)?;
+
+  report_success!(
+    report,
+    "fetched {lang} from {url} at {pin}",
+    lang = lang.blue(),
+    url = url.italic(),
+    pin = pin.yellow()
+  );
+  Ok(())
 }

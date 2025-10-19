@@ -11,7 +11,6 @@ use crate::{
   ui::{
     section::{Field, FieldValue, Section, SectionBuilder},
     source::source_field,
-    status_icon::StatusIcon,
     table::{Cell, Row, RowBuilder, Table},
   },
 };
@@ -33,9 +32,9 @@ impl Query {
   pub fn all_lang_info_tbl(&self) -> Result<Table, HellNo> {
     fn check_path_sign(path: &Path) -> Cell {
       if let Ok(true) = path.try_exists() {
-        Cell::new(StatusIcon::Success)
+        Cell::new("")
       } else {
-        Cell::new(StatusIcon::Error)
+        Cell::new("")
       }
     }
 
@@ -76,7 +75,7 @@ impl Query {
         row.push(check_path_sign(&queries_path.join("indents.scm")));
       } else {
         for _ in 0..5 {
-          row.push(Cell::new(StatusIcon::Error));
+          row.push(Cell::new(""));
         }
       }
 
@@ -214,7 +213,7 @@ impl Query {
       .grammar_path_from_config(lang, grammar_config);
     let grammar_field = if let Ok(true) = grammar_install_path.try_exists() {
       Field::status_line(
-        StatusIcon::Success,
+        "",
         format!(
           "{} {}{}{}",
           "grammar".blue(),
@@ -225,7 +224,7 @@ impl Query {
       )
     } else if let Ok(true) = self.resources.grammars_dir(lang).try_exists() {
       Field::status_line(
-        StatusIcon::Info,
+        "󰈅",
         format!(
           "{lang} grammar out of sync; synchronize with {help}",
           help = format!("ktsctl sync {lang}").bold()
@@ -233,7 +232,7 @@ impl Query {
       )
     } else {
       Field::status_line(
-        StatusIcon::Error,
+        "",
         format!(
           "{lang} grammar missing; install with {help}",
           help = format!("ktsctl sync {lang}").bold()
@@ -264,11 +263,11 @@ impl Query {
 
         if scm_files.contains(s) {
           scm_count += 1;
-          let mut f = Field::status_line(StatusIcon::Success, desc.blue());
+          let mut f = Field::status_line("", desc.blue());
           f.indent();
           f
         } else {
-          let mut f = Field::status_line(StatusIcon::Error, desc.blue());
+          let mut f = Field::status_line("", desc.blue());
           f.indent();
           f
         }
@@ -284,7 +283,7 @@ impl Query {
 
       if scm_count == scm_expected_count {
         section.push(Field::status_line(
-          StatusIcon::Success,
+          "",
           format!(
             "{} {}{}{}",
             "queries".blue(),
@@ -295,7 +294,7 @@ impl Query {
         ));
       } else if scm_count > 0 {
         section.push(Field::status_line(
-          StatusIcon::Warn,
+          "",
           format!(
             "{} {}{}{}",
             "queries".blue(),
@@ -306,7 +305,7 @@ impl Query {
         ));
       } else {
         section.push(Field::status_line(
-          StatusIcon::Error,
+          "",
           format!(
             "{lang} queries missing; install with {help}",
             help = format!("ktsctl sync {lang}").bold()
@@ -320,7 +319,7 @@ impl Query {
 
       let field = if let Ok(true) = queries_dir.try_exists() {
         Field::status_line(
-          StatusIcon::Error,
+          "",
           format!(
             "{lang} queries out of sync; synchronize with {help}",
             help = format!("ktsctl sync {lang}").bold()
@@ -328,7 +327,7 @@ impl Query {
         )
       } else {
         Field::status_line(
-          StatusIcon::Error,
+          "",
           format!(
             "{lang} queries missing; install with {help}",
             help = format!("ktsctl sync {lang}").bold()

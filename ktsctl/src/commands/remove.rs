@@ -2,17 +2,14 @@
 
 use std::fs;
 
-use colored::Colorize;
+use colored::Colorize as _;
 use kak_tree_sitter_config::{Config, GrammarConfig, LanguageConfig, source::Source};
 
-use crate::{
-  error::HellNo,
-  resources::Resources,
-  ui::{report::Report, status_icon::StatusIcon},
-};
+use crate::{error::HellNo, resources::Resources, ui::report::Report};
 
 /// Delete resources associated with a given language.
 pub fn remove<'lang>(
+  report: Report,
   config: &Config,
   resources: &Resources,
   grammar: bool,
@@ -21,14 +18,18 @@ pub fn remove<'lang>(
   langs: impl Iterator<Item = &'lang str>,
 ) {
   for lang in langs {
-    if let Err(err) = remove_lang(config, resources, grammar, queries, prune, lang) {
-      log::error!("{err}");
+    report!(report, "working {lang}");
+    let report = report.incr();
+
+    if let Err(err) = remove_lang(report, config, resources, grammar, queries, prune, lang) {
+      report_error!(report, "{err}", err = err.to_string().red());
     }
   }
 }
 
 /// Delete resources associated with a given language.
 pub fn remove_lang(
+  report: Report,
   config: &Config,
   resources: &Resources,
   grammar: bool,
@@ -36,28 +37,31 @@ pub fn remove_lang(
   prune: bool,
   lang: &str,
 ) -> Result<(), HellNo> {
+  report!(report, "removing resources for {lang}");
+  let report = report.incr();
+
   let lang_config = config.languages.get_lang_config(lang)?;
   let grammar_config = config
     .grammars
     .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
-  let report = Report::new(StatusIcon::Sync, format!("removing resources for {lang}"));
   let mut errors = Vec::new();
 
   if grammar {
-    remove_grammar(resources, lang, grammar_config, prune, &report, &mut errors);
+    remove_grammar(report, resources, lang, grammar_config, prune, &mut errors);
   }
 
   if queries {
-    remove_queries(resources, lang, lang_config, prune, &report, &mut errors);
+    remove_queries(report, resources, lang, lang_config, prune, &mut errors);
   }
 
   if errors.is_empty() {
-    report.success(format!("{lang} removed"));
+    report_success!(report, "{lang} removed");
   } else {
-    report.error(format!("cannot remove {lang}"));
+    report_error!(report, "cannot remove {lang}");
+    let report = report.incr();
 
     for err in errors {
-      eprintln!("{}", err.red());
+      report_error!(report, "{}", err.red());
     }
   }
 
@@ -65,41 +69,59 @@ pub fn remove_lang(
 }
 
 fn remove_grammar(
+  report: Report,
   resources: &Resources,
   lang: &str,
   grammar_config: &GrammarConfig,
   prune: bool,
-  report: &Report,
   errors: &mut Vec<String>,
 ) {
   if prune {
     let dir = resources.grammars_dir(lang);
     if let Ok(true) = dir.try_exists() {
-      report.info(format!("removing {lang} grammar"));
+      report!(report, "removing {lang} grammar", lang = lang.blue());
+      let report = report.incr();
 
       if let Err(err) = fs::remove_dir_all(dir) {
-        errors.push(format!("cannot remove {lang} grammar: {err}"));
+        errors.push(format!(
+          "cannot remove {lang} grammar: {err}",
+          lang = lang.blue(),
+          err = err.to_string().red()
+        ));
+      } else {
+        report_success!(report, "removed {lang} grammar", lang = lang.blue());
       }
+    } else {
+      report_info!(report, "{lang} grammar already removed", lang = lang.blue());
     }
   } else {
     let grammar_path = resources.grammar_path_from_config(lang, grammar_config);
 
     if let Ok(true) = grammar_path.try_exists() {
-      report.info(format!("removing {lang} grammar"));
+      report!(report, "removing {lang} grammar", lang = lang.blue());
+      let report = report.incr();
 
       if let Err(err) = fs::remove_file(grammar_path) {
-        errors.push(format!("cannot remove {lang} grammar: {err}"));
+        errors.push(format!(
+          "cannot remove {lang} grammar: {err}",
+          lang = lang.blue(),
+          err = err.to_string().red()
+        ));
+      } else {
+        report_success!(report, "removed {lang} grammar", lang = lang.blue());
       }
+    } else {
+      report_info!(report, "{lang} grammar already removed", lang = lang.blue());
     }
   }
 }
 
 fn remove_queries(
+  report: Report,
   resources: &Resources,
   lang: &str,
   lang_config: &LanguageConfig,
   prune: bool,
-  report: &Report,
   errors: &mut Vec<String>,
 ) {
   let dir = if prune {
@@ -110,24 +132,38 @@ fn remove_queries(
 
   if let Some(dir) = dir {
     if let Ok(true) = dir.try_exists() {
-      report.info(format!("removing {lang} queries"));
+      report!(report, "removing {lang} queries", lang = lang.blue());
+      let report = report.incr();
 
       if let Err(err) = fs::remove_dir_all(dir) {
-        errors.push(format!("cannot remove {lang} queries: {err}"));
+        errors.push(format!(
+          "cannot remove {lang} queries: {err}",
+          lang = lang.blue(),
+          err = err.to_string().red()
+        ));
+      } else {
+        report_success!(report, "removed {lang} queries", lang = lang.blue());
       }
+    } else {
+      report_info!(report, "{lang} queries already removed", lang = lang.blue());
     }
   }
 }
 
 /// Prune everything, removing unpinned data.
-pub fn prune_unpinned(config: &Config, resources: &Resources) -> Result<(), HellNo> {
+pub fn prune_unpinned(
+  report: Report,
+  config: &Config,
+  resources: &Resources,
+) -> Result<(), HellNo> {
   for (lang, lang_config) in config.languages.iter() {
     let grammar_config = config
       .grammars
       .get_grammar_config(lang_config.grammar.as_deref().unwrap_or(lang))?;
     let mut errors = Vec::new();
-    let report = Report::new(StatusIcon::Info, "pruning");
-    report.info(format!("pruning {}", lang.blue()));
+
+    let report = report.incr();
+    report!(report, "working {}", lang.blue());
 
     if let Err(err) = prune_unpinned_lang(resources, lang, lang_config, grammar_config, &mut errors)
     {
@@ -135,12 +171,14 @@ pub fn prune_unpinned(config: &Config, resources: &Resources) -> Result<(), Hell
     }
 
     if errors.is_empty() {
-      report.success(format!("pruned {}", lang.blue()));
+      report_success!(report, "pruned {}", lang.blue());
     } else {
-      report.error(format!(
+      report_error!(
+        report,
         "cannot prune {lang}:\n  {err}",
-        err = errors.join("\n  ")
-      ));
+        lang = lang.blue(),
+        err = errors.join("\n  ").red()
+      );
     }
   }
 
@@ -179,7 +217,9 @@ fn prune_unpinned_grammar(
           if let Err(err) = fs::remove_file(entry.path()) {
             errors.push(format!(
               "cannot prune grammar for {lang} at {path}: {err}",
-              path = entry.path().display()
+              lang = lang.blue(),
+              path = entry.path().display(),
+              err = err.to_string().red(),
             ));
           }
         }
@@ -197,7 +237,9 @@ fn prune_unpinned_grammar(
           if let Err(err) = fs::remove_file(entry.path()) {
             errors.push(format!(
               "cannot prune grammar for {lang} at {path}: {err}",
-              path = entry.path().display()
+              lang = lang.blue(),
+              path = entry.path().display(),
+              err = err.to_string().red(),
             ));
           }
         }
@@ -228,7 +270,9 @@ fn prune_unpinned_queries(
           if let Err(err) = fs::remove_file(entry.path()) {
             errors.push(format!(
               "cannot prune queries for {lang} at {path}: {err}",
-              path = entry.path().display()
+              lang = lang.blue(),
+              path = entry.path().display(),
+              err = err.to_string().red(),
             ));
           }
         }
@@ -239,7 +283,9 @@ fn prune_unpinned_queries(
           if let Err(err) = fs::remove_dir_all(entry.path()) {
             errors.push(format!(
               "cannot prune queries for {lang} at {path}: {err}",
-              path = entry.path().display()
+              lang = lang.blue(),
+              path = entry.path().display(),
+              err = err.to_string().red(),
             ));
           }
         }

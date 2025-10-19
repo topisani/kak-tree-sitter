@@ -1,62 +1,79 @@
-//! Report progress and status of commands.
+//! Report macros.
+//!
+//! Use these macros to report information while operating with ktsctl.
 
-use std::io::{Write, stdout};
+use std::fmt::Display;
 
-use super::status_icon::StatusIcon;
-
-/// A report that can updates itself on stdout.
+/// A report used for standardized formatting of ktsctl output commands.
 ///
-/// This type can be used whenever you want to output progress of a task on the same line. Every report will replace
-/// the current line, allowing an “in-place” report update, progress bar, etc.
-///
-/// You use it with [`Report::new`] to create the initial line, and then use the [`Report::update()`] function to update
-/// the report, or one of the other methods to update the report.
-///
-/// Once you are done and want to finish the report and go to the next line, simply drop the report.
-#[derive(Debug)]
-pub struct Report;
+/// Use the associated macros to use it.
+#[derive(Clone, Copy, Debug)]
+pub struct Report {
+  /// Depth at which we are in the report. For instance, fetching > rust > grammar, fetching > rust > queries, etc.
+  ///
+  /// This is mainly used for indentation.
+  depth: u8,
+}
 
 impl Report {
-  pub fn new(icon: StatusIcon, msg: impl AsRef<str>) -> Self {
-    print!("\x1b[?7l");
-    Self::to_stdout(icon, msg);
-    Self
+  pub fn new() -> Self {
+    Self { depth: 0 }
   }
 
-  fn to_stdout(icon: StatusIcon, msg: impl AsRef<str>) {
-    print!("{} {msg}", icon, msg = msg.as_ref());
-    stdout().flush().unwrap();
-  }
-
-  pub fn update(&self, icon: StatusIcon, msg: impl AsRef<str>) {
-    print!("\x1b[2K\r");
-    Self::to_stdout(icon, msg);
-  }
-
-  pub fn fetch(&self, msg: impl AsRef<str>) {
-    self.update(StatusIcon::Fetch, msg)
-  }
-
-  pub fn sync(&self, msg: impl AsRef<str>) {
-    self.update(StatusIcon::Sync, msg)
-  }
-
-  pub fn success(&self, msg: impl AsRef<str>) {
-    self.update(StatusIcon::Success, msg)
-  }
-
-  pub fn info(&self, msg: impl AsRef<str>) {
-    self.update(StatusIcon::Info, msg)
-  }
-
-  pub fn error(&self, msg: impl AsRef<str>) {
-    self.update(StatusIcon::Error, msg)
+  /// Deepen the report by incrementing the amount of indentation.
+  pub fn incr(self) -> Self {
+    Self {
+      depth: self.depth + 1,
+    }
   }
 }
 
-impl Drop for Report {
-  fn drop(&mut self) {
-    println!("\x1b[?7h");
-    stdout().flush().unwrap();
+impl Display for Report {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    for _ in 0..self.depth {
+      f.write_str("  ")?;
+    }
+
+    Ok(())
   }
+}
+
+macro_rules! report {
+  ($report:expr, $($arg:tt)*) => {{
+    use colored::Colorize as _;
+    print!("{}{} ", $report, "•".black());
+    println!($($arg)*)
+  }}
+}
+
+macro_rules! report_success {
+  ($report:expr, $($arg:tt)*) => {{
+    use colored::Colorize as _;
+    print!("{}{} ", $report, "".green());
+    println!($($arg)*)
+  }}
+}
+
+macro_rules! report_error {
+  ($report:expr, $($arg:tt)*) => {{
+    use colored::Colorize as _;
+    print!("{}{} ", $report, "".red());
+    println!($($arg)*)
+  }}
+}
+
+macro_rules! report_info {
+  ($report:expr, $($arg:tt)*) => {{
+    use colored::Colorize as _;
+    print!("{}{} ", $report, "󰈅".blue());
+    println!($($arg)*)
+  }}
+}
+
+macro_rules! report_warn {
+  ($report:expr, $($arg:tt)*) => {{
+    use colored::Colorize as _;
+    print!("{}{} ", $report, "".yellow());
+    println!($($arg)*)
+  }}
 }

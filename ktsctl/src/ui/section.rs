@@ -4,8 +4,6 @@ use std::fmt::Display;
 
 use colored::{ColoredString, Colorize};
 
-use super::status_icon::StatusIcon;
-
 #[derive(Debug)]
 pub struct Section {
   name: String,
@@ -77,7 +75,7 @@ pub enum Field {
   },
 
   StatusLine {
-    status: StatusIcon,
+    status: String,
     value: FieldValue,
     indent: usize,
   },
@@ -92,9 +90,9 @@ impl Field {
     }
   }
 
-  pub fn status_line(status: StatusIcon, value: impl Into<FieldValue>) -> Self {
+  pub fn status_line(status: impl Into<String>, value: impl Into<FieldValue>) -> Self {
     Self::StatusLine {
-      status,
+      status: status.into(),
       value: value.into(),
       indent: 0,
     }
