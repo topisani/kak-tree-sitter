@@ -288,6 +288,12 @@ impl Handler {
       timer.elapsed().as_micros()
     );
 
+    // if there is nothing to highlight, we return nothing
+    if ranges.is_empty() {
+      log::debug!("no highlights to return");
+      return Ok(None);
+    }
+
     let resp = Response::new(
       id.session(),
       None,
