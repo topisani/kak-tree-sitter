@@ -672,8 +672,8 @@ compile_args = ["-c", "-fpic", "../scanner.c", "../parser.c", "-I", ".."]
 link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "markdown.so"]
 
 [language.markdown.queries.source.git]
-url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
-pin = "3bb01001d93c087c888611bde6ac1254d7338dde"
+url = "https://github.com/helix-editor/helix"
+pin = "63eb1b870c411c2760c1ac28b0be704430f21439"
 
 # markdown.inline
 [grammar."markdown.inline".source.git]
@@ -687,7 +687,7 @@ link_args = ["-shared", "-fpic", "scanner.o", "parser.o", "-o", "markdown.inline
 
 [language."markdown.inline".queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+pin = "56ccaedffbb8011e36012278e2a4861a8d435a60"
 
 # matlab
 # TODO
