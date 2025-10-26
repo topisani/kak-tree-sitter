@@ -132,7 +132,7 @@ impl KakHighlightRange {
       self.line_start.into_one_indexed(),
       self.col_byte_start.into_one_indexed(),
       self.line_end.into_one_indexed(),
-      self.col_byte_end.into_one_indexed(),
+      self.col_byte_end.0.max(1), // upper bound is inclusive and 0 is not allowed
       faces[self.face.id]
     )
   }
