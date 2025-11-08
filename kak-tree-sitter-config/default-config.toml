@@ -251,7 +251,19 @@ url = "https://git.sr.ht/~hadronized/kak-tree-sitter"
 pin = "63cd42de7d7612d9b493074c06a2075ea1a2c899"
 
 # crystal
-# TODO
+[grammar.crystal]
+compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
+compile_flags = ["-O3"]
+link_args = ["-shared", "-fpic", "parser.o", "scanner.o", "-o", "crystal.so"]
+link_flags = ["-O3"]
+
+[grammar.crystal.source.git]
+url = "https://github.com/crystal-lang-tools/tree-sitter-crystal"
+pin = "76afc1f53518a2b68b51a5abcde01d268a9cb47c"
+
+[language.crystal.queries]
+source.git.url = "https://github.com/helix-editor/helix"
+source.git.pin = "c96642125f87b7f2ca186662c5885d129262133e"
 
 # c-sharp
 [grammar.csharp.source.git]
