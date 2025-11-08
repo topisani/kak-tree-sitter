@@ -582,7 +582,25 @@ url = "https://github.com/helix-editor/helix"
 pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 # just
-# TODO
+[grammar.just.source.git]
+url = "https://github.com/poliorcetics/tree-sitter-just"
+pin = "8d03cfdd7ab89ff76d935827de1b93450fa0ec0a"
+
+[grammar.just]
+path = "src"
+compile = "cc"
+compile_args = ["-c", "-fpic", "../parser.c", "-I", ".."]
+compile_flags = ["-O3"]
+link = "cc"
+link_args = ["-shared", "-fpic", "parser.o", "-o", "just.so"]
+link_flags = ["-O3"]
+
+[language.just.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "f6878f62f74430cff188e7978d06c5ed143179e9"
+
+[language.just.queries]
+path = "runtime/queries/just"
 
 # kdl
 # TODO
