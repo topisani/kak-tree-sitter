@@ -126,5 +126,5 @@ pub enum Cmd {
   Prune,
 
   /// Print default configuration
-  Default,
+  DefaultConfig,
 }
