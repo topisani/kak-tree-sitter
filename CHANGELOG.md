@@ -1,316 +1,150 @@
-# v2.0.0
-
-> Fri May 23 2025
-
-This changeset refers to:
-
-- **kak-tree-sitter v2.0.0**
-- **kak-tree-sitter-config v3.0.0**
-- **ktsctl v3.0.0**
-
-## Changeset
-
-### Features
-
-- [34824f7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/34824f7) Feature gate replying to Kakoune directly via the Unix socket.
-  - The feature gate is `direct-unix-socket` and should be used to speed up communication between KTS and
-    Kakoune. **Disabled by default**.
-- [b0ab4b4](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b0ab4b4) Update to tree-sitter 0.25.2.
-- [cfcf35b](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/cfcf35b) Introduce filetype_hook to allow Kakoune filetype-based hooks not to be introduced.
-- [88d1140](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/88d1140) Implements aliased language names, and fix filetype hooks
-  This unlocks the possibility to refer to the same language with a different `tree_sitter_language` name. This
-  is for instance used with shell languages.
-- Add more configuration support:
-  - [2780581](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/2780581) Add `--config`.
-    This allows to pass the configuration explicitly in the case of non-standard location.
-  - [c151f4e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c151f4e) Implement recursive call settings by passing initial CLI args around.
-- [d0a4685](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d0a4685) Add `ktsctl prune`.
-  This allows to get rid of the previously installed queries and grammars. After you have run `ktsctl sync`,
-  you should run `ktsctl prune` if everything works fine for you.
-- [50e5169](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/50e5169) Add the `debug-hl-ranges` feature.
-  This is not supposed to be used by end-users, but only KTS contributors.
-- Language updates to recent `tree-sitter`:
-  - [4d5033e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4d5033e) Update Zig to tree-sitter 0.22+ support.
-  - [8b54858](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8b54858) Update Yaml to tree-sitter 0.22+ support.
-  - [e31e8c8](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/e31e8c8) Update XML to tree-sitter 0.22+ support.
-  - [3bfee3c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3bfee3c) Update Vue to tree-sitter 0.22+ support.
-  - [62932b2](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/62932b2) Update Verilog to tree-sitter 0.22+ support.
-  - [462d28a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/462d28a) Update Unison to tree-sitter 0.22+ support.
-  - [480f929](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/480f929) Update Typescript to tree-sitter 0.22+ support.
-  - [4561a22](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4561a22) Update TSX to tree-sitter 0.22+ support.
-  - [b77a951](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b77a951) Update TOML to tree-sitter 0.22+ support.
-  - [a143738](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a143738) Update Task to tree-sitter 0.22+ support.
-  - [e5186c7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/e5186c7) Update Scheme to tree-sitter 0.22+ support.
-  - [b79ba2e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b79ba2e) Update SCSS to tree-sitter 0.22+ support.
-  - [280dffb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/280dffb) Update ruby to tree-sitter 0.22+ support.
-  - [1356a6c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1356a6c) Update python to tree-sitter 0.22+ support.
-  - [ea7a0f8](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ea7a0f8) Update purescript to tree-sitter 0.22+ support.
-  - [6a4738a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6a4738a) Update nu to tree-sitter 0.22+ support.
-  - [d313d4d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d313d4d) Update nix to tree-sitter 0.22+ support.
-  - [7e1dd56](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7e1dd56) Update nim to tree-sitter 0.22+ support.
-  - [3b5a364](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3b5a364) Update markdown.inline to tree-sitter 0.22+ support.
-  - [ac076c1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ac076c1) Update markdown to tree-sitter 0.22+ support.
-  - [1d374c0](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1d374c0) Update make to tree-sitter 0.22+ support.
-  - [a3bb100](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a3bb100) Update LLVM to tree-sitter 0.22+ support.
-  - [2e113be](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/2e113be) Update Latex to tree-sitter 0.22+ support.
-  - [1f396e7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1f396e7) Update Kotlin to tree-sitter 0.22+ support.
-  - [246f15c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/246f15c) Update Koka to tree-sitter 0.22+ support.
-  - [44be6b7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/44be6b7) Update Julia to tree-sitter 0.22+ support.
-  - [263d6aa](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/263d6aa) Update JSX to tree-sitter 0.22+ support.
-  - [edcd8b0](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/edcd8b0) Update JSON to tree-sitter 0.22+ support.
-  - [146b87e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/146b87e) Update JavaScript to tree-sitter 0.22+ support.
-  - [f6639dd](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/f6639dd) Update Java to tree-sitter 0.22+ support.
-  - [50631af](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/50631af) Update INI to tree-sitter 0.22+ support.
-  - [5e6141c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5e6141c) Update Hyprlang to tree-sitter 0.22+ support.
-  - [01727bb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/01727bb) Update HTML to tree-sitter 0.22+ support.
-  - [e9850c3](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/e9850c3) Update Haskell to tree-sitter 0.22+ support.
-  - [9a300f8](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9a300f8) Update Go to tree-sitter 0.22+ support.
-  - [440334d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/440334d) Update GLSL to tree-sitter 0.22+ support.
-  - [70f075b](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/70f075b) Update git-commit to tree-sitter 0.22+ support.
-  - [ed6b6c2](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ed6b6c2) Update fish to tree-sitter 0.22+ support.
-  - [d9d5a47](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d9d5a47) Update elixir to tree-sitter 0.22+ support.
-  - [49be878](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/49be878) Update diff to tree-sitter 0.22+ support.
-  - [b03151e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b03151e) Update CSS to tree-sitter 0.22+ support.
-  - [f2d00b4](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/f2d00b4) Update C++ to tree-sitter 0.22+ support.
-  - [c590b34](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c590b34) Update C# to tree-sitter 0.22+ support.
-  - [4885c98](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4885c98) Update comment to tree-sitter 0.22+ support.
-  - [406cabd](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/406cabd) Update cmake to tree-sitter 0.22+ support.
-  - [d7872aa](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d7872aa) Update C to tree-sitter 0.22+ support.
-  - [9a7ac7c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9a7ac7c) Update bibtex to tree-sitter 0.22+ support.
-  - [4234d46](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4234d46) Update bash to tree-sitter 0.22+ support.
-  - [388ee73](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/388ee73) Update awk to tree-sitter 0.22+ support.
-  - [1375f35](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1375f35) Update astro to tree-sitter 0.22+ support.
-  - [633b3e1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/633b3e1) Update Rust to tree-sitter 0.22+ support.
-  - [064decc](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/064decc) Repin all KTS queries.
-  - [3bb0100](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3bb0100) Repin the markdown queries.
-- [8a0f414](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8a0f414) Add support for new capture groups.
-
-### Bug fixes
-
-- [d20879b](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d20879b) Fix missing directories in ktsctl.
-- [592cb0c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/592cb0c) Fix buffer identities by switching to the absolute path.
-  This fixes an old bug where after having started a KTS integration on a buffer, using `:cd <rel-path>` would
-  break tree-sitter support.
-
-### Maintainance
-
-- [c0fa5e7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c0fa5e7) Switch to edition 2024 and update MSRV to 1.86.0.
-- [2a54c9a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/2a54c9a) Ensure the CI is ready for default / all-features.
-- [57d4e7c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/57d4e7c) Update Cargo.lock.
-- [17fbf97](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/17fbf97) Upgrade tree-sitter.
-
-# v1.1.3
-
-## Features
-
-- Support for `kak-tree-sitter-config-v2.2.1`.
-
-# v1.1.2
-
-## Bug fixes
-
-- Do not fail initialization if default highlighter was not found [9ad8d28](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9ad8d28)
-
-# v1.1.1
-
-## Bug fixes
-
-- Properly disable **tree-sitter** when using `tree-sitter-session-end`. [142a245](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/)
-- Fix removing default highlighter in already existing buffers. [46279fe](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/)
-
-# v1.1.0
-
-## Features
-
-- Implement Split text-object. [9d4b9f4](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9d4b9f4)
-	This change is pretty nice as it provides the equivalent of `s` but with
-	tree-sitter text-objects. A default setup is available via the `tree-sitter`
-	user-mode on `k`, `s` being already used by tree-sitter navigation (that was a
-	mistake that should be fixed later; sorry about that).
-
-## Bug fixes
-
-- Properly remove default highlighter. [8a76d3a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8a76d3a)
-- Fix `build.rs` files to allow for missing SHA1. [49951d1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/49951d1)
-
-# v1.0.1
-
-This release fixes bugs and adapts to the change introduced in
-`kak-tree-sitter-config-2.0.0`.
-
-## Bug fixes
-
-- Fix coordinate conversion in navigation [6506bff](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6506bff)
-- Fix crash when highlighter fails to load for a language. [8cb1acd](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8cb1acd)
-
-# v1.0.0
-
-- Add `tree-sitter-user-after-highlighter` overrideable command.
-  This allows to set external highlighters, like `show-matching`, without being
-  overridden by KTS.
-- Fix event loop polling.
-  Some I/O errors were left uncaught, like interruptions.
-- Fix daemonization process.
-  That was one of the main reasons why sometimes the _poll_ object got
-  corrupted; it was created before daemonization (i.e. before _forking_),
-  causing early-free of file descriptors and, thus, basically, massive failures.
-- Enhance logging.
-- Remove config dump.
-  If users eventually want it back, we could add a special command for that.
-- Fix tree-sitter objects and finalize their first stable version.
-- Add features in the config.
-  Features live under the `features` sections, and we start with two:
-
-  - `highlighting`, a `bool` to enable/disable highlighting.
-  - `text_objects`, a `bool` to enable/disable text-objects user-modes / hooks.
-- Support buffer close hook to cleanup and purge resources on KTS.
-- Rewrite the protocol / FIFO.
-  This is one of the biggest change of this new release. The new protocol is
-  written in a much safer way than it used to, since it’s based off non-blocking
-  FIFOs. The main difference is using one FIFO per session-buffer, allowing to
-  send metadata (which change very rarely) via a KTS UNIX command
-  (`kak-tree-sitter -r`), and stream buffers’ content only via a `write()` on
-  the KTS side.
-- Update MSRV and dependencies.
-- Always ensure runtime directories are correctly created.
-- Move to sr.ht.
-- Fix buffer not being read correctly.
-- Add tree-sitter navigation.
-
-# v0.6.0
-
-- First shot at text-objects. [1350fa1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1350fa1)
-- Adding support for selections with text-objects. [46075c8](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/46075c8)
-- First full and working implementation of text-object. [42935c9](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/42935c9)
-- Remove default theme and make cascaded tree-sitter faces. [1406e7d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1406e7d)
-- Introduce user-only configuration. [fc7c5c6](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fc7c5c6)
-- Move the user manual into the repository, extracted from the wiki. [a7ac734](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a7ac734)
-- Add --with-highlighting. [152f5f6](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/152f5f6)
-- Fix injecting Kakoune RC when we do not have any verbose flag. [ec1ee3c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ec1ee3c)
-- Support reading local paths when used as sources for both grammars & queries. [305455b](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/305455b)
-- Introduce ktsctl sources. [e083aad](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/e083aad)
-
----
-
-SHA 256 sums
-
-```
-f0bd6991a492218870bdcddaa7ee1eb8fdd5b69bbc2f99a1b16e2e5bf247d1dd  kak-tree-sitter.Linux-x86_64
-a8c0dd2899c5492f53b6e2d9c53ac0cf300f52298be5ada0f1d5c9b52444cf91  kak-tree-sitter.macOS-x86_64
-```
-
-# v0.5.4
-
-- Fix getting (already existing) sessions. [3c8e86d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3c8e86d)
-
-# v0.5.3
-
-- Fix freezing / crashing Kakoune instances by allowing to recover, as well as
-  optimizing testing whether sessions exist. [5cbba41](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5cbba41) [c525dff](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c525dff) [61b8b50](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/61b8b50)
-- Dependencies bumps.
-- Fix a typo in `kak-tree-sitter-req-stop`. [660c162](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/660c162)
-
-# v0.5.2
-
-- Fix regression introduced in 7db85a4b4e394750e633ceea8e390e052c61dac0. [974dc39](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/974dc39)
-
-# v0.5.1
-
-- Some internal fix with how newlines are handled. This fix is not complete though, so expect
-  weird behavior sometimes. Will be fixed in an upcoming patch. [7db85a4](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7db85a4)
-- Fix unicode graphemes in the byte -> (col, line) mapper. [46d6f1c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/46d6f1c)
-
-# v0.5.0
-
-- Add `remove_default_highlighter` option. [d78abc0](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d78abc0)
-- Send disconnect response (deinit) when the server quits. [5d58316](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5d58316)
-- Remove `colored` in `kak-tree-sitter`. [d5b0094](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d5b0094)
-- Fix blocking Kakoune after stopping KTS. [a3d68ea](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a3d68ea)
-- (Re)-add response queue to prevent blocking Kakoune. [404c8b8](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/404c8b8)
-- Clear buf fifo on errors. [1343f00](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1343f00)
-- dependencies bumps. [Various](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/Various)
-
-# v0.4.6
-
-- Add kak-tree-sitter-req-reload to static.kak. [36f4710](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/36f4710)
-- Add support for reloading config, grammars and queries. #108 [efe0669](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/efe0669)
-- Add build.rs to add git commit hash to versions in clap. [4381835](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4381835)
-- Fix FIFO corrupted data. [b06338f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b06338f)
-
-# v0.4.5
-
-- Rework FIFOs to make them all nonblocking and introduce per-session state machine. [291f376](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/291f376)
-- Fix fork leak. #10 [34f2a9a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/34f2a9a)
-
-# v0.4.4
-
-- Fix for EOF on the command FIFO. [ce72760](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ce72760)
-- Update static.kak for HTML (@attribute and @tag). [ec5d77d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ec5d77d)
-
-# v0.4.3
-
-- Enhance CLI of kak-tree-sitter. #100 [ceb0811](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ceb0811)
-- Add some requests in the .kak. [3147012](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3147012)
-- Revamp RC and --kakoune to fix opening files from the CLI. #101 [a017807](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a017807)
-
-# v0.4.2
-
-- Fix IO command reads. [17d7866](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/17d7866)
-
-# v0.4.1
-
-- Introduce kts_lang. [a446955](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a446955)
-- Fix commands by appending ;. [322823d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/322823d)
-
-# v0.4.0
-
-- Add support for YAML. [a045858](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a045858)
-- Java support. [2a58160](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/2a58160)
-- Scheme support. [30e10c9](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/30e10c9)
-- Fix highlighting for injections. [ac1d239](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ac1d239)
-- More highlighting groups. [3f47a8f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3f47a8f)
-- Hand-craft markdown queries. [d2d9761](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/d2d9761)
-- Fix html config and vendor C++ queries. [bf5fbfc](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/bf5fbfc)
-- Fix C++ highlighting. [848bddb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/848bddb)
-- Support for git-commit. [18dafa0](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/18dafa0)
-- Add support for tree-sitter-diff. [4e700ad](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4e700ad)
-- Remove cabal config. [cce2278](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/cce2278)
-- Fix bash support. [eedda58](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/eedda58)
-- Add LaTeX support. [9d3b046](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9d3b046)
-- Simplify highlighting not to override the highlighter everytime. [e288aca](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/e288aca)
-- Add CONTRIBUTING.md. [8a78dec](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8a78dec)
-- Add python support. [72eb686](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/72eb686)
-- Support BibTex highlighting. [50fdec1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/50fdec1)
-- Support Haskell highlighting. [9f384ea](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9f384ea)
-- Support JSON highlighting. [345c61e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/345c61e)
-- Support XML highlighting. [df43f7d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/df43f7d)
-- Support CSS highlighting. [30d91ae](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/30d91ae)
-- Support Makefile highlighting. [9391357](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9391357)
-- Fix highlighter range computations (better unicode support). [fd4d770](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fd4d770)
-- Allow to read commands from a command FIFO. [ea0fe6f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ea0fe6f)
-- Enable highlighting via the FIFO command interface. [58e0aea](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/58e0aea)
-- Rewrite with mio and remove tokio. [8961a3a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8961a3a)
-- Introduce per-session FIFO. [c57a2f1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c57a2f1)
-- Fix PID detection. #81 [db20bdf](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/db20bdf)
-- Go grammar. [db92ec5](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/db92ec5)
-- Add support for sessionless (standalone) server. #90 [616863c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/616863c)
-- Adding support for ctrl-c signals. [8eb30e7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8eb30e7)
-- Allow to specify the log level. [9b25d55](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/9b25d55)
-
-# v0.3.0
-
-- Proper error handling.
-- Some Kakoune commands are now hidden.
-- Because the FIFO / UNIX socket bug was fixed, `kak-tree-sitter-highlight-enable` now always performs an initial
-  highlight of the buffer with `kak-tree-sitter-highlight-buffer`.
-- Rework faces to include specific ones. For instance, `ts_function` with `ts_function_builtin`, `ts_function_macro`,
-  etc.
-- Add more details about the runtime state, especially when loading grammars, and make loading resources
-  (grammars / queries) error collectable instead of fallible.
-
-commit 3713c420dd9c9ac3845e90ceb71de6a87e36ba88 (tag: ktsctl-v0.2.0, tag: kak-tree-sitter-v0.3.0, tag: kak-tree-sitter-con
-
-# v0.2.0
-
-- Initial version of the project. `v0.1` was being used on crates.io by a completely different project, and they gave
-  use the name.
+# Changelog
+
+This is the changelog of the **kak-tree-sitter** project, which is composed of three sub-projects:
+
+- `kak-tree-sitter`, the binary bridging **tree-sitter** with **Kakoune**.
+- `ktsctl`, the CLI companion.
+- `kak-tree-sitter-config`, the library used to parse and use the configuration.
+
+> For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
+
+## kak-tree-sitter v3.0.0
+
+### Major changes
+
+- Many internal and structural changes (new configuration structure).
+- Switch to [tree-house](https://github.com/helix-editor/tree-house). The switch boosts performance massively
+  and is a building stone for upcoming features (partial updates).
+
+### Minor changes
+
+- Add more logs and timer-based logging.
+
+### Bugfixes
+
+- Languages are now lazy-loaded, which means that opening Kakoune on a scratch buffer will not cause any
+  grammars nor queries to load. Loading happens when a buffer is created with a recognized and accepted
+  file type by KTS.
+- Reimplementation of async IO decoupling, especially via triple-buffering, to prevent freezing Kakoune if
+  a bug is present in a grammar, causing KTS to take an abnormal time processing the buffer, highlights,
+  queries, etc.
+- Text-objects are correctly sent.
+- Optimizes memory usage and scheme to prevent allocating during highlighting, massively boosting
+  performances.
+
+### Commit set
+
+- [cdcfb42](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/cdcfb42) Fix upper byte boundary in highlighting code.
+- [18c6e80](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/18c6e80) Properly load grammars.
+- [b5771db](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b5771db) Do not return highlights if there’s none computed.
+- [abfeefe](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/abfeefe) Make tree-house grammar error more verbose.
+- [0cd2f51](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/0cd2f51) Fix symbol loading issue when the language name has a dot in it.
+- [14fce0a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/14fce0a) Fix typo in debug log.
+- [8bee812](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/8bee812) Fix highlighting logic with tree-house.
+- [7ee3797](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7ee3797) Fix tests regarding highlights with tree-house.
+- [a459d17](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a459d17) Fix face definition.
+- [61c58d1](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/61c58d1) Convert to ropey/tree-house.
+- [cc55d3e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/cc55d3e) Prepare switching to tree-house.
+- [f946149](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/f946149) ktsctl: operate on many languages at once.
+- [a5bda78](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/a5bda78) Abort early after updating a buffer if it didn’t change.
+- [eea7d5c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/eea7d5c) Add tests for the triple buffer.
+- [ed00fe4](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ed00fe4) Implement triple-buffering and remove back-buffers.
+- [3fcc99c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/3fcc99c) Make fifo copying more explicit.
+- [6911185](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6911185) Fix text-objects not correctly sent.
+- [ad15fdb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ad15fdb) Refactor IOHandler into its own module.
+- [5fb0060](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5fb0060) Reimplement proper async IO decoupling.
+- [43b3a3f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/43b3a3f) Remove trace logs and added some timer-based debug logs.
+- [5d9295e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5d9295e) Change configuration to make grammars dissociate from languages.
+- [fcab935](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fcab935) Make grammars shared via Rc.
+- [ab3874f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ab3874f) Automatically generate face definition based on the config.
+- [53e4dde](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/53e4dde) Fix typos.
+- [be260eb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/be260eb) [feature/22] Remove box type ascription when creating lazy languages.
+- [73a4eeb](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/73a4eeb) [feature/22] Massively simplify on-demand loading with LazyCell.
+- [846ab1a](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/846ab1a) [feature/22] (disgusting) version of on-demand loading of languages.
+- [4a6cce7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4a6cce7) Fix ts_constant_builtin face missing.
+
+## ktsctl v3.0.0
+
+### Major changes
+
+- Configuration has changed to make grammars dissociate from languages.
+
+### Minor changes
+
+- All commands acting on languages now support a list of languages instead of a single one. For instance,
+  `ktsctl sync rust toml`.
+- Enhance reporting and stop hiding intermediate logs.
+- Add `default-config` to print to standard output the content of the default configuration.
+
+### Bugfixes
+
+- Fix grammars not correctly synchronized.
+
+### Commit set
+
+- [1f9f3c3](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/1f9f3c3) [patch/61761] Rename Default into DefaultConfig.
+- [4c565a9](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4c565a9) ktsctl: Print default config
+- [673fd2f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/673fd2f) ktsctl: Enhance reporting.
+- [7692f4d](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7692f4d) Fix type (grammer -> queries).
+- [f946149](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/f946149) ktsctl: operate on many languages at once.
+- [fbedc85](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fbedc85) [feature/27] Simplify the default config by removing optional fields.
+- [6cbd42c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6cbd42c) Fix grammars not being correctly sync + TSX.
+- [5d9295e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5d9295e) Change configuration to make grammars dissociate from languages.
+
+## kak-tree-sitter-config v4.0.0
+
+### Major changes
+
+- The whole configuration is now optional besides `source`, which allows users to contribute / have custom
+  configuration that is much smaller.
+- Kakoune face definitions are now generated automatically from the config, so we do not have to hardcode
+  `set-face` declarations, which occasionally caused inconsistency.
+- Change configuration to make grammars dissociate from languages, allowing reuse for languages requiring the
+  same grammar.
+- Small internal change to allow to access the default configuration (mostly used by `ktsctl default-config`).
+
+### Minor changes
+
+- **typst**` is now supported in the default config.
+- Add support for `rust-format-args`, allowing to highlight inside macros such as `println!` or `format!`.
+- Add support for **jsonc**.
+- Add support for **mermaid**.
+- Add support for **lean**.
+- Add support for **qml**.
+
+### Bugfixes
+
+- **C++** grammar has been updated as well as its queries (`nullptr -> null`).
+- Fix **Rust** incorect highlights.
+- Update **Typescript** query source.
+- Fix **JSX** and **TSX** highlights, as well as capture groups for **JSX**.
+- Fix **Vue** queries pin.
+- Update **Ini**.
+- Update **Markdown** configuration.
+
+### Commit set
+
+- [4c565a9](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4c565a9) ktsctl: Print default config
+- [29ee234](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/29ee234) Update markdown and markdown.inline.
+- [24d80ca](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/24d80ca) Add qml language support
+- [307fc50](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/307fc50) add config for lean
+- [218762f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/218762f) Fix configuration overrides / mandatory fields.
+- [fbedc85](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fbedc85) [feature/27] Simplify the default config by removing optional fields.
+- [07477e7](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/07477e7) [feature/27] Make all GrammarConfig fields optional but source.
+- [38a241f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/38a241f) Fix typst query configuration
+- [5fbc5df](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5fbc5df) Bumped ini grammar
+- [c5c1951](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c5c1951) Add mermaid grammar
+- [6cbd42c](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6cbd42c) Fix grammars not being correctly sync + TSX.
+- [c8314df](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c8314df) Pin jsonc’ queries.
+- [55a8f80](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/55a8f80) Add support for jsonc.
+- [5d9295e](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/5d9295e) Change configuration to make grammars dissociate from languages.
+- [395f229](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/395f229) Add missing capture groups for JSX.
+- [7f598af](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7f598af) Fix Vue queries pin.
+- [84c46bf](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/84c46bf) Pin JSX and TSX to KTS ref.
+- [2e5b784](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/2e5b784) Fix JSX / TSX highlights.scm.
+- [ab3874f](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/ab3874f) Automatically generate face definition based on the config.
+- [b50e52b](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/b50e52b) changed typescript query source
+- [6b984af](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/6b984af) Add support for rust-format-args.
+- [0534e34](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/0534e34) Bump Rust queries (fix incorrect highlights).
+- [4a772dc](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/4a772dc) Update cpp grammar and point queries to commit featuring nullptr->null update.
+- [22d0353](https://git.sr.ht/~hadronized/kak-tree-sitter/commit/22d0353) Add typst to default config
