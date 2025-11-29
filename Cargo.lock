@@ -405,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "kak-tree-sitter"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "chrono",
  "clap",
@@ -434,7 +434,7 @@ dependencies = [
 
 [[package]]
 name = "kak-tree-sitter-config"
-version = "3.0.0"
+version = "4.0.0"
 dependencies = [
  "dirs",
  "log",
@@ -454,7 +454,7 @@ dependencies = [
 
 [[package]]
 name = "ktsctl"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "clap",
  "colored 3.0.0",
