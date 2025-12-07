@@ -677,7 +677,17 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 # TODO
 
 # lua
-# TODO
+[grammar.lua.source.git]
+url = "https://github.com/tree-sitter-grammars/tree-sitter-lua"
+pin = "d76023017f7485eae629cb60d406c7a1ca0f40c9"
+
+[grammar.lua]
+compile_args = ["-c", "-fPIC", "../scanner.c", "../parser.c", "-I", ".."]
+link_args = ["-shared", "-fPIC", "scanner.o", "parser.o", "-o", "lua.so"]
+
+[language.lua.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "f9f5fe6b12a41b859e56d1d7da225a10b76814ea"
 
 # make
 [grammar.make.source.git]
