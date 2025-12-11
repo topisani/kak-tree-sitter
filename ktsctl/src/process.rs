@@ -31,6 +31,8 @@ impl<'a> Process<'a> {
       cmd.current_dir(cwd);
     }
 
+    log::trace!("running process: {process}");
+
     let mut child = cmd
       .stdout(Stdio::null())
       .stderr(Stdio::piped())

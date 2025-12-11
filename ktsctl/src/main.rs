@@ -35,7 +35,11 @@ fn start() -> Result<(), HellNo> {
   let cli = Cli::parse();
 
   if cli.verbose {
-    simple_logger::init_with_level(log::Level::Debug)?;
+    if cfg!(feature = "trace") {
+      simple_logger::init_with_level(log::Level::Trace)?;
+    } else {
+      simple_logger::init_with_level(log::Level::Debug)?;
+    }
   }
 
   let config = if let Some(path_config) = &cli.config {
