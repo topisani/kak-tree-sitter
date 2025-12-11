@@ -789,10 +789,45 @@ url = "https://github.com/helix-editor/helix"
 pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 
 # ocaml
-# TODO
+
+[grammar.ocaml.source.git]
+url = "https://github.com/tree-sitter/tree-sitter-ocaml"
+pin = "9965d208337d88bbf1a38ad0b0fe49e5f5ec9677"
+
+[grammar.ocaml]
+path = "ocaml/src"
+compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
+compile_flags = ["-O3"]
+link_args = ["-shared", "-fpic", "parser.o", "scanner.o", "-o", "ocaml.so"]
+link_flags = ["-O3"]
+
+[language.ocaml.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "a3b64b6da2ece01fab8f7590c4252d07993c5e2b"
 
 # ocaml-interface
-# TODO
+
+[grammar."ocaml-interface".source.git]
+url = "https://github.com/tree-sitter/tree-sitter-ocaml"
+pin = "9965d208337d88bbf1a38ad0b0fe49e5f5ec9677"
+
+[grammar."ocaml-interface"]
+path = "interface/src"
+compile_args = ["-c", "-fpic", "../parser.c", "../scanner.c", "-I", ".."]
+compile_flags = ["-O3"]
+link_args = [
+  "-shared",
+  "-fpic",
+  "parser.o",
+  "scanner.o",
+  "-o",
+  "ocaml-interface.so",
+]
+link_flags = ["-O3"]
+
+[language."ocaml-interface".queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "a3b64b6da2ece01fab8f7590c4252d07993c5e2b"
 
 # odin
 # TODO
