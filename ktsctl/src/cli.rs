@@ -41,7 +41,7 @@ pub enum Cmd {
   Compile {
     /// Execute commands for all known languages.
     ///
-    /// The list of languages can be seen with `ktsctl info --all`.
+    /// The list of languages can be seen with `ktsctl query --all`.
     #[clap(short, long)]
     all: bool,
 
