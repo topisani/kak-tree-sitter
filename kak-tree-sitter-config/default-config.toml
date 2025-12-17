@@ -304,7 +304,14 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 # TODO
 
 # devicetree
-# TODO
+
+[grammar.devicetree.source.git]
+url = "https://github.com/joelspadin/tree-sitter-devicetree"
+pin = "877adbfa0174d25894c40fa75ad52d4515a36368"
+
+[language.devicetree.queries]
+source.git.url = "https://github.com/helix-editor/helix"
+source.git.pin = "b74e2694124b9d269d05f6aace42d4756c3bb724"
 
 # dhall
 # TODO
