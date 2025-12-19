@@ -860,6 +860,15 @@ pin = "a3b64b6da2ece01fab8f7590c4252d07993c5e2b"
 # perl
 # TODO
 
+# pest
+[grammar.pest.source.git]
+url = "https://github.com/pest-parser/tree-sitter-pest"
+pin = "c19629a0c50e6ca2485c3b154b1dde841a08d169"
+
+[language.pest.queries.source.git]
+url = "https://github.com/helix-editor/helix"
+pin = "b40ea7e73e505f9c10cb04421a8de91575f5c68f"
+
 # php
 # TODO
 
