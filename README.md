@@ -33,9 +33,10 @@ This is a binary server that interfaces [tree-sitter](https://tree-sitter.github
 - [x] Transformation-oriented; actual data (i.e. grammars, queries, etc.) can be used from any sources.
 - [x] Shell completions.
 
-## User manual
+## Wiki
 
-See the [User manual](./docs/man/README.md) to know how to install, use, configure and get runtime resources.
+See the [Wiki](https://man.sr.ht/~hadronized/kak-tree-sitter) to know how to install, use, configure and get
+runtime resources.
 
 ## Contributing
 
