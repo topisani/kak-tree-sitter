@@ -4,7 +4,6 @@ use kak_tree_sitter_config::error::ConfigError;
 use log::SetLoggerError;
 use mio::Token;
 use thiserror::Error;
-use tree_sitter::{LanguageError, QueryError};
 
 use crate::kakoune::buffer::BufferId;
 
@@ -98,12 +97,6 @@ pub enum OhNo {
   #[error("cannot send command")]
   CannotSendCommand,
 
-  #[error("highlight error: {err}")]
-  HighlightError {
-    #[from]
-    err: tree_sitter_highlight::Error,
-  },
-
   #[error("unknown language: {lang}")]
   UnknownLang { lang: String },
 
@@ -115,18 +108,6 @@ pub enum OhNo {
 
   #[error("unknown buffer token: {tkn:?}")]
   UnknownToken { tkn: Token },
-
-  #[error("language error: {err}")]
-  LangError {
-    #[from]
-    err: LanguageError,
-  },
-
-  #[error("query error: {err}")]
-  QueryError {
-    #[from]
-    err: QueryError,
-  },
 
   #[error("text-objects not supported")]
   UnsupportedTextObjects,
