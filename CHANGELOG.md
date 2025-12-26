@@ -3,24 +3,24 @@
 <!--toc:start-->
 - [Changelog](#changelog)
   - [kak-tree-sitter v3.1.0](#kak-tree-sitter-v310)
-    - [Bugfixes](#bugfixes)
+    - [Patch changes](#bugfixes)
   - [ktsctl v3.1.0](#ktsctl-v310)
     - [Minor changes](#minor-changes)
-    - [Bugfixes](#bugfixes)
+    - [Patch changes](#bugfixes)
   - [kak-tree-sitter-config v4.1.0](#kak-tree-sitter-config-v410)
     - [Minor changes](#minor-changes)
   - [kak-tree-sitter v3.0.0](#kak-tree-sitter-v300)
     - [Major changes](#major-changes)
     - [Minor changes](#minor-changes)
-    - [Bugfixes](#bugfixes)
+    - [Patch changes](#bugfixes)
   - [ktsctl v3.0.0](#ktsctl-v300)
     - [Major changes](#major-changes)
     - [Minor changes](#minor-changes)
-    - [Bugfixes](#bugfixes)
+    - [Patch changes](#bugfixes)
   - [kak-tree-sitter-config v4.0.0](#kak-tree-sitter-config-v400)
     - [Major changes](#major-changes)
     - [Minor changes](#minor-changes)
-    - [Bugfixes](#bugfixes)
+    - [Patch changes](#bugfixes)
 <!--toc:end-->
 
 This is the changelog of the **kak-tree-sitter** project, which is composed of three sub-projects:
@@ -31,6 +31,20 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 > For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
 
+## kak-tree-sitter v3.1.1
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/753536b">753536b</a> 753536b Remove unused dependencies.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/82e3351">82e3351</a> 82e3351 Remove tree-sitter and tree-sitter-highlight dependency.</li>
+  <ul>
+</details>
+
+### Patch changes
+
+- Remove unused dependencies (`tree-sitter`; we now use `tree-house`).
+
 ## kak-tree-sitter v3.1.0
 
 <details>
@@ -40,7 +54,7 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
   <ul>
 </details>
 
-### Bugfixes
+### Patch changes
 
 - Fix scratch buffers not correctly highlighted in recent versions of Kakoune (> 2025.06).
 
@@ -58,7 +72,7 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 - Add trace logs for ktsctl internals.
 
-### Bugfixes
+### Patch changes
 
 - Fixes outdated `--help` output.
 
@@ -131,7 +145,7 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 - Add more logs and timer-based logging.
 
-### Bugfixes
+### Patch changes
 
 - Languages are now lazy-loaded, which means that opening Kakoune on a scratch buffer will not cause any
   grammars nor queries to load. Loading happens when a buffer is created with a recognized and accepted
@@ -170,7 +184,7 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 - Enhance reporting and stop hiding intermediate logs.
 - Add `default-config` to print to standard output the content of the default configuration.
 
-### Bugfixes
+### Patch changes
 
 - Fix grammars not correctly synchronized.
 
@@ -225,7 +239,7 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 - Add support for **lean**.
 - Add support for **qml**.
 
-### Bugfixes
+### Patch changes
 
 - **C++** grammar has been updated as well as its queries (`nullptr -> null`).
 - Fix **Rust** incorect highlights.
