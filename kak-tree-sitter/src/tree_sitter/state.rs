@@ -123,9 +123,6 @@ impl TreeState {
     let changed = reader.read_to(&mut self.buf);
 
     if changed {
-      // Ensure we always have a trimmed buffer. Kakoune doesn’t like adding highlighters past the end of the buffer’s
-      // last line.
-      self.buf.truncate(self.buf.trim_end().len());
       self.recompute_tree(languages)?;
     }
 
