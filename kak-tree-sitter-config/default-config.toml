@@ -711,7 +711,7 @@ pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
 # markdown
 [grammar.markdown.source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
+pin = "2dfd57f547f06ca5631a80f601e129d73fc8e9f0"
 
 [grammar.markdown]
 path = "tree-sitter-markdown/src"
@@ -725,7 +725,7 @@ pin = "63eb1b870c411c2760c1ac28b0be704430f21439"
 # markdown.inline
 [grammar."markdown.inline".source.git]
 url = "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-pin = "62516e8c78380e3b51d5b55727995d2c511436d8"
+pin = "2dfd57f547f06ca5631a80f601e129d73fc8e9f0"
 
 [grammar."markdown.inline"]
 path = "tree-sitter-markdown-inline/src"
