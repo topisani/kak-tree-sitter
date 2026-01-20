@@ -76,19 +76,33 @@ impl KakHighlightRange {
 
     loop {
       let offset = highlighter.next_event_offset();
+
       if offset == u32::MAX {
+        log::trace!("met max offset; returning from highlighting");
         break;
       }
 
       let line = LineZeroIndexed(source.byte_to_line(offset as _));
       let col = ColZeroIndexed(offset as usize - source.line_to_byte(line.0));
 
+      log::trace!("highlighting offset: {offset}, line: {line:?}, col: {col:?}");
+
       let (event, hl_list) = highlighter.advance();
 
       if !tree_house_hls.is_empty() {
-        log::trace!("--> {tree_house_hls:?}");
-        // for hl in &tree_house_hls {
+        log::trace!("  highlights: {tree_house_hls:?}");
         if let Some(hl) = tree_house_hls.last() {
+          let mut line = line;
+          let mut col = col;
+
+          // check whether the last position.2 (column) is 0; if it is, it means that we cannot subtract -1,
+          // as this is not supported by Kakoune, so we need to lookup for the exact column of the previous
+          // line
+          if col.0 == 0 {
+            line.0 = source.byte_to_line(offset as usize - 1);
+            col.0 = offset as usize - source.line_to_byte(line.0);
+          }
+
           kak_hls.push(KakHighlightRange::new(
             last_position.1,
             last_position.2,
@@ -99,20 +113,11 @@ impl KakHighlightRange {
         }
       }
 
-      match event {
-        // apply highlights
-        tree_house::highlighter::HighlightEvent::Refresh => {
-          log::trace!("Refresh: {offset}, {line:?}, {col:?}");
-          tree_house_hls.clear();
-          tree_house_hls.extend(hl_list);
-        }
-
-        // stack up highlights
-        tree_house::highlighter::HighlightEvent::Push => {
-          tree_house_hls.extend(hl_list);
-          log::trace!("Push: {offset}, {line:?}, {col:?}; {tree_house_hls:?}");
-        }
+      // apply highlights
+      if let tree_house::highlighter::HighlightEvent::Refresh = event {
+        tree_house_hls.clear();
       }
+      tree_house_hls.extend(hl_list);
 
       last_position = (offset, line, col);
     }
@@ -132,7 +137,7 @@ impl KakHighlightRange {
       self.line_start.into_one_indexed(),
       self.col_byte_start.into_one_indexed(),
       self.line_end.into_one_indexed(),
-      self.col_byte_end.0.max(1), // upper bound is inclusive and 0 is not allowed
+      self.col_byte_end.0,
       faces[self.face.id]
     )
   }
