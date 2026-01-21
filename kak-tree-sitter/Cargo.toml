@@ -25,7 +25,7 @@ daemonize = "0.5"
 dirs = "6.0"
 kak-tree-sitter-config = { version = ">=3.0, < 5.0", path = "../kak-tree-sitter-config" }
 libc = "0.2"
-libloading = "0.8"
+libloading = ">=0.8, < 0.10"
 log = "0.4"
 mio = { version = "1.0.2", features = ["net", "os-poll", "os-ext"] }
 ropey = "1.6.1"
