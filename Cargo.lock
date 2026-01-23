@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "kak-tree-sitter"
-version = "3.1.1"
+version = "3.1.2"
 dependencies = [
  "chrono",
  "clap",
@@ -407,7 +407,7 @@ dependencies = [
  "dirs",
  "kak-tree-sitter-config",
  "libc",
- "libloading 0.9.0",
+ "libloading",
  "log",
  "mio",
  "ropey",
@@ -423,7 +423,7 @@ dependencies = [
 
 [[package]]
 name = "kak-tree-sitter-config"
-version = "4.1.0"
+version = "4.1.1"
 dependencies = [
  "dirs",
  "log",
@@ -466,16 +466,6 @@ name = "libloading"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
-dependencies = [
- "cfg-if",
- "windows-link",
-]
-
-[[package]]
-name = "libloading"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "754ca22de805bb5744484a5b151a9e1a8e837d5dc232c2d7d8c2e3492edc8b60"
 dependencies = [
  "cfg-if",
  "windows-link",
@@ -922,7 +912,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f24f037be888a6ea5521046288c126aa700ade79e9fe7c74cdef79207281c20b"
 dependencies = [
  "cc",
- "libloading 0.8.9",
+ "libloading",
  "regex-cursor",
  "ropey",
  "thiserror",
