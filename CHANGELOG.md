@@ -31,6 +31,45 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 > For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
 
+## kak-tree-sitter v3.1.2
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fa66e6b">fa66e6b</a> Put common manifest keys and dependencies in the workspace.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c7169db">c7169db</a> Bump dependencies.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/7b40207">7b40207</a> Fix end of line highlighting issue with tree-house.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/58143f7">58143f7</a> [kak-tree-sitter] Remove the trim when updating tree-house buffer.</li>
+  <ul>
+</details>
+
+### Patch changes
+
+- Rework the workspace layout.
+- Bump dependencies.
+- Fix end-of-line highlighting issue.
+
+## kak-tree-sitter-config v4.1.1
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/fa66e6b">fa66e6b</a> Put common manifest keys and dependencies in the workspace.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/c7169db">c7169db</a> Bump dependencies.</li>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/eeb2a2d">eeb2a2d</a> Update markdown / markdown.inline grammars.</li>
+  <ul>
+</details>
+
+### Major changes
+
+### Minor changes
+
+### Patch changes
+
+- Rework the workspace layout.
+- Update `markdown` and `markdown.inline` queries.
+- Bump dependencies.
+
 ## kak-tree-sitter v3.1.1
 
 <details>
