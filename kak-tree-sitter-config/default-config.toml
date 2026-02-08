@@ -586,7 +586,7 @@ link_args = ["-shared", "-fpic", "-flto=auto", "parser.o", "scanner.o", "-o", "j
 
 [language.julia.queries.source.git]
 url = "https://github.com/helix-editor/helix"
-pin = "7275b7f85014aad7e15d4987ec4f2249572eecfb"
+pin = "a3b64b6da2ece01fab8f7590c4252d07993c5e2b"
 
 # just
 [grammar.just.source.git]
