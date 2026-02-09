@@ -37,6 +37,41 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 > For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
 
+## kak-tree-sitter v3.1.3
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/96df26f">96df26f</a>Fix Julia queries for new tree-sitter.</li>
+  <ul>
+</details>
+
+- Bump dependencies.
+
+## kak-tree-sitter-config v.4.1.2
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/96df26f">96df26f</a>Fix Julia queries for new tree-sitter.</li>
+  <ul>
+</details>
+
+### Patch changes
+
+- Fix **julia** queries.
+
+## ktsctl v3.1.1
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/96df26f">96df26f</a>Fix Julia queries for new tree-sitter.</li>
+  <ul>
+</details>
+
+- Update dependencies.
+
 ## kak-tree-sitter v3.1.2
 
 <details>
