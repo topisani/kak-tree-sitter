@@ -14,10 +14,10 @@ tasks:
   - check-default: |
       cd kak-tree-sitter
       cargo fmt --check
-      cargo clippy
+      cargo clippy -- -D warnings
   - check-all-features: |
       cd kak-tree-sitter
-      cargo clippy --all-features --all-targets
+      cargo clippy --all-features --all-targets -- -D warnings
 
   # up-to-date build
   - build-default: |
