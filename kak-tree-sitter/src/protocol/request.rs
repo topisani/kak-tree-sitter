@@ -99,4 +99,7 @@ pub enum Payload {
 
   /// Request to navigate the tree-sitter tree on selections.
   Nav { selections: String, dir: nav::Dir },
+
+  /// Request the server version.
+  Version,
 }

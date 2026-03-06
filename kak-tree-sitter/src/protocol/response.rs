@@ -100,6 +100,9 @@ pub enum Payload {
   ///
   /// These selections are typically returned when the user asked to perform text-objects queries.
   Selections { sels: Vec<Sel> },
+
+  /// Server version.
+  Version(String),
 }
 
 impl Payload {
@@ -201,6 +204,10 @@ impl Payload {
 
           writeln!(resp_str)?;
         }
+      }
+
+      Payload::Version(version) => {
+        writeln!(resp_str, "echo '{version}'")?;
       }
     }
 

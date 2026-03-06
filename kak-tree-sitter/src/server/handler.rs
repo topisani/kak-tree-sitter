@@ -67,6 +67,9 @@ pub enum Command {
     selections: Vec<Sel>,
     dir: nav::Dir,
   },
+
+  /// Server version.
+  Version { metadata: Metadata },
 }
 
 /// Send commands to the handler.
@@ -178,6 +181,11 @@ impl Handler {
           selections,
           dir,
         } => self.handle_nav(metadata, selections, dir).map(Some),
+
+        Command::Version { metadata } => Ok(Some(Response::from_req_metadata(
+          metadata,
+          Payload::Version(env!("VERSION").to_owned()),
+        ))),
       };
 
       match resp {

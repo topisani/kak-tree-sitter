@@ -51,25 +51,25 @@ define-command -hidden tree-sitter-request-with-session-client -params 1 %{
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-buffer -params 1 %{
-    kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""buffer"": ""%sh{
-        if [ -n ""$kak_buffile"" ]; then
-            printf '%s' ""$kak_buffile""
-        else
-            printf '%s' ""$kak_bufname""
-        fi
-    }"" }, ""payload"": %arg{1} }"}
+  kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""buffer"": ""%sh{
+    if [ -n ""$kak_buffile"" ]; then
+      printf '%s' ""$kak_buffile""
+    else
+      printf '%s' ""$kak_bufname""
+    fi
+  }"" }, ""payload"": %arg{1} }"}
 
 # Create a command to send to Kakoune for the current session, client and buffer.
 #
 # The parameter is the string to be used as payload.
 define-command -hidden tree-sitter-request-with-session-client-buffer -params 1 %{
   kak-tree-sitter "{ ""metadata"": { ""session"": ""%val{session}"", ""client"": ""%val{client}"", ""buffer"": ""%sh{
-        if [ -n ""$kak_buffile"" ]; then
-            printf '%s' ""$kak_buffile""
-        else
-            printf '%s' ""$kak_bufname""
-        fi
-    }"" }, ""payload"": %arg{1} }"}
+    if [ -n ""$kak_buffile"" ]; then
+      printf '%s' ""$kak_buffile""
+    else
+      printf '%s' ""$kak_bufname""
+    fi
+  }"" }, ""payload"": %arg{1} }"}
 
 # Notify KTS that a session exists.
 define-command tree-sitter-session-begin %{
@@ -112,6 +112,11 @@ define-command tree-sitter-buffer-update %{
 # Request KTS to clean up resources of a closed buffer.
 define-command tree-sitter-buffer-close %{
   tree-sitter-request-with-session-buffer "{ ""type"": ""buffer_close"" }"
+}
+
+# Request the kak-tree-sitter version used by the server.
+define-command tree-sitter-version %{
+  tree-sitter-request-with-session-client "{ ""type"": ""version"" }"
 }
 
 # Request KTS to apply text-objects on selections.

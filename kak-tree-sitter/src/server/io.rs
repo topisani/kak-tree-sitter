@@ -228,6 +228,8 @@ impl IOHandler {
     session_tracker: &mut SessionTracker,
     req: Request,
   ) -> Result<Feedback, OhNo> {
+    log::debug!("processing request: {req:?}");
+
     match req.payload {
       request::Payload::SessionBegin => {
         let session = req.session();
@@ -359,6 +361,10 @@ impl IOHandler {
           dir,
         })?;
       }
+
+      request::Payload::Version => self.command_sender.send(Command::Version {
+        metadata: req.metadata,
+      })?,
     }
 
     Ok(Feedback::Ok)
