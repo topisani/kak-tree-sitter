@@ -52,7 +52,7 @@ impl Query {
     );
 
     let mut langs = self.config.languages.language.iter().collect::<Vec<_>>();
-    langs.sort_by(|(a, _), (b, _)| a.cmp(b));
+    langs.sort_by_key(|(a, _)| *a);
 
     for (lang, lang_config) in langs {
       let grammar_config = self
