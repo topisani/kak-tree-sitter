@@ -2,48 +2,50 @@
 
 <!--toc:start-->
 - [Changelog](#changelog)
-  - [kak-tree-sitter v3.2.1](#kak-tree-sitter-v321)
+  - [kak-tree-sitter-config v4.2.1](#kak-tree-sitter-config-v421)
     - [Patch changes](#patch-changes)
-  - [ktsctl v3.1.2](#ktsctl-v312)
+  - [kak-tree-sitter v3.2.1](#kak-tree-sitter-v321)
     - [Patch changes](#patch-changes-1)
+  - [ktsctl v3.1.2](#ktsctl-v312)
+    - [Patch changes](#patch-changes-2)
   - [kak-tree-sitter-config v.4.2.0](#kak-tree-sitter-config-v420)
     - [Minor changes](#minor-changes)
-    - [Patch changes](#patch-changes-2)
+    - [Patch changes](#patch-changes-3)
   - [kak-tree-sitter v3.2.0](#kak-tree-sitter-v320)
     - [Minor changes](#minor-changes-1)
   - [kak-tree-sitter v3.1.3](#kak-tree-sitter-v313)
-    - [Patch changes](#patch-changes-3)
-  - [kak-tree-sitter-config v.4.1.2](#kak-tree-sitter-config-v412)
     - [Patch changes](#patch-changes-4)
-  - [ktsctl v.3.1.2](#ktsctl-v312-1)
+  - [kak-tree-sitter-config v.4.1.2](#kak-tree-sitter-config-v412)
     - [Patch changes](#patch-changes-5)
-  - [ktsctl v3.1.1](#ktsctl-v311)
+  - [ktsctl v.3.1.2](#ktsctl-v312-1)
     - [Patch changes](#patch-changes-6)
-  - [kak-tree-sitter v3.1.2](#kak-tree-sitter-v312)
+  - [ktsctl v3.1.1](#ktsctl-v311)
     - [Patch changes](#patch-changes-7)
-  - [kak-tree-sitter-config v4.1.1](#kak-tree-sitter-config-v411)
+  - [kak-tree-sitter v3.1.2](#kak-tree-sitter-v312)
     - [Patch changes](#patch-changes-8)
-  - [kak-tree-sitter v3.1.1](#kak-tree-sitter-v311)
+  - [kak-tree-sitter-config v4.1.1](#kak-tree-sitter-config-v411)
     - [Patch changes](#patch-changes-9)
-  - [kak-tree-sitter v3.1.0](#kak-tree-sitter-v310)
+  - [kak-tree-sitter v3.1.1](#kak-tree-sitter-v311)
     - [Patch changes](#patch-changes-10)
+  - [kak-tree-sitter v3.1.0](#kak-tree-sitter-v310)
+    - [Patch changes](#patch-changes-11)
   - [ktsctl v3.1.0](#ktsctl-v310)
     - [Minor changes](#minor-changes-2)
-    - [Patch changes](#patch-changes-11)
+    - [Patch changes](#patch-changes-12)
   - [kak-tree-sitter-config v4.1.0](#kak-tree-sitter-config-v410)
     - [Minor changes](#minor-changes-3)
   - [kak-tree-sitter v3.0.0](#kak-tree-sitter-v300)
     - [Major changes](#major-changes)
     - [Minor changes](#minor-changes-4)
-    - [Patch changes](#patch-changes-12)
+    - [Patch changes](#patch-changes-13)
   - [ktsctl v3.0.0](#ktsctl-v300)
     - [Major changes](#major-changes-1)
     - [Minor changes](#minor-changes-5)
-    - [Patch changes](#patch-changes-13)
+    - [Patch changes](#patch-changes-14)
   - [kak-tree-sitter-config v4.0.0](#kak-tree-sitter-config-v400)
     - [Major changes](#major-changes-2)
     - [Minor changes](#minor-changes-6)
-    - [Patch changes](#patch-changes-14)
+    - [Patch changes](#patch-changes-15)
 <!--toc:end-->
 
 This is the changelog of the **kak-tree-sitter** project, which is composed of three sub-projects:
@@ -53,6 +55,19 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 - `kak-tree-sitter-config`, the library used to parse and use the configuration in both binaries.
 
 > For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
+
+## kak-tree-sitter-config v4.2.1
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/38f3d04">38f3d04</a> config: Fix astro compilation.</li>
+  <ul>
+</details>
+
+### Patch changes
+
+- Fixed astro compilation.
 
 ## kak-tree-sitter v3.2.1
 
