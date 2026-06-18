@@ -58,6 +58,19 @@ This is the changelog of the **kak-tree-sitter** project, which is composed of t
 
 > For older versions of the changelogs, please refer to [CHANGELOG.old.md](./CHANGELOG.old.md)
 
+## ktsctl v3.1.3
+
+<details>
+  <summary><b>Commit set</b></summary>
+  <ul>
+    <li><a href="https://git.sr.ht/~hadronized/kak-tree-sitter/commit/38f3d04">38f3d04</a> config: Fix astro compilation.</li>
+  <ul>
+</details>
+
+### Patch changes
+
+- Fixed astro compilation.
+
 ## kak-tree-sitter v3.2.2
 
 <details>
