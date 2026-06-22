@@ -32,11 +32,6 @@ Before contributing, some prerequisites **if you plan on providing patches**:
   third-party location — for instance, [keys.openpgp.org] — and sign your
   emails with it. More on that in the the [Guidelines](#guidelines) section.
 
-### No LLM / AI
-
-Please do not contribute in any form LLM-generated content, should it be issues,
-feature request or patches. They will immediately be closed.
-
 ## Setup
 
 Before starting up, you need to setup your tools.
